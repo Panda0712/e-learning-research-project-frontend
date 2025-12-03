@@ -21,6 +21,7 @@ const Popular = () => {
 
       <div className="flex flex-wrap mt-16 justify-center gap-8">
         <CourseCard
+          variant="popular"
           img={ExampleCourse1}
           courseName="Fullstack NodeJS"
           courseRating={5}
@@ -28,6 +29,7 @@ const Popular = () => {
           detailRef="/courses/2"
         />
         <CourseCard
+          variant="popular"
           img={ExampleCourse2}
           courseName="Fullstack NodeJS"
           courseRating={5}
@@ -35,6 +37,7 @@ const Popular = () => {
           detailRef="/courses/2"
         />
         <CourseCard
+          variant="popular"
           img={ExampleCourse3}
           courseName="Fullstack NodeJS"
           courseRating={5}
@@ -42,6 +45,7 @@ const Popular = () => {
           detailRef="/courses/2"
         />
         <CourseCard
+          variant="popular"
           img={ExampleCourse4}
           courseName="Fullstack NodeJS"
           courseRating={5}
@@ -49,6 +53,7 @@ const Popular = () => {
           detailRef="/courses/2"
         />
         <CourseCard
+          variant="popular"
           img={ExampleCourse5}
           courseName="Fullstack NodeJS"
           courseRating={5}
@@ -56,6 +61,7 @@ const Popular = () => {
           detailRef="/courses/2"
         />
         <CourseCard
+          variant="popular"
           img={ExampleCourse6}
           courseName="Fullstack NodeJS"
           courseRating={5}

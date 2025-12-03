@@ -1,4 +1,14 @@
 export const color = {
+  bg: "#F9FAFC",
+  textMain: "#000000",
+  textGray: "#555555",
+  textLight: "9D9D9D",
+  yellow: "F5C362",
+  orange: "FF782D",
+  green: "#55BE24",
+  blue: "#2580D5",
+  btnBg: "#F6B40A",
+
   grey1: "#19566A",
   grey2: "#6A6B6C",
   grey3: "#327186",
