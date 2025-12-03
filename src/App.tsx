@@ -6,6 +6,15 @@ import CourseDetail from "./pages/CourseDetail/CourseDetail";
 import CourseLearning from "./pages/CourseLearning/CourseLearning";
 import Homepage from "./pages/Homepage/Homepage";
 import Payment from "./pages/Payment/Payment";
+import ForgotPasswordPage from "./pages/Auth/ForgotPasswordPage";
+import LoginPage from "./pages/Auth/LoginPage";
+import SignUpPage from "./pages/Auth/SignUpPage";
+import BlogDetail from "./pages/Blogs/BlogDetail";
+import BlogList from "./pages/Blogs/BlogList";
+import Contact from "./pages/Contact/Contact";
+import Lecturer from "./pages/Lecturer/Lecturer";
+import LecturerDetails from "./pages/Lecturer/LecturerDetails";
+import Registration from "./pages/Lecturer/Registration";
 
 const App = () => {
   return (
@@ -25,13 +34,33 @@ const App = () => {
           {/* Homepage */}
           <Route path="/" element={<Homepage />} />
 
+          {/* Auth */}
+          <Route path="/auth/login" element={<LoginPage />} />
+          <Route path="/auth/register" element={<SignUpPage />} />
+          <Route
+            path="/auth/forgot-password"
+            element={<ForgotPasswordPage />}
+          />
+
+          {/* Contact */}
+          <Route path="/contact" element={<Contact />} />
+
           {/* Course */}
           <Route path="/courses" element={<Course />} />
           <Route path="/courses/:id" element={<CourseDetail />} />
           <Route path="/learning/:id" element={<CourseLearning />} />
 
+          {/* Lecturer */}
+          <Route path="/lecturer" element={<Lecturer />} />
+          <Route path="/lecturer/:id" element={<LecturerDetails />} />
+          <Route path="/registration" element={<Registration />} />
+
           {/* Payment */}
           <Route path="/payment/:id" element={<Payment />} />
+
+          {/* Blog */}
+          <Route path="/blog" element={<BlogList />} />
+          <Route path="/blog/:id" element={<BlogDetail />} />
         </Route>
         {/* </Route> */}
       </Routes>
