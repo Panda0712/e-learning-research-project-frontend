@@ -6,6 +6,11 @@ import Contact from "./pages/Contact/Contact";
 import Lecturer from "./pages/Lecturer/Lecturer";
 import LecturerDetails from "./pages/Lecturer/LecturerDetails";
 import Registration from "./pages/Lecturer/Registration";
+import ForgotPasswordPage from "./pages/Auth/ForgotPasswordPage";
+import LoginPage from "./pages/Auth/LoginPage";
+import SignUpPage from "./pages/Auth/SignUpPage";
+import BlogDetail from "./pages/Blogs/BlogDetail";
+import BlogList from "./pages/Blogs/BlogList";
 
 const App = () => {
   return (
@@ -24,14 +29,26 @@ const App = () => {
           {/* <Route element={<ProtectedRoutes />}> */}
           {/* Homepage */}
           <Route path="/" element={<Homepage />} />
+
+          {/* Auth */}
+          <Route path="/auth/login" element={<LoginPage />} />
+          <Route path="/auth/register" element={<SignUpPage />} />
+          <Route
+            path="/auth/forgot-password"
+            element={<ForgotPasswordPage />}
+          />
+          
           {/* Contact */}
           <Route path="/contact" element={<Contact />} />
+          
           {/* Lecturer */}
           <Route path="/lecturer" element={<Lecturer />} />
-          {/* Lecturer Details */}
           <Route path="/lecturer/:id" element={<LecturerDetails />} />
-          {/* Registration */}
           <Route path="/registration" element={<Registration />} />
+
+          {/* Blog */}
+          <Route path="/blog" element={<BlogList />} />
+          <Route path="/blog/:id" element={<BlogDetail />} />
         </Route>
         {/* </Route> */}
       </Routes>
