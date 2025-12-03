@@ -1,6 +1,11 @@
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
 import Footer from "./components/Footer/Footer";
 import Navbar from "./components/Navbar/Navbar";
+import ForgotPasswordPage from "./pages/Auth/ForgotPasswordPage";
+import LoginPage from "./pages/Auth/LoginPage";
+import SignUpPage from "./pages/Auth/SignUpPage";
+import BlogDetail from "./pages/Blogs/BlogDetail";
+import BlogList from "./pages/Blogs/BlogList";
 import Homepage from "./pages/Homepage/Homepage";
 import Contact from "./pages/Contact/Contact";
 import Lecturer from "./pages/Lecturer/Lecturer";
