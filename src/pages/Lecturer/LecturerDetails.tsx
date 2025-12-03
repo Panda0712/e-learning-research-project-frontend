@@ -1,6 +1,13 @@
-import { Facebook, Linkedin, Mail, MapPin, Phone, Twitter } from "lucide-react";
+import {
+  Facebook,
+  Linkedin,
+  Mail,
+  MapPin,
+  Phone,
+  Share2,
+  Twitter,
+} from "lucide-react";
 import { useParams } from "react-router-dom";
-import { Share2 } from "lucide-react";
 
 interface LecturerData {
   id: number;
@@ -93,111 +100,111 @@ const LecturerDetails = () => {
       <div className=" px-20 pb-0 py-16 bg-white">
         <div className="bg-[#E8E6F5] p-10 ">
           <div className="grid grid-cols-3 gap-8 mb-20">
-          {/* Left Sidebar - Lecturer Info */}
-          <div className="col-span-1">
-            <div className="rounded-lg pt-0 p-6">
-              {/* Profile Image */}
-              <div className="mb-6">
-                <img
-                  src={lecturer.image}
-                  alt={lecturer.name}
-                  className="w-full rounded-sm"
-                />
-              </div>
-
-              {/* Social Icons */}
-              <div className="flex items-center justify-center gap-4 mb-6">
-                <button className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center hover:bg-gray-100 transition-colors">
-                  <Facebook className="w-5 h-5 text-[#704FE6]" />
-                </button>
-                <button className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center hover:bg-gray-100 transition-colors">
-                  <Twitter className="w-5 h-5 text-[#704FE6]" />
-                </button>
-                <button className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center hover:bg-gray-100 transition-colors">
-                  <Linkedin className="w-5 h-5 text-[#704FE6]" />
-                </button>
-                <button className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center hover:bg-gray-100 transition-colors">
-                  <Mail className="w-5 h-5 text-[#704FE6]" />
-                </button>
-              </div>
-
-              {/* Contact Information */}
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <Phone className="w-5 h-5 text-[#FC6441] mt-1" />
-                  <span className="text-[16px] text-[#333931] font-poppins">
-                    {lecturer.phone}
-                  </span>
+            {/* Left Sidebar - Lecturer Info */}
+            <div className="col-span-1">
+              <div className="rounded-lg pt-0 p-6">
+                {/* Profile Image */}
+                <div className="mb-6">
+                  <img
+                    src={lecturer.image}
+                    alt={lecturer.name}
+                    className="w-full rounded-sm"
+                  />
                 </div>
-                <div className="flex items-start gap-3">
-                  <MapPin className="w-5 h-5 text-[#FC6441] mt-1" />
-                  <span className="text-[16px] text-[#333931] font-poppins">
-                    {lecturer.address}
-                  </span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Mail className="w-5 h-5 text-[#FC6441] mt-1" />
-                  <span className="text-[16px] text-[#333931] font-poppins">
-                    {lecturer.email}
-                  </span>
-                </div>
-              </div>
 
-              {/* Contact Button */}
-              <button className="w-full mt-8 px-6 py-3 bg-[#704FE6] text-white text-[15px] font-medium rounded-full hover:bg-[#5F3DD4] transition-colors flex items-center justify-center gap-2">
-                Contact Us Lecture
-                <span className="text-lg">→</span>
-              </button>
+                {/* Social Icons */}
+                <div className="flex items-center justify-center gap-4 mb-6">
+                  <button className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center hover:bg-gray-100 transition-colors">
+                    <Facebook className="w-5 h-5 text-[#704FE6]" />
+                  </button>
+                  <button className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center hover:bg-gray-100 transition-colors">
+                    <Twitter className="w-5 h-5 text-[#704FE6]" />
+                  </button>
+                  <button className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center hover:bg-gray-100 transition-colors">
+                    <Linkedin className="w-5 h-5 text-[#704FE6]" />
+                  </button>
+                  <button className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center hover:bg-gray-100 transition-colors">
+                    <Mail className="w-5 h-5 text-[#704FE6]" />
+                  </button>
+                </div>
+
+                {/* Contact Information */}
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <Phone className="w-5 h-5 text-[#FC6441] mt-1" />
+                    <span className="text-[16px] text-[#333931] font-poppins">
+                      {lecturer.phone}
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <MapPin className="w-5 h-5 text-[#FC6441] mt-1" />
+                    <span className="text-[16px] text-[#333931] font-poppins">
+                      {lecturer.address}
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Mail className="w-5 h-5 text-[#FC6441] mt-1" />
+                    <span className="text-[16px] text-[#333931] font-poppins">
+                      {lecturer.email}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Contact Button */}
+                <button className="w-full mt-8 px-6 py-3 bg-[#704FE6] text-white text-[15px] font-medium rounded-full hover:bg-[#5F3DD4] transition-colors flex items-center justify-center gap-2">
+                  Contact Us Lecture
+                  <span className="text-lg">→</span>
+                </button>
+              </div>
             </div>
-          </div>
 
-          {/* Right Content - Details */}
-          <div className="col-span-2">
-            <div className="bg-white p-10 shadow-sm">
-              {/* Name and Role */}
-              <h1 className="text-[30px] font-bold text-[#FC6441] mb-2">
-                {lecturer.name}
-              </h1>
-              <p className="text-[18px] text-[#778BE5] font-poppins mb-6">
-                {lecturer.role}
-              </p>
-
-              {/* Bio */}
-              <p className="text-[16px] text-[#333931] font-poppins leading-relaxed mb-8">
-                {lecturer.bio}
-              </p>
-
-              {/* Education */}
-              <div className="mb-8">
-                <h2 className="text-[22px] font-semibold text-[#000000] mb-4">
-                  Education:
-                </h2>
-                <p className="text-[16px] text-[#333931] font-poppins leading-relaxed">
-                  {lecturer.education}
+            {/* Right Content - Details */}
+            <div className="col-span-2">
+              <div className="bg-white p-10 shadow-sm">
+                {/* Name and Role */}
+                <h1 className="text-[30px] font-bold text-[#FC6441] mb-2">
+                  {lecturer.name}
+                </h1>
+                <p className="text-[18px] text-[#778BE5] font-poppins mb-6">
+                  {lecturer.role}
                 </p>
-              </div>
 
-              {/* Expertise & Skills */}
-              <div>
-                <h2 className="text-[22px] font-semibold text-[#000000] mb-4">
-                  EXPERTISE & SKILLS:
-                </h2>
-                <div className="space-y-3">
-                  {lecturer.expertise.map((skill, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between py-3 border-b border-gray-200"
-                    >
-                      <span className="text-[16px] text-[#333931] font-poppins">
-                        {skill}
-                      </span>
-                    </div>
-                  ))}
+                {/* Bio */}
+                <p className="text-[16px] text-[#333931] font-poppins leading-relaxed mb-8">
+                  {lecturer.bio}
+                </p>
+
+                {/* Education */}
+                <div className="mb-8">
+                  <h2 className="text-[22px] font-semibold text-[#000000] mb-4">
+                    Education:
+                  </h2>
+                  <p className="text-[16px] text-[#333931] font-poppins leading-relaxed">
+                    {lecturer.education}
+                  </p>
+                </div>
+
+                {/* Expertise & Skills */}
+                <div>
+                  <h2 className="text-[22px] font-semibold text-[#000000] mb-4">
+                    EXPERTISE & SKILLS:
+                  </h2>
+                  <div className="space-y-3">
+                    {lecturer.expertise.map((skill, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between py-3 border-b border-gray-200"
+                      >
+                        <span className="text-[16px] text-[#333931] font-poppins">
+                          {skill}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
         </div>
 
         {/* Meet Our Instructor Section */}

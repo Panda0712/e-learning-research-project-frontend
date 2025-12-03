@@ -28,10 +28,10 @@ const Contact = () => {
   return (
     <div className="flex-1 bg-white">
       {/* Breadcrumb */}
-      <div className="bg-[#F2F2F2] px-20 py-6"> 
+      <div className="bg-[#F2F2F2] px-20 py-6">
         <div className="flex items-center gap-2 text-[16px]">
-          <a 
-            href="/" 
+          <a
+            href="/"
             className="text-[#737A86] font-poppins hover:text-[#4D5756] transition-colors cursor-pointer"
           >
             Home
