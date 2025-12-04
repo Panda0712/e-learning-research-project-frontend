@@ -1,27 +1,20 @@
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
 import Footer from "./components/Footer/Footer";
 import Navbar from "./components/Navbar/Navbar";
+import ForgotPasswordPage from "./pages/Auth/ForgotPasswordPage";
+import LoginPage from "./pages/Auth/LoginPage";
+import SignUpPage from "./pages/Auth/SignUpPage";
+import BlogDetail from "./pages/Blogs/BlogDetail";
+import BlogList from "./pages/Blogs/BlogList";
+import Contact from "./pages/Contact/Contact";
 import Course from "./pages/Course/Course";
 import CourseDetail from "./pages/CourseDetail/CourseDetail";
 import CourseLearning from "./pages/CourseLearning/CourseLearning";
 import Homepage from "./pages/Homepage/Homepage";
-import Payment from "./pages/Payment/Payment";
-import ForgotPasswordPage from "./pages/Auth/ForgotPasswordPage";
-import LoginPage from "./pages/Auth/LoginPage";
-import SignUpPage from "./pages/Auth/SignUpPage";
-import BlogDetail from "./pages/Blogs/BlogDetail";
-import BlogList from "./pages/Blogs/BlogList";
-import Contact from "./pages/Contact/Contact";
-import ForgotPasswordPage from "./pages/Auth/ForgotPasswordPage";
-import LoginPage from "./pages/Auth/LoginPage";
-import SignUpPage from "./pages/Auth/SignUpPage";
-import BlogDetail from "./pages/Blogs/BlogDetail";
-import BlogList from "./pages/Blogs/BlogList";
-import Contact from "./pages/Contact/Contact";
-import Homepage from "./pages/Homepage/Homepage";
 import Lecturer from "./pages/Lecturer/Lecturer";
 import LecturerDetails from "./pages/Lecturer/LecturerDetails";
 import Registration from "./pages/Lecturer/Registration";
+import Payment from "./pages/Payment/Payment";
 
 const App = () => {
   return (
