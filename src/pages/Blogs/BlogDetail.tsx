@@ -1,7 +1,7 @@
 import { Calendar, Quote, User } from "lucide-react";
 import { useParams } from "react-router-dom";
 import AuthorBox from "../../components/AuthorBox/AuthorBox";
-import CommentList from "../../components/CommentList/CommentList";
+import CommentList from "../../components/CommentListBlog/CommentListBlog";
 import Sidebar from "../../components/SideBar/SideBar";
 import { blogs } from "../../utils/blogData";
 
