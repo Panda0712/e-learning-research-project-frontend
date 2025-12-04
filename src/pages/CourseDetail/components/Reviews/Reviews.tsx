@@ -1,5 +1,5 @@
 import { Star } from "lucide-react";
-import CommentList from "../../../../components/CommentList/CommentList";
+import CommentList from "../../../../components/CommentListCourse/CommentListCourse";
 import type { Review } from "../../../../types/course.type";
 
 const Reviews = ({

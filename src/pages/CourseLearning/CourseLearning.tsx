@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import CommentForm from "../../components/CommentForm/CommentForm";
-import CommentList from "../../components/CommentList/CommentList";
+import CommentList from "../../components/CommentListCourse/CommentListCourse";
 import { MOCK_COURSES, MOCK_STUDENTS } from "../../utils/mockData";
 import LearningBreadcrumb from "./LearningBreadcrumb/LearningBreadcrumb";
 import type { TabType } from "./LearningTabs/LearningTabs";
