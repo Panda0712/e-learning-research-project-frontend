@@ -1,8 +1,16 @@
-const Button = ({
-  content = "",
+interface ButtonProps {
+  content?: React.ReactNode;
+  onClick?: () => void;
+  type?: "primary" | "secondary";
+  additionalClass?: string;
+}
+
+const Button: React.FC<ButtonProps> = ({
+  content,
   onClick = () => {},
   type = "primary",
   additionalClass = "",
+  ...props
 }) => {
   let buttonBg = "bg-[#f5c362]";
 
@@ -20,9 +28,15 @@ const Button = ({
   return (
     <button
       onClick={onClick}
-      className={`w-32 h-[62px] rounded-[20px] p-2.5 
-      text-[22px] text-[#190d30] font-poppins font-semibold 
-      cursor-pointer hover:opacity-85 duration-300 ease ${buttonBg} ${additionalClass}`}
+      className={`
+        w-32 h-[62px] rounded-[20px] p-2.5 
+        text-[22px] text-[#190d30] font-poppins font-semibold 
+        cursor-pointer hover:opacity-85 duration-300 ease 
+        flex items-center justify-center
+        ${buttonBg} 
+        ${additionalClass}
+      `}
+      {...props}
     >
       {content}
     </button>
