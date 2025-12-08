@@ -16,6 +16,7 @@ export const color = {
   grey5: "#B1B3B6",
   grey6: "#534D5E",
   grey7: "#b1b3b6",
+  grey8: "#2596be",
 
   yellow1: "#f5c362",
 
@@ -25,6 +26,8 @@ export const color = {
   blue1: "#0166FF",
   blue2: "#80C8E8",
   blue3: "#2596be",
+  blue4: "#0F172A",
+  blue5: "#3B82F6",
 
   purple1: "#309DC1",
 };

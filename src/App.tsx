@@ -10,6 +10,20 @@ import Contact from "./pages/Contact/Contact";
 import Course from "./pages/Course/Course";
 import CourseDetail from "./pages/CourseDetail/CourseDetail";
 import CourseLearning from "./pages/CourseLearning/CourseLearning";
+import DashboardBlog from "./pages/Dashboard/Admin/DashboardBlog/DashboardBlog";
+import DashboardCourses from "./pages/Dashboard/Admin/DashboardCourses/DashboardCourses";
+import DashboardInstructorRequests from "./pages/Dashboard/Admin/DashboardInstructorRequests/DashboardInstructorRequests";
+import DashboardPayouts from "./pages/Dashboard/Admin/DashboardPayouts/DashboardPayouts";
+import DashboardTransactions from "./pages/Dashboard/Admin/DashboardTransactions/DashboardTransactions";
+import DashboardUser from "./pages/Dashboard/Admin/DashboardUser/DashboardUser";
+import DashboardLayout from "./pages/Dashboard/Dashboard";
+import DashboardMain from "./pages/Dashboard/DashboardMain/DashboardMain";
+import DashboardAssessment from "./pages/Dashboard/Lecturer/DashboardAssessment/DashboardAssessment";
+import DashboardCommunication from "./pages/Dashboard/Lecturer/DashboardCommunication/DashboardCommunication";
+import DashboardMyCourses from "./pages/Dashboard/Lecturer/DashboardMyCourses/DashboardMyCourses";
+import DashboardMyStudents from "./pages/Dashboard/Lecturer/DashboardMyStudents/DashboardMyStudents";
+import DashboardRevenue from "./pages/Dashboard/Lecturer/DashboardRevenue/DashboardRevenue";
+import DashboardSetting from "./pages/Dashboard/Lecturer/DashboardSetting/DashboardSetting";
 import Homepage from "./pages/Homepage/Homepage";
 import Lecturer from "./pages/Lecturer/Lecturer";
 import LecturerDetails from "./pages/Lecturer/LecturerDetails";
@@ -20,6 +34,47 @@ const App = () => {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Admin Routes */}
+        <Route>
+          <Route path="/dashboard" element={<DashboardLayout />}>
+            {/* Dashboard lecturer */}
+            <Route path="lecturer" index element={<DashboardMain />} />
+            <Route
+              path="lecturer/assessment"
+              element={<DashboardAssessment />}
+            />
+            <Route
+              path="lecturer/communication"
+              element={<DashboardCommunication />}
+            />
+            <Route
+              path="lecturer/my-courses"
+              element={<DashboardMyCourses />}
+            />
+            <Route
+              path="lecturer/my-students"
+              element={<DashboardMyStudents />}
+            />
+            <Route path="lecturer/revenue" element={<DashboardRevenue />} />
+            <Route path="lecturer/setting" element={<DashboardSetting />} />
+
+            {/* Dashboard Admin */}
+            <Route path="admin" element={<DashboardMain />} />
+            <Route path="admin/blog" element={<DashboardBlog />} />
+            <Route path="admin/courses" element={<DashboardCourses />} />
+            <Route
+              path="admin/instructor-requests"
+              element={<DashboardInstructorRequests />}
+            />
+            <Route path="admin/payouts" element={<DashboardPayouts />} />
+            <Route
+              path="admin/transactions"
+              element={<DashboardTransactions />}
+            />
+            <Route path="admin/user" element={<DashboardUser />} />
+          </Route>
+        </Route>
+
         {/* User Routes */}
         <Route
           element={
