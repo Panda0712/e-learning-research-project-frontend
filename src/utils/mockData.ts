@@ -1,4 +1,4 @@
-import type { Course, Student } from "../types/course.type";
+import type { Course, Student, DashboardStudent } from "../types/course.type";
 
 // ========================================================================
 // 1. DANH SÁCH HỌC VIÊN
@@ -660,4 +660,20 @@ export const MOCK_COURSES: Course[] = [
       },
     ],
   },
+];
+
+// ========================================================================
+// 3. DANH SÁCH SINH VIÊN TRONG DASHBOARD (Cần export cái này để Dashboard chạy)
+// ========================================================================
+export const STUDENT_DATA: DashboardStudent[] = [
+  { id: 1, name: "Saron Mekonnen", email: "saron@gmail.com", course: "Python cho Khoa học Dữ liệu và Machine Learning Bootcamp", progress: 100, lastActivity: "June 15, 2025", status: "Completed" },
+  { id: 2, name: "Dawit Tadesse", email: "dawit@gmail.com", course: "Lập trình Web cho người mới bắt đầu: HTML, CSS", progress: 85, lastActivity: "June 12, 2025", status: "Active" },
+  { id: 3, name: "Helen Yilma", email: "helen@gmail.com", course: "Làm chủ Thiết kế Sản phẩm Số: UX Research & UI Design", progress: 42, lastActivity: "June 15, 2025", status: "Active" },
+  { id: 4, name: "Abel Getachew", email: "abel@gmail.com", course: "Làm chủ Thiết kế Sản phẩm Số: UX Research & UI Design", progress: 0, lastActivity: "June 10, 2025", status: "Inactive" },
+  { id: 5, name: "Bethlehem Gashaw", email: "beth@gmail.com", course: "Flutter & Dart - Hướng dẫn toàn tập [Phiên bản 2024]", progress: 76, lastActivity: "June 11, 2025", status: "Active" },
+  { id: 6, name: "Nahom Abebe", email: "nahom@gmail.com", course: "Lập trình Web cho người mới bắt đầu: HTML, CSS", progress: 25, lastActivity: "June 19, 2025", status: "Active" },
+  { id: 7, name: "Mastewal Asfaw", email: "mas@gmail.com", course: "Khóa học An ninh mạng toàn diện: Hackers Exposed!", progress: 58, lastActivity: "June 14, 2025", status: "Active" },
+  { id: 8, name: "Samuel Tefera", email: "sam@gmail.com", course: "Làm chủ Thiết kế Sản phẩm Số: UX Research & UI Design", progress: 0, lastActivity: "June 6, 2025", status: "Inactive" },
+  { id: 9, name: "Liya Habte", email: "liya@gmail.com", course: "Flutter & Dart - Hướng dẫn toàn tập [Phiên bản 2024]", progress: 63, lastActivity: "April 18, 2025", status: "Active" },
+  { id: 10, name: "Robel Demissie", email: "robel@gmail.com", course: "Lập trình viên Unreal Engine 5 C++: Làm game từ A-Z", progress: 100, lastActivity: "June 7, 2025", status: "Completed" },
 ];
