@@ -67,3 +67,29 @@ export interface Course {
   ratingCount?: number;
   viewers?: Student[];
 }
+
+export interface DashboardStudent {
+    id: number | string;
+    name: string;
+    email: string;
+    course: string; 
+    progress: number;
+    lastActivity: string;
+    status: string;
+}
+
+export interface CourseItem {
+    title: string;
+    duration: string;
+    type: string;
+    isPreview: boolean;
+    completed?: boolean;
+}
+
+export interface CourseCurriculum {
+    title: string;
+    lessonsCount: number;
+    duration: number;
+    items: CourseItem[];
+    complete?: boolean; 
+}
