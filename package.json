@@ -12,6 +12,7 @@
   "dependencies": {
     "@reduxjs/toolkit": "^2.9.2",
     "@tailwindcss/vite": "^4.1.17",
+    "@tinymce/tinymce-react": "^6.3.0",
     "axios": "^1.12.2",
     "cross-env": "^10.1.0",
     "date-fns": "^4.1.0",
