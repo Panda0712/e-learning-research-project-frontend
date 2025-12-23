@@ -1,4 +1,5 @@
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
 import Footer from "./components/Footer/Footer";
 import Navbar from "./components/Navbar/Navbar";
 import ForgotPasswordPage from "./pages/Auth/ForgotPasswordPage";
@@ -29,10 +30,21 @@ import Lecturer from "./pages/Lecturer/Lecturer";
 import LecturerDetails from "./pages/Lecturer/LecturerDetails";
 import Registration from "./pages/Lecturer/Registration";
 import Payment from "./pages/Payment/Payment";
+import Profile from "./pages/Profile/Profile";
 
 const App = () => {
   return (
     <BrowserRouter>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        draggable
+      />
+
       <Routes>
         {/* Admin Routes */}
         <Route>
@@ -99,6 +111,11 @@ const App = () => {
 
           {/* Contact */}
           <Route path="/contact" element={<Contact />} />
+
+          {/* Profile */}
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/my-courses" element={<Profile />} />
+          <Route path="/profile/lecturers" element={<Profile />} />
 
           {/* Course */}
           <Route path="/courses" element={<Course />} />
