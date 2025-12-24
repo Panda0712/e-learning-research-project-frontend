@@ -11,6 +11,7 @@ import Contact from "./pages/Contact/Contact";
 import Course from "./pages/Course/Course";
 import CourseDetail from "./pages/CourseDetail/CourseDetail";
 import CourseLearning from "./pages/CourseLearning/CourseLearning";
+import DashboardAdminMain from "./pages/Dashboard/Admin/DashboardAdminMain/DashboardAdminMain";
 import DashboardBlog from "./pages/Dashboard/Admin/DashboardBlog/DashboardBlog";
 import DashboardCourses from "./pages/Dashboard/Admin/DashboardCourses/DashboardCourses";
 import DashboardInstructorRequests from "./pages/Dashboard/Admin/DashboardInstructorRequests/DashboardInstructorRequests";
@@ -18,9 +19,9 @@ import DashboardPayouts from "./pages/Dashboard/Admin/DashboardPayouts/Dashboard
 import DashboardTransactions from "./pages/Dashboard/Admin/DashboardTransactions/DashboardTransactions";
 import DashboardUser from "./pages/Dashboard/Admin/DashboardUser/DashboardUser";
 import DashboardLayout from "./pages/Dashboard/Dashboard";
-import DashboardMain from "./pages/Dashboard/DashboardMain/DashboardMain";
 import DashboardAssessment from "./pages/Dashboard/Lecturer/DashboardAssessment/DashboardAssessment";
 import DashboardCommunication from "./pages/Dashboard/Lecturer/DashboardCommunication/DashboardCommunication";
+import DashboardLecturerMain from "./pages/Dashboard/Lecturer/DashboardLecturerMain/DashboardLecturerMain";
 import DashboardMyCourses from "./pages/Dashboard/Lecturer/DashboardMyCourses/DashboardMyCourses";
 import DashboardMyStudents from "./pages/Dashboard/Lecturer/DashboardMyStudents/DashboardMyStudents";
 import DashboardRevenue from "./pages/Dashboard/Lecturer/DashboardRevenue/DashboardRevenue";
@@ -50,7 +51,7 @@ const App = () => {
         <Route>
           <Route path="/dashboard" element={<DashboardLayout />}>
             {/* Dashboard lecturer */}
-            <Route path="lecturer" index element={<DashboardMain />} />
+            <Route path="lecturer" index element={<DashboardLecturerMain />} />
             <Route
               path="lecturer/assessment"
               element={<DashboardAssessment />}
@@ -71,7 +72,7 @@ const App = () => {
             <Route path="lecturer/setting" element={<DashboardSetting />} />
 
             {/* Dashboard Admin */}
-            <Route path="admin" element={<DashboardMain />} />
+            <Route path="admin" element={<DashboardAdminMain />} />
             <Route path="admin/blog" element={<DashboardBlog />} />
             <Route path="admin/courses" element={<DashboardCourses />} />
             <Route
