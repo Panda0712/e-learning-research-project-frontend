@@ -12,6 +12,7 @@ const CreateBlogModal = ({ isOpen, onClose }: CreateBlogModalProps) => {
   const [category, setCategory] = useState("Web Development");
   const [tags, setTags] = useState(["skill"]);
   const [newTag, setNewTag] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const editorRef = useRef<any>(null);
 
   const handleAddTag = (tag: string) => {
@@ -128,7 +129,7 @@ const CreateBlogModal = ({ isOpen, onClose }: CreateBlogModalProps) => {
               <label className="mb-2 block font-poppins text-xs text-gray-400">
                 Upload Intro Image
               </label>
-              <div className="flex h-[140px] flex-col items-center justify-center rounded-xl border border-gray-200 bg-white">
+              <div className="flex h-35 flex-col items-center justify-center rounded-xl border border-gray-200 bg-white">
                 <svg
                   className="mb-2 h-8 w-8 text-gray-400"
                   fill="none"
@@ -156,7 +157,7 @@ const CreateBlogModal = ({ isOpen, onClose }: CreateBlogModalProps) => {
           </div>
 
           {/* Right Column - Metadata */}
-          <div className="w-[240px] space-y-4">
+          <div className="w-60 space-y-4">
             {/* Language */}
             <div className="relative rounded-xl border border-gray-200 bg-white px-4 py-3">
               <label className="mb-1 block font-poppins text-xs text-gray-400">
@@ -172,8 +173,16 @@ const CreateBlogModal = ({ isOpen, onClose }: CreateBlogModalProps) => {
                 <option>French</option>
               </select>
               <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
-                <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                <svg
+                  className="h-5 w-5 text-gray-400"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
             </div>
@@ -193,8 +202,16 @@ const CreateBlogModal = ({ isOpen, onClose }: CreateBlogModalProps) => {
                 <option>Programming</option>
               </select>
               <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
-                <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                <svg
+                  className="h-5 w-5 text-gray-400"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
             </div>
@@ -229,12 +246,20 @@ const CreateBlogModal = ({ isOpen, onClose }: CreateBlogModalProps) => {
                     }
                   }}
                   placeholder=""
-                  className="min-w-[40px] flex-1 bg-transparent font-poppins text-sm focus:outline-none"
+                  className="min-w-10 flex-1 bg-transparent font-poppins text-sm focus:outline-none"
                 />
               </div>
               <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
-                <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                <svg
+                  className="h-5 w-5 text-gray-400"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
             </div>
