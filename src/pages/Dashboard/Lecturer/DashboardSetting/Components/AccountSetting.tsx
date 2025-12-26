@@ -5,6 +5,7 @@ const AccountSetting = () => {
   const [activeTab] = useState('account');
   const [showCurrentPass, setShowCurrentPass] = useState(false); 
   const [showNewPass, setShowNewPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
 
   const [formData, setFormData] = useState({
     name: 'Bang',
@@ -181,6 +182,23 @@ const AccountSetting = () => {
                                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                                     >
                                         {showNewPass ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Confirm pass */}
+                            <div className="space-y-2">
+                                <label className="text-sm text-gray-500">Confirm New Password</label>
+                                <div className="relative">
+                                     <input 
+                                        type={showConfirmPass ? "text" : "password"} 
+                                        className="w-full border border-gray-200 rounded-lg p-3 pr-10 focus:outline-none focus:border-blue-500 text-sm" 
+                                    />
+                                    <button 
+                                        onClick={() => setShowConfirmPass(!showConfirmPass)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                    >
+                                        {showConfirmPass ? <EyeOff size={18} /> : <Eye size={18} />}
                                     </button>
                                 </div>
                             </div>
