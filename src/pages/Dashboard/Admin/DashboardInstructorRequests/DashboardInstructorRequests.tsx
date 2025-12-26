@@ -99,6 +99,7 @@ const DashboardInstructorRequests = () => {
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [actionType, setActionType] = useState<'approve' | 'reject' | null>(null);
+
   const itemsPerPage = 5;
 
   const filteredData = allRequests.filter(item => 
@@ -119,15 +120,12 @@ const DashboardInstructorRequests = () => {
 
   const confirmAction = () => {
     if (!selectedRequest || !actionType) return;
-
     const newStatus = actionType === 'approve' ? 'Approved' : 'Rejected';
     setAllRequests(prev => prev.map(item => 
       item.id === selectedRequest.id ? { ...item, status: newStatus } : item
     ));
-
     setShowConfirmModal(false);
     if (viewMode === 'detail') setViewMode('list');
-
     if (currentItems.length === 1 && currentPage > 1) {
       setCurrentPage(currentPage - 1);
     }
@@ -151,6 +149,7 @@ const DashboardInstructorRequests = () => {
     <div className="p-6 min-h-screen font-poppins relative" onClick={() => setOpenMenuId(null)}>
       <h1 className="text-2xl font-bold text-gray-800 mb-6">Instructor Requests</h1>
 
+      {/* Tabs */}
       <div className="flex gap-8 border-b border-gray-200 mb-6">
         <button 
           onClick={() => { setActiveTab('requests'); setCurrentPage(1); }} 
@@ -166,9 +165,10 @@ const DashboardInstructorRequests = () => {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden min-h-[500px] flex flex-col justify-between">
+      {/* TABLE */}
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 mb-6">
         <table className="w-full text-left border-collapse">
-          <thead className="bg-gray-100">
+          <thead className="bg-[#EBEBEB]">
             <tr>
               <th className="p-4 text-sm font-semibold text-gray-600">Avatar</th>
               <th className="p-4 text-sm font-semibold text-gray-600">Lecturer</th>
@@ -180,7 +180,7 @@ const DashboardInstructorRequests = () => {
           </thead>
           <tbody>
             {currentItems.map((item) => (
-              <tr key={item.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+              <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                 <td className="p-4"><img src={item.avatar} className="w-10 h-10 rounded-full object-cover" alt="" /></td>
                 <td className="p-4">
                    <div className="font-bold text-gray-800 text-sm">{item.lastName} {item.firstName}</div>
@@ -216,48 +216,47 @@ const DashboardInstructorRequests = () => {
               </tr>
             ))}
             {currentItems.length === 0 && (
-              <tr><td colSpan={6} className="p-10 text-center text-gray-500 font-medium">No requests found in this tab.</td></tr>
+              <tr><td colSpan={6} className="p-10 text-center text-gray-500 font-medium">No requests found.</td></tr>
             )}
           </tbody>
         </table>
-
-        {totalPages > 0 && (
-          <div className="flex justify-center p-6 gap-2 border-t border-gray-100">
-              <button 
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage(p => p - 1)}
-                className="w-8 h-8 flex items-center justify-center rounded border hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              >
-                <ChevronLeft size={16}/>
-              </button>
-              
-              {[...Array(totalPages)].map((_, i) => {
-                const pageNum = i + 1;
-                return (
-                  <button 
-                    key={pageNum}
-                    onClick={() => setCurrentPage(pageNum)}
-                    className={`w-8 h-8 flex items-center justify-center rounded text-sm transition-all duration-200
-                      ${currentPage === pageNum 
-                        ? 'bg-black text-white font-bold shadow-md' 
-                        : 'border border-gray-200 text-gray-600 hover:bg-gray-100'
-                      }`}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
-
-              <button 
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage(p => p + 1)}
-                className="w-8 h-8 flex items-center justify-center rounded border hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              >
-                <ChevronRight size={16}/>
-              </button>
-          </div>
-        )}
       </div>
+
+      {totalPages > 0 && (
+          <div className="flex justify-center mt-6 pb-8">
+              <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm bg-white" aria-label="Pagination">
+                  <button
+                      onClick={() => setCurrentPage(p => p - 1)}
+                      disabled={currentPage === 1}
+                      className="relative inline-flex items-center rounded-l-md px-3 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                      <ChevronLeft size={16} aria-hidden="true" />
+                  </button>
+
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                      <button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ring-1 ring-inset focus:z-20 focus:outline-offset-0
+                              ${currentPage === pageNum 
+                                  ? 'z-10 bg-black text-white ring-black' 
+                                  : 'text-gray-900 ring-gray-300 hover:bg-gray-50' 
+                              }`}
+                      >
+                          {pageNum}
+                      </button>
+                  ))}
+
+                  <button
+                      onClick={() => setCurrentPage(p => p + 1)}
+                      disabled={currentPage === totalPages}
+                      className="relative inline-flex items-center rounded-r-md px-3 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                      <ChevronRight size={16} aria-hidden="true" />
+                  </button>
+              </nav>
+          </div>
+      )}
 
       {showConfirmModal && renderConfirmModal()}
     </div>
