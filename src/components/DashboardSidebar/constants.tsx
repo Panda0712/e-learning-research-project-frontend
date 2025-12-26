@@ -16,6 +16,7 @@ import {
   ClipboardList,
   Receipt,
   FileText,
+  TicketPercent,
 } from "lucide-react";
 
 export const menu = [
@@ -87,5 +88,10 @@ export const menu2 = [
     label: "Blog",
     path: "/dashboard/admin/blog",
     icon: <FileText size={22} />,
+  },
+  {
+    label: "Voucher",
+    path: "/dashboard/admin/vouchers",
+    icon: <TicketPercent size={22} />,
   },
 ];

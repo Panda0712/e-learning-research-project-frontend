@@ -16,6 +16,7 @@ import DashboardInstructorRequests from "./pages/Dashboard/Admin/DashboardInstru
 import DashboardPayouts from "./pages/Dashboard/Admin/DashboardPayouts/DashboardPayouts";
 import DashboardTransactions from "./pages/Dashboard/Admin/DashboardTransactions/DashboardTransactions";
 import DashboardUser from "./pages/Dashboard/Admin/DashboardUser/DashboardUser";
+import DashboardVoucher from "./pages/Dashboard/Admin/DashboardVoucher/DashboardVoucher";
 import DashboardLayout from "./pages/Dashboard/Dashboard";
 import DashboardMain from "./pages/Dashboard/DashboardMain/DashboardMain";
 import DashboardAssessment from "./pages/Dashboard/Lecturer/DashboardAssessment/DashboardAssessment";
@@ -72,6 +73,7 @@ const App = () => {
               element={<DashboardTransactions />}
             />
             <Route path="admin/user" element={<DashboardUser />} />
+            <Route path="admin/vouchers" element={<DashboardVoucher />} />
           </Route>
         </Route>
 
