@@ -14,3 +14,8 @@ export interface StudentSubmission {
   score: number;
   feedback: string | null;
 }
+
+export interface RevenueStatsProps {
+  onWithdrawClick: () => void;
+  availableBalance: number;
+}
