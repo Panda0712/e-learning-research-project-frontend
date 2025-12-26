@@ -79,13 +79,13 @@ const DashboardPayouts = () => {
       {/* TABLE */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-6 border border-gray-100"> 
         <table className="w-full text-left border-collapse">
-          <thead className="bg-gray-50/50">
+          <thead className="bg-[#EBEBEB]">
             <tr>
-              <th className="p-4 text-sm font-semibold text-gray-600">Avatar</th>
-              <th className="p-4 text-sm font-semibold text-gray-600">Lecturer</th>
-              <th className="p-4 text-sm font-semibold text-gray-600">Amount</th>
-              <th className="p-4 text-sm font-semibold text-gray-600">Date</th>
-              <th className="p-4 text-sm font-semibold text-gray-600">Transaction ID</th> 
+              <th className="p-4 text-sm font-bold text-gray-800 border-r border-white last:border-r-0">Avatar</th>
+              <th className="p-4 text-sm font-bold text-gray-800 border-r border-white last:border-r-0">Lecturer</th>
+              <th className="p-4 text-sm font-bold text-gray-800 border-r border-white last:border-r-0">Amount</th>
+              <th className="p-4 text-sm font-bold text-gray-800 border-r border-white last:border-r-0">Date</th>
+              <th className="p-4 text-sm font-bold text-gray-800">Transaction ID</th> 
             </tr>
           </thead>
           <tbody>
@@ -112,7 +112,6 @@ const DashboardPayouts = () => {
       {totalPages > 0 && (
           <div className="flex justify-center mt-6">
               <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm bg-white" aria-label="Pagination">
-
                   <button
                       onClick={goToPrev}
                       disabled={currentPage === 1}
@@ -120,7 +119,7 @@ const DashboardPayouts = () => {
                   >
                       <ChevronLeft size={16} aria-hidden="true" />
                   </button>
-
+                  
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
                       <button
                           key={pageNum}
