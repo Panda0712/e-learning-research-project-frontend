@@ -1,4 +1,5 @@
-import type { Course, Student } from "../types/course.type";
+import type { Course, Student, DashboardStudent } from "../types/course.type";
+import type { Transaction } from "../types/transaction.type";
 
 // ========================================================================
 // 1. DANH SÁCH HỌC VIÊN
@@ -660,4 +661,117 @@ export const MOCK_COURSES: Course[] = [
       },
     ],
   },
+];
+
+// ========================================================================
+// 3. DANH SÁCH SINH VIÊN TRONG DASHBOARD (Cần export cái này để Dashboard chạy)
+// ========================================================================
+export const STUDENT_DATA: DashboardStudent[] = [
+  { id: 1, name: "Saron Mekonnen", email: "saron@gmail.com", course: "Python cho Khoa học Dữ liệu và Machine Learning Bootcamp", progress: 100, lastActivity: "June 15, 2025", status: "Completed" },
+  { id: 2, name: "Dawit Tadesse", email: "dawit@gmail.com", course: "Lập trình Web cho người mới bắt đầu: HTML, CSS", progress: 85, lastActivity: "June 12, 2025", status: "Active" },
+  { id: 3, name: "Helen Yilma", email: "helen@gmail.com", course: "Làm chủ Thiết kế Sản phẩm Số: UX Research & UI Design", progress: 42, lastActivity: "June 15, 2025", status: "Active" },
+  { id: 4, name: "Abel Getachew", email: "abel@gmail.com", course: "Làm chủ Thiết kế Sản phẩm Số: UX Research & UI Design", progress: 0, lastActivity: "June 10, 2025", status: "Inactive" },
+  { id: 5, name: "Bethlehem Gashaw", email: "beth@gmail.com", course: "Flutter & Dart - Hướng dẫn toàn tập [Phiên bản 2024]", progress: 76, lastActivity: "June 11, 2025", status: "Active" },
+  { id: 6, name: "Nahom Abebe", email: "nahom@gmail.com", course: "Lập trình Web cho người mới bắt đầu: HTML, CSS", progress: 25, lastActivity: "June 19, 2025", status: "Active" },
+  { id: 7, name: "Mastewal Asfaw", email: "mas@gmail.com", course: "Khóa học An ninh mạng toàn diện: Hackers Exposed!", progress: 58, lastActivity: "June 14, 2025", status: "Active" },
+  { id: 8, name: "Samuel Tefera", email: "sam@gmail.com", course: "Làm chủ Thiết kế Sản phẩm Số: UX Research & UI Design", progress: 0, lastActivity: "June 6, 2025", status: "Inactive" },
+  { id: 9, name: "Liya Habte", email: "liya@gmail.com", course: "Flutter & Dart - Hướng dẫn toàn tập [Phiên bản 2024]", progress: 63, lastActivity: "April 18, 2025", status: "Active" },
+  { id: 10, name: "Robel Demissie", email: "robel@gmail.com", course: "Lập trình viên Unreal Engine 5 C++: Làm game từ A-Z", progress: 100, lastActivity: "June 7, 2025", status: "Completed" },
+];
+
+// ========================================================================
+// 4. DANH SÁCH GIAO DỊCH (TRANSACTIONS)
+// ========================================================================
+export const MOCK_TRANSACTIONS: Transaction[] = [
+    {
+        id: "#TXN-192837",
+        studentName: "Saron Mekonnen",
+        studentEmail: "saronmekonnen@gmail.com",
+        courseTitle: "UI Design Basics",
+        instructorName: "John Doe",
+        amount: 50,
+        payoutMethod: "MoMo - 0901234567 - NGUYEN VAN A",
+        date: "June 15, 2025",
+        status: "Successful",
+        bankRef: "99283712",
+        subtotal: 100,
+        discount: 50,
+        discountCode: "SALE50",
+        paymentMethodDetail: "MoMo (**** 4242)"
+    },
+    {
+        id: "#TXN-192838",
+        studentName: "Dawit Tadesse",
+        studentEmail: "dawit@gmail.com",
+        courseTitle: "Figma for Beginners",
+        instructorName: "Jane Smith",
+        amount: 50,
+        payoutMethod: "MoMo - 0901234567 - NGUYEN VAN A",
+        date: "June 15, 2025",
+        status: "Successful",
+        bankRef: "88273611",
+        subtotal: 50,
+        discount: 0,
+        paymentMethodDetail: "Visa (**** 1234)"
+    },
+    {
+        id: "#TXN-192839",
+        studentName: "Abel Getachew",
+        studentEmail: "abel@gmail.com",
+        courseTitle: "Typography Fundamentals",
+        instructorName: "Robert Fox",
+        amount: 100,
+        payoutMethod: "MoMo - 0901234567 - NGUYEN VAN A",
+        date: "June 15, 2025",
+        status: "Refunded",
+        bankRef: "77263544",
+        subtotal: 100,
+        discount: 0,
+        paymentMethodDetail: "MoMo (**** 9999)"
+    },
+    {
+        id: "#TXN-192840",
+        studentName: "Mastewal Asfaw",
+        studentEmail: "mastewal@gmail.com",
+        courseTitle: "Designing for Mobile Apps",
+        instructorName: "Leslie Alexander",
+        amount: 100,
+        payoutMethod: "MoMo - 0901234567 - NGUYEN VAN A",
+        date: "June 15, 2025",
+        status: "Failed",
+        bankRef: "N/A",
+        subtotal: 100,
+        discount: 0,
+        paymentMethodDetail: "MasterCard (**** 5678)"
+    },
+    {
+        id: "#TXN-192841",
+        studentName: "Samuel Tefera",
+        studentEmail: "samuel@gmail.com",
+        courseTitle: "Accessibility in Design",
+        instructorName: "Kristin Watson",
+        amount: 50,
+        payoutMethod: "MoMo - 0901234567 - NGUYEN VAN A",
+        date: "June 15, 2025",
+        status: "Refunded",
+        bankRef: "66253499",
+        subtotal: 50,
+        discount: 0,
+        paymentMethodDetail: "MoMo (**** 1111)"
+    },
+    {
+        id: "#TXN-192842",
+        studentName: "Nahom Abebe",
+        studentEmail: "nahom@gmail.com",
+        courseTitle: "HTML & CSS for Designers",
+        instructorName: "Cody Fisher",
+        amount: 100,
+        payoutMethod: "MoMo - 0901234567 - NGUYEN VAN A",
+        date: "June 16, 2025",
+        status: "Successful",
+        bankRef: "55243388",
+        subtotal: 100,
+        discount: 0,
+        paymentMethodDetail: "Visa (**** 8888)"
+    },
 ];
