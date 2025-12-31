@@ -13,6 +13,8 @@ import CourseDetail from "./pages/CourseDetail/CourseDetail";
 import CourseLearning from "./pages/CourseLearning/CourseLearning";
 import DashboardAdminMain from "./pages/Dashboard/Admin/DashboardAdminMain/DashboardAdminMain";
 import DashboardBlog from "./pages/Dashboard/Admin/DashboardBlog/DashboardBlog";
+import AdminCourseDetail from "./pages/Dashboard/Admin/DashboardCourses/CourseDetail/AdminCourseDetail";
+import CourseDetailChapter from "./pages/Dashboard/Admin/DashboardCourses/CourseDetailChapter/CourseDetailChapter";
 import DashboardCourses from "./pages/Dashboard/Admin/DashboardCourses/DashboardCourses";
 import DashboardInstructorRequests from "./pages/Dashboard/Admin/DashboardInstructorRequests/DashboardInstructorRequests";
 import DashboardPayouts from "./pages/Dashboard/Admin/DashboardPayouts/DashboardPayouts";
@@ -120,6 +122,11 @@ const App = () => {
             <Route path="admin" element={<DashboardAdminMain />} />
             <Route path="admin/blog" element={<DashboardBlog />} />
             <Route path="admin/courses" element={<DashboardCourses />} />
+            <Route path="admin/courses/:id" element={<AdminCourseDetail />} />
+            <Route
+              path="/dashboard/admin/courses/:courseId/chapter/:chapterId"
+              element={<CourseDetailChapter />}
+            />
             <Route
               path="admin/instructor-requests"
               element={<DashboardInstructorRequests />}
