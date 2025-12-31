@@ -1,11 +1,23 @@
 import React from "react";
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+type BaseProps = {
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
-  variant?: "outline" | "underline";
+  variant?: "outline" | "underline" | "no-line";
   containerClass?: string;
-}
+};
+
+type InputAsInput = BaseProps &
+  React.InputHTMLAttributes<HTMLInputElement> & {
+    inputType?: "input";
+  };
+
+type InputAsTextarea = BaseProps &
+  React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
+    inputType: "textarea";
+  };
+
+type InputProps = InputAsInput | InputAsTextarea;
 
 const Input = ({
   leftIcon,
@@ -13,6 +25,7 @@ const Input = ({
   variant = "underline",
   containerClass = "",
   className = "",
+  inputType,
   ...props
 }: InputProps) => {
   const baseStyle =
@@ -21,7 +34,17 @@ const Input = ({
   const variantStyle =
     variant === "outline"
       ? "border border-gray-300 rounded-lg px-3 focus:border-black"
-      : "border-b border-gray-300 focus:border-black px-0"; // underline
+      : variant === "underline"
+      ? "border-b border-gray-300 focus:border-black px-0"
+      : "outline-none px-0 py-0!";
+
+  const commonClass = `
+    ${baseStyle}
+    ${variantStyle}
+    ${leftIcon ? "pl-8" : ""}
+    ${rightIcon ? "pr-10" : ""}
+    ${className}
+  `;
 
   return (
     <div className={`relative flex items-center ${containerClass}`}>
@@ -31,16 +54,17 @@ const Input = ({
         </div>
       )}
 
-      <input
-        className={`
-          ${baseStyle} 
-          ${variantStyle}
-          ${leftIcon ? "pl-8" : ""} 
-          ${rightIcon ? "pr-10" : ""}
-          ${className}
-        `}
-        {...props}
-      />
+      {inputType === "textarea" ? (
+        <textarea
+          className={`${commonClass} resize-none min-h-13`}
+          {...(props as React.TextareaHTMLAttributes<HTMLTextAreaElement>)}
+        />
+      ) : (
+        <input
+          className={commonClass}
+          {...(props as React.InputHTMLAttributes<HTMLInputElement>)}
+        />
+      )}
 
       {rightIcon && (
         <div className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black cursor-pointer transition-colors">
