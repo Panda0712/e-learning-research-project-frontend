@@ -41,3 +41,17 @@ export const color = {
 
   purple1: "#309DC1",
 };
+
+export const MAX_VIDEO_SIZE = 200 * 1024 * 1024; // 200MB
+export const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+export const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+export const MAX_SIZE_GB = 4;
+export const MIN_VIDEO_HEIGHT = 720;
+
+export const VIDEO_TYPES = ["video/mp4", "video/quicktime"]; // mp4, mov
+export const IMAGE_TYPES = ["image/jpeg", "image/png"];
+export const FILE_TYPES = [
+  "application/pdf",
+  "application/msword", // .doc
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // docx
+];

@@ -5,7 +5,7 @@ interface PaginationProps {
   currentPage: number;
   totalPages: number;
   onChange: (page: number) => void;
-  type?: "primary" | "secondary";
+  type?: "primary" | "secondary" | "dashboard";
 }
 
 const PrimaryRender = ({
@@ -100,6 +100,52 @@ const SecondaryRender = ({
   );
 };
 
+const DashboardRender = ({
+  currentPage,
+  totalPages,
+  onChange,
+}: PaginationProps) => {
+  return (
+    <div className="flex items-center justify-center mt-8">
+      <button
+        disabled={currentPage == 1}
+        onClick={() => onChange(currentPage - 1)}
+        className="bg-white w-10.75 h-10.75 flex items-center justify-center
+         rounded-tl rounded-bl border border-[#E2E8F0] disabled:opacity-40 cursor-pointer"
+      >
+        <LeftIcon className="font-semibold" />
+      </button>
+
+      {Array.from({ length: totalPages }).map((_, i) => {
+        const page = i + 1;
+        return (
+          <button
+            key={page}
+            onClick={() => onChange(page)}
+            className={`bg-white cursor-pointer w-10.75 h-10.75 flex items-center justify-center 
+                border border-[#E2E8F0] font-semibold text-[#334155] ${
+                  page == currentPage
+                    ? "bg-gray-100 border-black"
+                    : "hover:bg-gray-100"
+                }`}
+          >
+            {page}
+          </button>
+        );
+      })}
+
+      <button
+        disabled={currentPage == totalPages}
+        onClick={() => onChange(currentPage + 1)}
+        className="bg-white w-10.75 h-10.75 flex items-center justify-center
+         rounded-tr rounded-br border border-[#E2E8F0] disabled:opacity-40 cursor-pointer"
+      >
+        <RightIcon className="font-semibold" />
+      </button>
+    </div>
+  );
+};
+
 const Pagination = ({
   currentPage,
   totalPages,
@@ -112,8 +158,14 @@ const Pagination = ({
       totalPages={totalPages}
       onChange={onChange}
     />
-  ) : (
+  ) : type === "secondary" ? (
     <SecondaryRender
+      currentPage={currentPage}
+      totalPages={totalPages}
+      onChange={onChange}
+    />
+  ) : (
+    <DashboardRender
       currentPage={currentPage}
       totalPages={totalPages}
       onChange={onChange}

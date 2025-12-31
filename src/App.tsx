@@ -21,6 +21,8 @@ import DashboardUser from "./pages/Dashboard/Admin/DashboardUser/DashboardUser";
 import DashboardLayout from "./pages/Dashboard/Dashboard";
 import DashboardAssessment from "./pages/Dashboard/Lecturer/DashboardAssessment/DashboardAssessment";
 import DashboardCommunication from "./pages/Dashboard/Lecturer/DashboardCommunication/DashboardCommunication";
+import DashboardCreateCourse from "./pages/Dashboard/Lecturer/DashboardCreateCourse/DashboardCreateCourse";
+import DashboardCreateEditCurriculum from "./pages/Dashboard/Lecturer/DashboardCreateCourse/DashboardCurriculum/DashboardCreateEditCurriculum/DashboardCreateEditCurriculum";
 import DashboardLecturerMain from "./pages/Dashboard/Lecturer/DashboardLecturerMain/DashboardLecturerMain";
 import DashboardMyCourses from "./pages/Dashboard/Lecturer/DashboardMyCourses/DashboardMyCourses";
 import DashboardMyStudents from "./pages/Dashboard/Lecturer/DashboardMyStudents/DashboardMyStudents";
@@ -64,6 +66,48 @@ const App = () => {
               path="lecturer/my-courses"
               element={<DashboardMyCourses />}
             />
+
+            <Route
+              path="lecturer/my-courses/create-course/commission"
+              element={<DashboardCreateCourse />}
+            />
+            <Route
+              path="lecturer/my-courses/create-course/curriculum"
+              element={<DashboardCreateCourse />}
+            />
+            <Route
+              path="lecturer/my-courses/create-course/curriculum/edit-curriculum/:id"
+              element={<DashboardCreateEditCurriculum />}
+            />
+            <Route
+              path="lecturer/my-courses/create-course/curriculum/create-curriculum"
+              element={<DashboardCreateEditCurriculum />}
+            />
+            <Route
+              path="lecturer/my-courses/create-course/customer"
+              element={<DashboardCreateCourse />}
+            />
+            <Route
+              path="lecturer/my-courses/create-course/detail"
+              element={<DashboardCreateCourse />}
+            />
+            <Route
+              path="lecturer/my-courses/create-course/promotion"
+              element={<DashboardCreateCourse />}
+            />
+            <Route
+              path="lecturer/my-courses/create-course/promotion/edit-coupon/:id"
+              element={<DashboardCreateCourse />}
+            />
+            <Route
+              path="lecturer/my-courses/create-course/promotion/create-coupon"
+              element={<DashboardCreateCourse />}
+            />
+            <Route
+              path="lecturer/my-courses/create-course/reviews"
+              element={<DashboardCreateCourse />}
+            />
+
             <Route
               path="lecturer/my-students"
               element={<DashboardMyStudents />}
