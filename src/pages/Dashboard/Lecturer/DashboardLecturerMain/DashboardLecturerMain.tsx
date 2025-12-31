@@ -104,35 +104,6 @@ const DashboardLecturerMain = () => {
         </div>
 
         <div className="h-80">
-          {/* {isLoading || !selectedYear ? (
-            <ChartSkeleton />
-          ) : (!isLoading && !engagementByYear[selectedYear]) ||
-            !selectedYear ? (
-            <p className="text-[22px] font-bold text-center mt-12">
-              No data found!
-            </p>
-          ) : (
-            <ResponsiveContainer
-              className="mt-4 border border-[#ebebeb] outline-none"
-              width="100%"
-              height="100%"
-            >
-              <BarChart
-                data={engagementByYear[selectedYear]}
-                barCategoryGap={2}
-              >
-                <XAxis dataKey="month" axisLine={false} tickLine={false} />
-                <YAxis axisLine={false} tickLine={false} width={40} />
-                <Tooltip cursor={{ fill: "transparent" }} />
-                <Bar
-                  dataKey="value"
-                  fill="#FFD400"
-                  radius={[8, 8, 0, 0]}
-                  animationDuration={600}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          )} */}
           {isLoading || !selectedYear ? (
             <ChartSkeleton />
           ) : (!isLoading && !engagementByYear[selectedYear]) ||
