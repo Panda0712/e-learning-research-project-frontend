@@ -31,7 +31,7 @@ const DashboardSidebar = ({ open, setOpen }: DashboardSidebarProps) => {
       >
         {open && (
           <div className="flex items-end cursor-pointer">
-            <img className="w-[34px] h-[34px] z-10" src={Logo} alt="Logo" />
+            <img className="w-8.5 h-8.5 z-10" src={Logo} alt="Logo" />
             <h5 className="font-bold text-[15px] leading-none -ml-2 z-0">
               Learn
             </h5>
@@ -50,12 +50,12 @@ const DashboardSidebar = ({ open, setOpen }: DashboardSidebarProps) => {
       {/* Menu */}
       <nav className="flex-1 mt-3">
         {menuList.map((item) => (
-          <Link to={item.path}>
+          <Link key={item.path} to={item.path}>
             <div
               key={item.label}
               className={`flex items-center px-4 py-3 cursor-pointer border-l-2 
               border-[#0f172a] hover:text-[#3B82F6] hover:border-l-2 hover:border-[#3B82F6] ${
-                !open ? "justify-center gap-0 h-[60px]" : "gap-4"
+                !open ? "justify-center gap-0 h-15" : "gap-4"
               } ${
                 location.pathname === item.path &&
                 "border-l-2 border-[#3B82F6] text-[#3B82F6]"
