@@ -1,10 +1,10 @@
 import { useState } from "react";
-import Pagination from "../../components/Pagination/Pagination";
+import CourseHeader from "../../components/course/CourseHeader";
+import CourseList from "../../components/course/CourseList";
+import Sidebar from "../../components/course/CourseSidebar";
+import Pagination from "../../components/ui/Pagination";
 import { color } from "../../utils/constants";
 import { MOCK_COURSES } from "../../utils/mockData";
-import CourseHeader from "./CourseHeader/CourseHeader";
-import CourseList from "./CourseList/CourseList";
-import Sidebar from "./Sidebar/Sidebar";
 
 const CoursePage = () => {
   const [currentPage, setCurrentPage] = useState(1);

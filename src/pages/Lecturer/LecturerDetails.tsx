@@ -226,7 +226,7 @@ const LecturerDetails = () => {
                   <img
                     src={instructor.image}
                     alt={instructor.name}
-                    className="w-full h-[200px] object-cover"
+                    className="w-full h-50 object-cover"
                   />
                   {/* Share Button */}
                   <button className="absolute bottom-4 right-4 w-10 h-10 bg-[#FC6441] rounded-md flex items-center justify-center hover:bg-[#E5543A] transition-colors">

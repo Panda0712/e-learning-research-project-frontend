@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom"; // 1. Import useParams
+import Details from "../../components/payment/Details";
+import Method from "../../components/payment/Method";
+import QRCode from "../../components/payment/QRCode";
+import Success from "../../components/payment/Success";
 import { MOCK_COURSES } from "../../utils/mockData"; // 2. Import Mock Data
-import Details from "./components/Details";
-import Method from "./components/Method";
-import QRCode from "./components/QRCode";
-import Success from "./components/Success";
 
 // Import các bước con
 
