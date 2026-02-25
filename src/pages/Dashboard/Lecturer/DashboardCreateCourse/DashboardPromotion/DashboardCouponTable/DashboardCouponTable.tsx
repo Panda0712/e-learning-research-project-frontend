@@ -7,7 +7,7 @@ import {
 import { useEffect, useState } from "react";
 import PencilIcon from "../../../../../../assets/pencil.svg?react";
 import TrashIcon from "../../../../../../assets/trash.svg?react";
-import TableSkeleton from "../../../../../../components/TableSkeleton/TableSkeleton";
+import TableSkeleton from "../../../../../../components/skeleton/TableSkeleton";
 import ToggleSwitch from "../../../../../../components/ToggleSwitch/ToggleSwitch";
 import { columns } from "./columns";
 
@@ -54,8 +54,8 @@ const DashboardCouponTable = ({ data }: TableProps) => {
               ...item,
               status: item.status === "active" ? "expired" : "active",
             }
-          : item
-      )
+          : item,
+      ),
     );
   };
 
@@ -83,7 +83,7 @@ const DashboardCouponTable = ({ data }: TableProps) => {
                       <th key={header.id} className={`px-4 py-3 text-left`}>
                         {flexRender(
                           header.column.columnDef.header,
-                          header.getContext()
+                          header.getContext(),
                         )}
                       </th>
                     ))}
@@ -106,7 +106,7 @@ const DashboardCouponTable = ({ data }: TableProps) => {
                       >
                         {flexRender(
                           cell.column.columnDef.cell,
-                          cell.getContext()
+                          cell.getContext(),
                         )}
                       </td>
                     ))}

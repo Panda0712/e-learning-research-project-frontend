@@ -1,6 +1,6 @@
 import { Bell } from "lucide-react";
 import { useEffect, useState } from "react";
-import ChartSkeleton from "../../../../components/ChartSkeleton/ChartSkeleton";
+import ChartSkeleton from "../../../../components/skeleton/ChartSkeleton";
 import DashboardBarChart from "../../../../components/DashboardBarChart/DashboardBarChart";
 import DashboardStatistic from "../../../../components/DashboardStatistic/DashboardStatistic";
 import DashboardTopCourses from "../../../../components/DashboardTopCourses/DashboardTopCourses";

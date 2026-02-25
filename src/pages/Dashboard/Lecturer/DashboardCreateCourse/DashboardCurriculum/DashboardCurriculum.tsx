@@ -3,7 +3,7 @@ import Button from "../../../../../components/Button/Button";
 import { mockCurriculumData } from "../../../../../types/curriculum.type";
 import DashboardCurriculumTable from "./DashboardCurriculumTable/DashboardCurriculumTable";
 import { Plus } from "lucide-react";
-import TableSkeleton from "../../../../../components/TableSkeleton/TableSkeleton";
+import TableSkeleton from "../../../../../components/skeleton/TableSkeleton";
 import DashboardCreateCurriculumModal from "./DashboardCreateCurriculumModal/DashboardCreateCurriculumModal";
 
 const DashboardCurriculum = () => {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { usePagination } from "../../hooks/usePagination";
-import CourseCardSkeleton from "../../components/CourseCardSkeleton/CourseCardSkeleton";
+import CourseCardSkeleton from "../../components/skeleton/CourseCardSkeleton";
 import CourseCard from "../../components/CourseCard/CourseCard";
 import Pagination from "../../components/Pagination/Pagination";
 

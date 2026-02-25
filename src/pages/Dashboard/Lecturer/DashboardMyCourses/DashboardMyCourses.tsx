@@ -1,7 +1,7 @@
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import Button from "../../../../components/Button/Button";
-import TableSkeleton from "../../../../components/TableSkeleton/TableSkeleton";
+import TableSkeleton from "../../../../components/skeleton/TableSkeleton";
 import { type CourseStatus } from "./DashboardCoursesTable/DashboardCoursesTable";
 import DashboardCoursesTableV2 from "./DashboardCoursesTableV2/DashboardCoursesTableV2";
 import DashboardFilter from "./DashboardFilter/DashboardFilter";

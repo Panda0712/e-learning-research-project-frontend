@@ -7,7 +7,7 @@ import {
 import PaginationV2 from "../../../../../components/PaginationV2/PaginationV2";
 import { columns } from "./columns";
 import { useEffect, useState } from "react";
-import TableSkeleton from "../../../../../components/TableSkeleton/TableSkeleton";
+import TableSkeleton from "../../../../../components/skeleton/TableSkeleton";
 
 export interface CustomerData {
   id: number;
@@ -105,7 +105,7 @@ const DashboardCustomer = () => {
                       <th key={header.id} className={`px-4 py-3`}>
                         {flexRender(
                           header.column.columnDef.header,
-                          header.getContext()
+                          header.getContext(),
                         )}
                       </th>
                     ))}
@@ -123,7 +123,7 @@ const DashboardCustomer = () => {
                       >
                         {flexRender(
                           cell.column.columnDef.cell,
-                          cell.getContext()
+                          cell.getContext(),
                         )}
                       </td>
                     ))}

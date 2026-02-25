@@ -1,7 +1,7 @@
 import { Check, ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import { HiBars3BottomRight } from "react-icons/hi2";
-import ChartSkeleton from "../../../../components/ChartSkeleton/ChartSkeleton";
+import ChartSkeleton from "../../../../components/skeleton/ChartSkeleton";
 import DashboardBarChart from "../../../../components/DashboardBarChart/DashboardBarChart";
 import DashboardLineChart from "../../../../components/DashboardLineChart/DashboardLineChart";
 import DashboardStatistic from "../../../../components/DashboardStatistic/DashboardStatistic";

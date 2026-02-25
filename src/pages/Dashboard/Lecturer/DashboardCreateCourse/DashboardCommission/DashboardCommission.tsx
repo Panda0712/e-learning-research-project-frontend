@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { HiBars3BottomRight } from "react-icons/hi2";
 import GraphIcon from "../../../../../assets/graph.svg?react";
 import Input from "../../../../../components/Input/Input";
-import TableSkeleton from "../../../../../components/TableSkeleton/TableSkeleton";
+import TableSkeleton from "../../../../../components/skeleton/TableSkeleton";
 import DashboardCommissionTable from "./DashboardCommissionTable/DashboardCommissionTable";
 
 type DateFilter = "all" | "last-month" | "this-month" | "this-year" | "custom";
