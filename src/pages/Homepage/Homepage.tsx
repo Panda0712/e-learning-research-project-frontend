@@ -1,9 +1,9 @@
-import Banner from "./Banner/Banner";
-import Benefits from "./Benefits/Benefits";
-import Commitment from "./Commitment/Commitment";
-import Feedbacks from "./Feedbacks/Feedbacks";
-import Introduce from "./Introduce/Introduce";
-import Popular from "./Popular/Popular";
+import Banner from "../../components/homepage/Banner";
+import Benefits from "../../components/homepage/Benefits";
+import Commitment from "../../components/homepage/Commitment";
+import Feedbacks from "../../components/homepage/Feedbacks";
+import Introduce from "../../components/homepage/Introduce";
+import Popular from "../../components/homepage/Popular";
 
 const Homepage = () => {
   return (

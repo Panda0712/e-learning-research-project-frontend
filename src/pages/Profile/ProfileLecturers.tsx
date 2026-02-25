@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { usePagination } from "../../hooks/usePagination";
-import Pagination from "../../components/Pagination/Pagination";
+import LecturerCard from "../../components/cards/LecturerCard";
 import LecturerCardSkeleton from "../../components/skeleton/LecturerCardSkeleton";
-import LecturerCard from "../../components/LecturerCard/LecturerCard";
+import Pagination from "../../components/ui/Pagination";
+import { usePagination } from "../../hooks/usePagination";
 
 const mockLecturers = Array.from({ length: 18 }, (_, i) => ({
   id: i + 1,

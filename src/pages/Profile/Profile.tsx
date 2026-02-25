@@ -1,9 +1,9 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import AvatarUploader from "./AvatarUploader/AvatarUploader";
-import PersonalInfoCard from "./PersonalInfoCard/PersonalInfoCard";
+import AvatarUploader from "../../components/profile/AvatarUploader";
+import PersonalInfoCard from "../../components/profile/PersonalInfoCard";
+import SecuritySettingCard from "../../components/profile/SecuritySettingCard";
 import ProfileLecturers from "./ProfileLecturers";
 import ProfileMyCourses from "./ProfileMyCourses";
-import SecuritySettingCard from "./SecuritySettingCard/SecuritySettingCard";
 import PersonalIcon from "/icons/avatar.png";
 import BookIcon from "/icons/book.png";
 import TeacherIcon from "/icons/teacher.png";
