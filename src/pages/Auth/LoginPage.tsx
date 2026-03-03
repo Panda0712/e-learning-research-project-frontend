@@ -1,12 +1,26 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
+import { useForm } from "react-hook-form";
 import { FaFacebookF } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
-import { Link } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "react-toastify";
+import { loginUserAPI } from "../../redux/activeUser/activeUserSlice";
 import { removeVietnameseMarks } from "../../utils/stringUtils";
 
 const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState("");
+
+  const {register, handleSubmit, formState: {errors}} = useForm();
+
+  const [searchParams] = useSearchParams();
+  const registeredEmail = searchParams.get("registeredEmail");
+  const verifiedEmail = searchParams.get("verifiedEmail");
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -18,6 +32,23 @@ const LoginPage: React.FC = () => {
     setShowPassword((prev) => !prev);
   };
 
+  const onSubmit = (data: {
+    email: string;
+    password: string;
+  })=>{
+    const {email, password} = data;
+    toast
+      .promise(dispatch(loginUserAPI({email, password})), {
+        pending: "Is logging in...",
+      })
+      .then((res:any) => {
+        if(!res.error){
+          navigate("/");
+          toast.success("Login successfully!");
+        }
+      });
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
       <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-xl">
@@ -26,7 +57,20 @@ const LoginPage: React.FC = () => {
           Login to access your account
         </p>
 
-        <form>
+        <div className="my-4">
+          {verifiedEmail && <p className="max-w-75 mx-auto text-center">
+              Your email: <span className="text-green-500">{verifiedEmail}</span> 
+              has been verified. Please login to our service.
+            </p>}
+
+          {registeredEmail && <p className="max-w-75 mt-4 mx-auto text-center">
+              Verify email link has been sent to:{" "}
+            <span className="text-green-500">{registeredEmail}</span>. 
+            Please verify to access to next step.
+          </p>}
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-4">
             <label
               htmlFor="email"

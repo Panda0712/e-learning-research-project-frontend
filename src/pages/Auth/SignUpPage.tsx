@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import { FaFacebookF } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { removeVietnameseMarks } from "../../utils/stringUtils";
+import { useForm } from "react-hook-form";
+import { toast } from "react-toastify";
+import { authService } from "../../apis/auth";
 
 const SignUpPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -12,6 +15,15 @@ const SignUpPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rePassword, setRePassword] = useState("");
+
+  const {
+    register, 
+    watch, 
+    handleSubmit, 
+    formState: {errors}, 
+    reset} = useForm();
+ 
+  const navigate = useNavigate();
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -25,6 +37,22 @@ const SignUpPage: React.FC = () => {
     setRePassword(cleanedValue);
   };
 
+  const onSubmit = (data: {
+    fullName: string;
+    email: string;
+    password: string;
+  })=>{
+    const {fullName, email, password} = data;
+    toast
+      .promise(authService.registerUserAPI({fullName, email, password}),{
+        pending: "Signing up...",
+      })
+      .then((user)=>{
+        navigate(`/auth/login?registeredEmail=${user.email}`);
+        reset();
+      })
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
       <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-xl">
@@ -35,7 +63,7 @@ const SignUpPage: React.FC = () => {
           Join for execute access
         </p>
 
-        <form>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-4">
             <label
               htmlFor="fullName"
