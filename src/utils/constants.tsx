@@ -188,3 +188,12 @@ export const FILE_TYPES = [
   "application/msword", // .doc
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // docx
 ];
+
+let apiRoot = "http://localhost:8017";
+if (import.meta.env.VITE_BUILD_MODE === "dev") {
+  apiRoot = "http://localhost:8017";
+}
+if (import.meta.env.VITE_BUILD_MODE === "production") {
+  apiRoot = "https://meo-station-backend.onrender.com";
+}
+export const API_ROOT = apiRoot;
