@@ -5,22 +5,32 @@ import { FaFacebookF } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import Input from "../../components/ui/Input";
 import {
   loginOAuthUserAPI,
   loginUserAPI,
 } from "../../redux/activeUser/activeUserSlice";
 import { useAppDispatch } from "../../redux/hooks";
-import { removeVietnameseMarks } from "../../utils/stringUtils";
+import {
+  EMAIL_RULE,
+  EMAIL_RULE_MESSAGE,
+  PASSWORD_RULE,
+  PASSWORD_RULE_MESSAGE,
+} from "../../utils/constants";
+
+type LoginFormValues = {
+  email: string;
+  password: string;
+};
 
 const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [password, setPassword] = useState("");
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
+  } = useForm<LoginFormValues>();
 
   const [searchParams] = useSearchParams();
   const registeredEmail = searchParams.get("registeredEmail");
@@ -29,35 +39,31 @@ const LoginPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    const cleanedValue = removeVietnameseMarks(value);
-    setPassword(cleanedValue);
-  };
-
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
 
-  const onSubmit = (data: { email: string; password: string }) => {
-    const { email, password } = data;
-    toast
-      .promise(dispatch(loginUserAPI({ email, password })), {
-        pending: "Is logging in...",
-      })
-      .then((res: any) => {
-        if (!res.error) {
-          navigate("/");
-          toast.success("Login successfully!");
-        }
+  const onSubmit = async (data: LoginFormValues) => {
+    try {
+      await toast.promise(dispatch(loginUserAPI(data)).unwrap(), {
+        pending: "Logging in...",
       });
+
+      toast.success("Login successfully!");
+      navigate("/");
+    } catch (error: any) {
+      toast.error(error?.message || "Login failed");
+    }
   };
 
-  const onSubmitOAuthLogin = () => {
-    dispatch(loginOAuthUserAPI()).then(() => {
-      navigate("/");
+  const onSubmitOAuthLogin = async () => {
+    try {
+      await dispatch(loginOAuthUserAPI()).unwrap();
       toast.success("Login successfully!");
-    });
+      navigate("/");
+    } catch (error: any) {
+      toast.error(error?.message || "OAuth login failed");
+    }
   };
 
   return (
@@ -94,12 +100,24 @@ const LoginPage: React.FC = () => {
             >
               Email
             </label>
-            <input
+            <Input
               type="email"
               id="email"
+              {...register("email", {
+                required: "Email is required",
+                pattern: {
+                  value: EMAIL_RULE,
+                  message: EMAIL_RULE_MESSAGE,
+                },
+              })}
               placeholder="Enter your email"
               className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-blue-500"
             />
+            {errors?.email && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.email.message}
+              </p>
+            )}
           </div>
 
           <div className="mb-4">
@@ -110,21 +128,32 @@ const LoginPage: React.FC = () => {
               Password
             </label>
             <div className="relative">
-              <input
+              <Input
                 type={showPassword ? "text" : "password"}
                 id="password"
+                {...register("password", {
+                  required: "Password is required",
+                  pattern: {
+                    value: PASSWORD_RULE,
+                    message: PASSWORD_RULE_MESSAGE,
+                  },
+                })}
                 placeholder="Enter your password"
                 className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-blue-500"
-                value={password}
-                onChange={handlePasswordChange}
+                rightIcon={
+                  <span
+                    className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600 transition"
+                    onClick={togglePasswordVisibility}
+                  >
+                    {showPassword ? "🙈" : "👁"}
+                  </span>
+                }
               />
-
-              <span
-                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600 transition"
-                onClick={togglePasswordVisibility}
-              >
-                {showPassword ? "🙈" : "👁"}
-              </span>
+              {errors?.password && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
           </div>
 
