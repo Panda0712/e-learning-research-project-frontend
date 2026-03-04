@@ -143,7 +143,7 @@ const LoginPage: React.FC = () => {
               </label>
             </div>
             <Link
-              to="forgot-password"
+              to="/auth/forgot-password"
               className="text-sm font-medium text-blue-600 hover:text-blue-500"
             >
               Forgot password?

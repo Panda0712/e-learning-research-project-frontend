@@ -33,8 +33,31 @@ const verifyUserAPI = async (data: any) => {
   return res.data;
 };
 
+// handle forgot password
+const forgotPasswordAPI = async (email: string) => {
+  const res = await authorizedAxiosInstance.post(
+    `${API_ROOT}/v1/users/forgot-password`,
+    email,
+  );
+  return res.data;
+};
+
+// handle reset password
+const resetPasswordAPI = async (data: {
+  token: string;
+  newPassword: string;
+}) => {
+  const res = await authorizedAxiosInstance.post(
+    `${API_ROOT}/v1/users/reset-password`,
+    data,
+  );
+  return res.data;
+};
+
 export const authService = {
   refreshTokenAPI,
   registerUserAPI,
   verifyUserAPI,
+  forgotPasswordAPI,
+  resetPasswordAPI,
 };
