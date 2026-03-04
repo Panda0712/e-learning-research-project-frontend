@@ -10,10 +10,20 @@ const initialState = {
 
 export const loginUserAPI = createAsyncThunk(
   "user/loginUserAPI",
-  async (data) => {
+  async (data: { email: string; password: string }) => {
     const res = await authorizedAxiosInstance.post(
       `${API_ROOT}/v1/users/login`,
       data,
+    );
+    return res.data;
+  },
+);
+
+export const loginOAuthUserAPI = createAsyncThunk(
+  "user/loginOAuthUserAPI",
+  async () => {
+    const res = await authorizedAxiosInstance.get(
+      `${API_ROOT}/v1/users/google`,
     );
     return res.data;
   },
@@ -49,6 +59,9 @@ const userSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(loginUserAPI.fulfilled, (state, action) => {
+      state.currentUser = action.payload;
+    });
+    builder.addCase(loginOAuthUserAPI.fulfilled, (state, action) => {
       state.currentUser = action.payload;
     });
     builder.addCase(logoutUserAPI.fulfilled, (state) => {

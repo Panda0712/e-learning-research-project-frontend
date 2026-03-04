@@ -1,11 +1,13 @@
 import React, { useState } from "react";
+import { useForm } from "react-hook-form";
 import { FaFacebookF } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { Link, useNavigate } from "react-router-dom";
-import { removeVietnameseMarks } from "../../utils/stringUtils";
-import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { authService } from "../../apis/auth";
+import { loginOAuthUserAPI } from "../../redux/activeUser/activeUserSlice";
+import { useAppDispatch } from "../../redux/hooks";
+import { removeVietnameseMarks } from "../../utils/stringUtils";
 
 const SignUpPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -17,12 +19,14 @@ const SignUpPage: React.FC = () => {
   const [rePassword, setRePassword] = useState("");
 
   const {
-    register, 
-    watch, 
-    handleSubmit, 
-    formState: {errors}, 
-    reset} = useForm();
- 
+    register,
+    watch,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm();
+
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,17 +45,25 @@ const SignUpPage: React.FC = () => {
     fullName: string;
     email: string;
     password: string;
-  })=>{
-    const {fullName, email, password} = data;
+  }) => {
+    const { fullName, email, password } = data;
     toast
-      .promise(authService.registerUserAPI({fullName, email, password}),{
+      .promise(authService.registerUserAPI({ fullName, email, password }), {
         pending: "Signing up...",
       })
-      .then((user)=>{
+      .then((user) => {
         navigate(`/auth/login?registeredEmail=${user.email}`);
         reset();
-      })
-  }
+      });
+  };
+
+  const onSubmitOAuthSignUp = () => {
+    dispatch(loginOAuthUserAPI()).then(() => {
+      navigate("/");
+      reset();
+      toast.success("Sign up successfully!");
+    });
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
@@ -208,7 +220,10 @@ const SignUpPage: React.FC = () => {
             <button className="flex items-center rounded-md border border-gray-300 bg-white p-2 hover:bg-gray-50">
               <FaFacebookF className="h-6 w-6 text-blue-600" />
             </button>
-            <button className="flex items-center rounded-md border border-gray-300 bg-white p-2 hover:bg-gray-50">
+            <button
+              onClick={onSubmitOAuthSignUp}
+              className="flex items-center rounded-md border border-gray-300 bg-white p-2 hover:bg-gray-50"
+            >
               <FcGoogle className="h-6 w-6" />
             </button>
           </div>
