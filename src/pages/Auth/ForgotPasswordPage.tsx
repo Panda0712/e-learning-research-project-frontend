@@ -1,12 +1,23 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
 import { FiCheckCircle } from "react-icons/fi";
-import { Link } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
+import { toast } from "react-toastify";
+import { authService } from "../../apis/auth";
+import Input from "../../components/ui/Input";
+import { logoutUserAPI } from "../../redux/activeUser/activeUserSlice";
+import { useAppDispatch } from "../../redux/hooks";
 import { removeVietnameseMarks } from "../../utils/stringUtils";
 
 type Step = "email" | "reset" | "success";
 
 const ForgotPasswordPage: React.FC = () => {
-  const [step, setStep] = useState<Step>("email");
+  const [searchParams] = useSearchParams();
+  const resetPasswordToken = searchParams.get("token");
+
+  const [step, setStep] = useState<Step>(
+    resetPasswordToken ? "reset" : "email",
+  );
 
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -14,6 +25,8 @@ const ForgotPasswordPage: React.FC = () => {
 
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showRePassword, setShowRePassword] = useState(false);
+
+  const dispatch = useAppDispatch();
 
   const handleNewPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -27,16 +40,47 @@ const ForgotPasswordPage: React.FC = () => {
     setRePassword(cleanedValue);
   };
 
+  const handleForgotPasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!email) toast.error("Please enter your email");
+
+    authService.forgotPasswordAPI(email).then((res: any) => {
+      if (!res.error) {
+        toast.success(
+          res?.message ||
+            "If an account with this email exists, we will send you a reset link!",
+        );
+      }
+    });
+  };
+
+  const handleResetPasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    authService
+      .resetPasswordAPI({ token: resetPasswordToken!, newPassword })
+      .then((res: any) => {
+        if (!res.error) {
+          toast.success(res?.message || "Password updated successfully");
+          setStep("success");
+          setTimeout(() => {
+            dispatch(logoutUserAPI(false));
+          }, 1000);
+        }
+      });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (step === "email") {
-      setStep("reset");
+      handleForgotPasswordSubmit(e);
     } else if (step === "reset") {
       if (newPassword === rePassword && newPassword.length > 0) {
-        setStep("success");
+        handleResetPasswordSubmit(e);
       } else {
-        alert("Mật khẩu mới và xác nhận mật khẩu không khớp hoặc bị trống.");
+        alert("New password and re-enter password must be the same!");
       }
     }
   };
@@ -58,11 +102,11 @@ const ForgotPasswordPage: React.FC = () => {
           >
             Email
           </label>
-          <input
+          <Input
+            variant="outline"
             type="email"
             id="email"
             placeholder="Enter your email"
-            className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-blue-500"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -97,7 +141,8 @@ const ForgotPasswordPage: React.FC = () => {
             Password
           </label>
           <div className="relative">
-            <input
+            <Input
+              variant="outline"
               type={showNewPassword ? "text" : "password"}
               id="newPassword"
               placeholder="Enter your new password"
@@ -105,13 +150,15 @@ const ForgotPasswordPage: React.FC = () => {
               required
               value={newPassword}
               onChange={handleNewPasswordChange}
+              rightIcon={
+                <span
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600 transition"
+                  onClick={() => setShowNewPassword((prev) => !prev)}
+                >
+                  {showNewPassword ? "🙈" : "👁"}
+                </span>
+              }
             />
-            <span
-              className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600 transition"
-              onClick={() => setShowNewPassword((prev) => !prev)}
-            >
-              {showNewPassword ? "🙈" : "👁"}
-            </span>
           </div>
         </div>
 
@@ -123,7 +170,8 @@ const ForgotPasswordPage: React.FC = () => {
             Re-enter Password
           </label>
           <div className="relative">
-            <input
+            <Input
+              variant="outline"
               type={showRePassword ? "text" : "password"}
               id="rePassword"
               placeholder="Re-enter your password"
@@ -131,13 +179,15 @@ const ForgotPasswordPage: React.FC = () => {
               required
               value={rePassword}
               onChange={handleRePasswordChange}
+              rightIcon={
+                <span
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600 transition"
+                  onClick={() => setShowRePassword((prev) => !prev)}
+                >
+                  {showRePassword ? "🙈" : "👁"}
+                </span>
+              }
             />
-            <span
-              className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600 transition"
-              onClick={() => setShowRePassword((prev) => !prev)}
-            >
-              {showRePassword ? "🙈" : "👁"}
-            </span>
           </div>
         </div>
 
@@ -164,12 +214,12 @@ const ForgotPasswordPage: React.FC = () => {
         Please log in again with your new password
       </p>
 
-      <Link
-        to="/login"
+      <span
+        onClick={() => dispatch(logoutUserAPI(false))}
         className="inline-block w-full rounded-md bg-sky-500 py-2 text-lg font-semibold text-white transition duration-200 hover:bg-sky-600"
       >
         Login Now
-      </Link>
+      </span>
     </div>
   );
 

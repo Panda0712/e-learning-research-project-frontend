@@ -37,6 +37,7 @@ import LecturerDetails from "./pages/Lecturer/LecturerDetails";
 import Registration from "./pages/Lecturer/Registration";
 import Payment from "./pages/Payment/Payment";
 import Profile from "./pages/Profile/Profile";
+import NotFoundPage from "./pages/NotFound/NotFound";
 
 const App = () => {
   return (
@@ -189,6 +190,8 @@ const App = () => {
           <Route path="/blog/:id" element={<BlogDetail />} />
         </Route>
         {/* </Route> */}
+
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   );

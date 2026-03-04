@@ -1,12 +1,13 @@
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { menuList } from "../../utils/constants";
 import Button from "./Button";
 import Logo from "/logo.png";
 
 const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isLecturerDropdownOpen, setIsLecturerDropdownOpen] = useState(false);
 
   return (
@@ -76,8 +77,16 @@ const Navbar = () => {
       </ul>
 
       <div className="flex items-center justify-center gap-6">
-        <Button type="primary" content="Log In" />
-        <Button type="primary" content="Sign Up" />
+        <Button
+          onClick={() => navigate("/auth/login")}
+          type="primary"
+          content="Log In"
+        />
+        <Button
+          onClick={() => navigate("/auth/register")}
+          type="primary"
+          content="Sign Up"
+        />
       </div>
     </nav>
   );
