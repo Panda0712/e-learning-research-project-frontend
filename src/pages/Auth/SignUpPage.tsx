@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaFacebookF } from "react-icons/fa";
@@ -5,18 +6,26 @@ import { FcGoogle } from "react-icons/fc";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { authService } from "../../apis/auth";
+import Input from "../../components/ui/Input";
 import { loginOAuthUserAPI } from "../../redux/activeUser/activeUserSlice";
 import { useAppDispatch } from "../../redux/hooks";
-import { removeVietnameseMarks } from "../../utils/stringUtils";
+import {
+  EMAIL_RULE,
+  EMAIL_RULE_MESSAGE,
+  PASSWORD_RULE,
+  PASSWORD_RULE_MESSAGE,
+} from "../../utils/constants";
+
+type SignUpFormValues = {
+  fullName: string;
+  email: string;
+  password: string;
+  rePassword: string;
+};
 
 const SignUpPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showRePassword, setShowRePassword] = useState(false);
-
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [rePassword, setRePassword] = useState("");
 
   const {
     register,
@@ -24,45 +33,40 @@ const SignUpPage: React.FC = () => {
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm();
+  } = useForm<SignUpFormValues>();
+  const passwordValue = watch("password");
 
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    const cleanedValue = removeVietnameseMarks(value);
-    setPassword(cleanedValue);
+  const onSubmit = async (data: SignUpFormValues) => {
+    try {
+      const { fullName, email, password } = data;
+
+      const user = await toast.promise(
+        authService.registerUserAPI({ fullName, email, password }),
+        {
+          pending: "Signing up...",
+        },
+      );
+
+      toast.success("Sign up successfully!");
+      navigate(`/auth/login?registeredEmail=${user.email}`);
+      reset();
+    } catch (error: any) {
+      toast.error(error?.message || "Sign up failed");
+    }
   };
 
-  const handleRePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    const cleanedValue = removeVietnameseMarks(value);
-    setRePassword(cleanedValue);
-  };
-
-  const onSubmit = (data: {
-    fullName: string;
-    email: string;
-    password: string;
-  }) => {
-    const { fullName, email, password } = data;
-    toast
-      .promise(authService.registerUserAPI({ fullName, email, password }), {
-        pending: "Signing up...",
-      })
-      .then((user) => {
-        navigate(`/auth/login?registeredEmail=${user.email}`);
-        reset();
-      });
-  };
-
-  const onSubmitOAuthSignUp = () => {
-    dispatch(loginOAuthUserAPI()).then(() => {
+  const onSubmitOAuthSignUp = async () => {
+    try {
+      await dispatch(loginOAuthUserAPI()).unwrap();
+      toast.success("Sign up successfully!");
       navigate("/");
       reset();
-      toast.success("Sign up successfully!");
-    });
+    } catch (error: any) {
+      toast.error(error?.message || "OAuth sign up failed");
+    }
   };
 
   return (
@@ -84,13 +88,14 @@ const SignUpPage: React.FC = () => {
               Full Name
               <span className="text-red-500">*</span>
             </label>
-            <input
+            <Input
               type="text"
               id="fullName"
               placeholder="Enter your FullName"
               className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-blue-500"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              {...register("fullName", {
+                required: "Full name is required",
+              })}
             />
           </div>
 
@@ -102,14 +107,24 @@ const SignUpPage: React.FC = () => {
               Email
               <span className="text-red-500">*</span>
             </label>
-            <input
+            <Input
               type="email"
               id="email"
               placeholder="Enter your email"
               className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-blue-500"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              {...register("email", {
+                required: "Email is required",
+                pattern: {
+                  value: EMAIL_RULE,
+                  message: EMAIL_RULE_MESSAGE,
+                },
+              })}
             />
+            {errors?.email && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.email.message}
+              </p>
+            )}
           </div>
 
           <div className="mb-4">
@@ -121,20 +136,32 @@ const SignUpPage: React.FC = () => {
               <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <input
+              <Input
                 type={showPassword ? "text" : "password"}
                 id="password"
                 placeholder="Enter your password"
                 className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-blue-500"
-                value={password}
-                onChange={handlePasswordChange}
+                {...register("password", {
+                  required: "Password is required",
+                  pattern: {
+                    value: PASSWORD_RULE,
+                    message: PASSWORD_RULE_MESSAGE,
+                  },
+                })}
+                rightIcon={
+                  <span
+                    className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600 transition"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                  >
+                    {showPassword ? "🙈" : "👁"}
+                  </span>
+                }
               />
-              <span
-                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600 transition"
-                onClick={() => setShowPassword((prev) => !prev)}
-              >
-                {showPassword ? "🙈" : "👁"}
-              </span>
+              {errors?.password && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
           </div>
 
@@ -147,20 +174,30 @@ const SignUpPage: React.FC = () => {
               <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <input
+              <Input
                 type={showRePassword ? "text" : "password"}
                 id="rePassword"
                 placeholder="Re-enter your password"
                 className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-blue-500"
-                value={rePassword}
-                onChange={handleRePasswordChange}
+                {...register("rePassword", {
+                  required: "Re-enter password is required",
+                  validate: (value) =>
+                    value === passwordValue || "Passwords do not match",
+                })}
+                rightIcon={
+                  <span
+                    className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600 transition"
+                    onClick={() => setShowRePassword((prev) => !prev)}
+                  >
+                    {showRePassword ? "🙈" : "👁"}
+                  </span>
+                }
               />
-              <span
-                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600 transition"
-                onClick={() => setShowRePassword((prev) => !prev)}
-              >
-                {showRePassword ? "🙈" : "👁"}
-              </span>
+              {errors?.rePassword && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.rePassword.message}
+                </p>
+              )}
             </div>
           </div>
 

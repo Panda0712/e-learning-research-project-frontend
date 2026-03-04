@@ -189,6 +189,14 @@ export const FILE_TYPES = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // docx
 ];
 
+export const EMAIL_RULE = /^\S+@\S+\.\S+$/;
+export const EMAIL_RULE_MESSAGE = "Error email. (example@gmail.com)";
+
+export const PASSWORD_RULE = /^(?=.*[a-zA-Z])(?=.*\d)[A-Za-z\d\W]{8,256}$/;
+export const PASSWORD_RULE_MESSAGE =
+  "Password has to be at least 1 character, 1 number and 8 characters min.";
+export const PASSWORD_CONFIRMATION_MESSAGE = "Confirm password not match!";
+
 let apiRoot = "http://localhost:8017";
 if (import.meta.env.VITE_BUILD_MODE === "dev") {
   apiRoot = "http://localhost:8017";
