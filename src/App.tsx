@@ -38,6 +38,7 @@ import Registration from "./pages/Lecturer/Registration";
 import Payment from "./pages/Payment/Payment";
 import Profile from "./pages/Profile/Profile";
 import NotFoundPage from "./pages/NotFound/NotFound";
+import VerificationPage from "./pages/Auth/VerificationPage";
 
 const App = () => {
   return (
@@ -163,6 +164,7 @@ const App = () => {
             path="/auth/forgot-password"
             element={<ForgotPasswordPage />}
           />
+          <Route path="/auth/verification" element={<VerificationPage />} />
 
           {/* Contact */}
           <Route path="/contact" element={<Contact />} />

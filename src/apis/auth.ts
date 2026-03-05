@@ -12,7 +12,12 @@ const refreshTokenAPI = async () => {
 };
 
 // handle register new user
-const registerUserAPI = async (data: any) => {
+const registerUserAPI = async (data: {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+}) => {
   const res = await authorizedAxiosInstance.post(
     `${API_ROOT}/v1/users/register`,
     data,
@@ -34,10 +39,10 @@ const verifyUserAPI = async (data: any) => {
 };
 
 // handle forgot password
-const forgotPasswordAPI = async (email: string) => {
+const forgotPasswordAPI = async (data: { email: string }) => {
   const res = await authorizedAxiosInstance.post(
     `${API_ROOT}/v1/users/forgot-password`,
-    email,
+    data,
   );
   return res.data;
 };

@@ -17,7 +17,8 @@ import {
 } from "../../utils/constants";
 
 type SignUpFormValues = {
-  fullName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
   rePassword: string;
@@ -41,10 +42,10 @@ const SignUpPage: React.FC = () => {
 
   const onSubmit = async (data: SignUpFormValues) => {
     try {
-      const { fullName, email, password } = data;
+      const { firstName, lastName, email, password } = data;
 
       const user = await toast.promise(
-        authService.registerUserAPI({ fullName, email, password }),
+        authService.registerUserAPI({ firstName, lastName, email, password }),
         {
           pending: "Signing up...",
         },
@@ -93,8 +94,27 @@ const SignUpPage: React.FC = () => {
               id="fullName"
               placeholder="Enter your FullName"
               className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-blue-500"
-              {...register("fullName", {
-                required: "Full name is required",
+              {...register("firstName", {
+                required: "First name is required",
+              })}
+            />
+          </div>
+
+          <div className="mb-4">
+            <label
+              htmlFor="lastName"
+              className="mb-1 block text-sm font-medium text-gray-700 required-label"
+            >
+              Last Name
+              <span className="text-red-500">*</span>
+            </label>
+            <Input
+              type="text"
+              id="lastName"
+              placeholder="Enter your last name"
+              className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-blue-500"
+              {...register("lastName", {
+                required: "Last name is required",
               })}
             />
           </div>

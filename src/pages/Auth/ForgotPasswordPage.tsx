@@ -45,7 +45,7 @@ const ForgotPasswordPage: React.FC = () => {
 
     if (!email) toast.error("Please enter your email");
 
-    authService.forgotPasswordAPI(email).then((res: any) => {
+    authService.forgotPasswordAPI({ email }).then((res: any) => {
       if (!res.error) {
         toast.success(
           res?.message ||
