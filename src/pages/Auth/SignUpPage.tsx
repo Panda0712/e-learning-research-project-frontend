@@ -7,8 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { authService } from "../../apis/auth";
 import Input from "../../components/ui/Input";
-import { loginOAuthUserAPI } from "../../redux/activeUser/activeUserSlice";
-import { useAppDispatch } from "../../redux/hooks";
+import { startGoogleAuth } from "../../redux/activeUser/activeUserSlice";
 import {
   EMAIL_RULE,
   EMAIL_RULE_MESSAGE,
@@ -37,7 +36,6 @@ const SignUpPage: React.FC = () => {
   } = useForm<SignUpFormValues>();
   const passwordValue = watch("password");
 
-  const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
   const onSubmit = async (data: SignUpFormValues) => {
@@ -59,15 +57,8 @@ const SignUpPage: React.FC = () => {
     }
   };
 
-  const onSubmitOAuthSignUp = async () => {
-    try {
-      await dispatch(loginOAuthUserAPI()).unwrap();
-      toast.success("Sign up successfully!");
-      navigate("/");
-      reset();
-    } catch (error: any) {
-      toast.error(error?.message || "OAuth sign up failed");
-    }
+  const onSubmitOAuthSignUp = () => {
+    startGoogleAuth("/auth/google/callback");
   };
 
   return (

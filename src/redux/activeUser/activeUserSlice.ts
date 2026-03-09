@@ -54,10 +54,27 @@ export const updateUserAPI = createAsyncThunk(
   },
 );
 
+export const fetchCurrentUserAPI = createAsyncThunk(
+  "user/fetchCurrentUserAPI",
+  async ()=>{
+    const res = await authorizedAxiosInstance.get(`${API_ROOT}/v1/users/me`);
+    return res.data;
+  },
+);
+
+export const startGoogleAuth = (redirectPath = "/auth/google/callback")=>{
+  const redirect = encodeURIComponent(`${window.location.origin}${redirectPath}`);
+  window.location.assign(`${API_ROOT}/v1/users/google?redirect=${redirect}`);
+}
+
 const userSlice = createSlice({
   name: "user",
   initialState,
-  reducers: {},
+  reducers: {
+    setCurrentUser: (state, action) => {
+      state.currentUser = action.payload;
+    },
+  },
   extraReducers: (builder) => {
     builder.addCase(loginUserAPI.fulfilled, (state, action) => {
       state.currentUser = action.payload;
@@ -77,5 +94,7 @@ const userSlice = createSlice({
 export const selectCurrentUser = (state: any) => {
   return state.user.currentUser;
 };
+
+export const {setCurrentUser} = userSlice.actions;
 
 export const userReducer = userSlice.reducer;
