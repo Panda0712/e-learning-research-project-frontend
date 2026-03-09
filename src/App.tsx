@@ -7,7 +7,9 @@ import Footer from "./components/ui/Footer";
 import Navbar from "./components/ui/Navbar";
 import ForgotPasswordPage from "./pages/Auth/ForgotPasswordPage";
 import LoginPage from "./pages/Auth/LoginPage";
+import OAuthGoogleCallbackPage from "./pages/Auth/OAuthGoogleCallbackPage";
 import SignUpPage from "./pages/Auth/SignUpPage";
+import VerificationPage from "./pages/Auth/VerificationPage";
 import BlogDetail from "./pages/Blogs/BlogDetail";
 import BlogList from "./pages/Blogs/BlogList";
 import Contact from "./pages/Contact/Contact";
@@ -35,10 +37,9 @@ import Homepage from "./pages/Homepage/Homepage";
 import Lecturer from "./pages/Lecturer/Lecturer";
 import LecturerDetails from "./pages/Lecturer/LecturerDetails";
 import Registration from "./pages/Lecturer/Registration";
+import NotFoundPage from "./pages/NotFound/NotFound";
 import Payment from "./pages/Payment/Payment";
 import Profile from "./pages/Profile/Profile";
-import NotFoundPage from "./pages/NotFound/NotFound";
-import VerificationPage from "./pages/Auth/VerificationPage";
 
 const App = () => {
   return (
@@ -165,6 +166,7 @@ const App = () => {
             element={<ForgotPasswordPage />}
           />
           <Route path="/auth/verification" element={<VerificationPage />} />
+          <Route path="/auth/google/callback" element={<OAuthGoogleCallbackPage/>} />
 
           {/* Contact */}
           <Route path="/contact" element={<Contact />} />

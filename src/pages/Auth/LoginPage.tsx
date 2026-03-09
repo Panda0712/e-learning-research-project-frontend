@@ -7,8 +7,8 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import Input from "../../components/ui/Input";
 import {
-  loginOAuthUserAPI,
   loginUserAPI,
+  startGoogleAuth
 } from "../../redux/activeUser/activeUserSlice";
 import { useAppDispatch } from "../../redux/hooks";
 import {
@@ -56,14 +56,8 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  const onSubmitOAuthLogin = async () => {
-    try {
-      await dispatch(loginOAuthUserAPI()).unwrap();
-      toast.success("Login successfully!");
-      navigate("/");
-    } catch (error: any) {
-      toast.error(error?.message || "OAuth login failed");
-    }
+  const onSubmitOAuthLogin = () => {
+    startGoogleAuth("/auth/google/callback");
   };
 
   return (
