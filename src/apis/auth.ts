@@ -59,10 +59,20 @@ const resetPasswordAPI = async (data: {
   return res.data;
 };
 
+// handle facebook auth
+const facebookAuthAPI = async ({ accessToken }: { accessToken: string }) => {
+  const res = await authorizedAxiosInstance.post(
+    `${API_ROOT}/v1/users/facebook`,
+    { accessToken },
+  );
+  return res.data;
+};
+
 export const authService = {
   refreshTokenAPI,
   registerUserAPI,
   verifyUserAPI,
   forgotPasswordAPI,
   resetPasswordAPI,
+  facebookAuthAPI,
 };

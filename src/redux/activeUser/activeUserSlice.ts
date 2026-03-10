@@ -56,16 +56,29 @@ export const updateUserAPI = createAsyncThunk(
 
 export const fetchCurrentUserAPI = createAsyncThunk(
   "user/fetchCurrentUserAPI",
-  async ()=>{
+  async () => {
     const res = await authorizedAxiosInstance.get(`${API_ROOT}/v1/users/me`);
     return res.data;
   },
 );
 
-export const startGoogleAuth = (redirectPath = "/auth/google/callback")=>{
-  const redirect = encodeURIComponent(`${window.location.origin}${redirectPath}`);
+export const handleFacebookAuthAPI = createAsyncThunk(
+  "user/handleFacebookAuthAPI",
+  async ({ accessToken }: { accessToken: string }) => {
+    const res = await authorizedAxiosInstance.post(
+      `${API_ROOT}/v1/users/facebook`,
+      { accessToken },
+    );
+    return res.data;
+  },
+);
+
+export const startGoogleAuth = (redirectPath = "/auth/google/callback") => {
+  const redirect = encodeURIComponent(
+    `${window.location.origin}${redirectPath}`,
+  );
   window.location.assign(`${API_ROOT}/v1/users/google?redirect=${redirect}`);
-}
+};
 
 const userSlice = createSlice({
   name: "user",
@@ -88,6 +101,9 @@ const userSlice = createSlice({
     builder.addCase(updateUserAPI.fulfilled, (state, action) => {
       state.currentUser = action.payload;
     });
+    builder.addCase(handleFacebookAuthAPI.fulfilled, (state, action) => {
+      state.currentUser = action.payload;
+    });
   },
 });
 
@@ -95,6 +111,6 @@ export const selectCurrentUser = (state: any) => {
   return state.user.currentUser;
 };
 
-export const {setCurrentUser} = userSlice.actions;
+export const { setCurrentUser } = userSlice.actions;
 
 export const userReducer = userSlice.reducer;
