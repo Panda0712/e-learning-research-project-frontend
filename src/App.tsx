@@ -1,10 +1,17 @@
-import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter,
+  Navigate,
+  Outlet,
+  Route,
+  Routes,
+} from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import CourseDetailChapter from "./components/dashboard/admin/courses/course-detail-chapter/CourseDetailChapter";
 import AdminCourseDetail from "./components/dashboard/admin/courses/course-detail/AdminCourseDetail";
 import DashboardCreateEditCurriculum from "./components/dashboard/lecturer/create-course/curriculum/DashboardCreateEditCurriculum";
 import Footer from "./components/ui/Footer";
 import Navbar from "./components/ui/Navbar";
+import AccessDenied from "./pages/AccessDenied/AccessDenied";
 import ForgotPasswordPage from "./pages/Auth/ForgotPasswordPage";
 import LoginPage from "./pages/Auth/LoginPage";
 import OAuthGoogleCallbackPage from "./pages/Auth/OAuthGoogleCallbackPage";
@@ -40,8 +47,44 @@ import Registration from "./pages/Lecturer/Registration";
 import NotFoundPage from "./pages/NotFound/NotFound";
 import Payment from "./pages/Payment/Payment";
 import Profile from "./pages/Profile/Profile";
+import { selectCurrentUser } from "./redux/activeUser/activeUserSlice";
+import { useAppSelector } from "./redux/hooks";
+import type { UserProfile } from "./types/user.type";
+import { ACCOUNT_ROLES } from "./utils/constants";
+
+const ProtectedRoutes = ({ user }: { user: UserProfile | null }) => {
+  if (!user) return <Navigate to="/auth/login" replace={true} />;
+
+  if (
+    user.role === ACCOUNT_ROLES.LECTURER ||
+    user.role === ACCOUNT_ROLES.ADMIN
+  ) {
+    return <Navigate to="/access-denied" replace={true} />;
+  }
+
+  return <Outlet />;
+};
+
+const AdminRoutes = ({ user }: { user: UserProfile | null }) => {
+  if (!user || user.role !== ACCOUNT_ROLES.ADMIN)
+    return <Navigate to="/access-denied" replace={true} />;
+  return <Outlet />;
+};
+
+const LecturerRoutes = ({ user }: { user: UserProfile | null }) => {
+  if (!user || user.role !== ACCOUNT_ROLES.LECTURER)
+    return <Navigate to="/access-denied" replace={true} />;
+  return <Outlet />;
+};
+
+const UnauthorizedRoutes = ({ user }: { user: UserProfile | null }) => {
+  if (user) return <Navigate to="/" replace={true} />;
+  return <Outlet />;
+};
 
 const App = () => {
+  const currentUser = useAppSelector(selectCurrentUser);
+
   return (
     <BrowserRouter>
       <ToastContainer
@@ -59,88 +102,92 @@ const App = () => {
         <Route>
           <Route path="/dashboard" element={<DashboardLayout />}>
             {/* Dashboard lecturer */}
-            <Route path="lecturer" index element={<DashboardLecturerMain />} />
-            <Route
-              path="lecturer/assessment"
-              element={<DashboardAssessment />}
-            />
-            <Route
-              path="lecturer/communication"
-              element={<DashboardCommunication />}
-            />
-            <Route
-              path="lecturer/my-courses"
-              element={<DashboardMyCourses />}
-            />
+            <Route element={<LecturerRoutes user={currentUser} />}>
+              <Route path="lecturer" element={<DashboardLecturerMain />} />
+              <Route
+                path="lecturer/assessment"
+                element={<DashboardAssessment />}
+              />
+              <Route
+                path="lecturer/communication"
+                element={<DashboardCommunication />}
+              />
+              <Route
+                path="lecturer/my-courses"
+                element={<DashboardMyCourses />}
+              />
 
-            <Route
-              path="lecturer/my-courses/create-course/commission"
-              element={<DashboardCreateCourse />}
-            />
-            <Route
-              path="lecturer/my-courses/create-course/curriculum"
-              element={<DashboardCreateCourse />}
-            />
-            <Route
-              path="lecturer/my-courses/create-course/curriculum/edit-curriculum/:id"
-              element={<DashboardCreateEditCurriculum />}
-            />
-            <Route
-              path="lecturer/my-courses/create-course/curriculum/create-curriculum"
-              element={<DashboardCreateEditCurriculum />}
-            />
-            <Route
-              path="lecturer/my-courses/create-course/customer"
-              element={<DashboardCreateCourse />}
-            />
-            <Route
-              path="lecturer/my-courses/create-course/detail"
-              element={<DashboardCreateCourse />}
-            />
-            <Route
-              path="lecturer/my-courses/create-course/promotion"
-              element={<DashboardCreateCourse />}
-            />
-            <Route
-              path="lecturer/my-courses/create-course/promotion/edit-coupon/:id"
-              element={<DashboardCreateCourse />}
-            />
-            <Route
-              path="lecturer/my-courses/create-course/promotion/create-coupon"
-              element={<DashboardCreateCourse />}
-            />
-            <Route
-              path="lecturer/my-courses/create-course/reviews"
-              element={<DashboardCreateCourse />}
-            />
+              <Route
+                path="lecturer/my-courses/create-course/commission"
+                element={<DashboardCreateCourse />}
+              />
+              <Route
+                path="lecturer/my-courses/create-course/curriculum"
+                element={<DashboardCreateCourse />}
+              />
+              <Route
+                path="lecturer/my-courses/create-course/curriculum/edit-curriculum/:id"
+                element={<DashboardCreateEditCurriculum />}
+              />
+              <Route
+                path="lecturer/my-courses/create-course/curriculum/create-curriculum"
+                element={<DashboardCreateEditCurriculum />}
+              />
+              <Route
+                path="lecturer/my-courses/create-course/customer"
+                element={<DashboardCreateCourse />}
+              />
+              <Route
+                path="lecturer/my-courses/create-course/detail"
+                element={<DashboardCreateCourse />}
+              />
+              <Route
+                path="lecturer/my-courses/create-course/promotion"
+                element={<DashboardCreateCourse />}
+              />
+              <Route
+                path="lecturer/my-courses/create-course/promotion/edit-coupon/:id"
+                element={<DashboardCreateCourse />}
+              />
+              <Route
+                path="lecturer/my-courses/create-course/promotion/create-coupon"
+                element={<DashboardCreateCourse />}
+              />
+              <Route
+                path="lecturer/my-courses/create-course/reviews"
+                element={<DashboardCreateCourse />}
+              />
 
-            <Route
-              path="lecturer/my-students"
-              element={<DashboardMyStudents />}
-            />
-            <Route path="lecturer/revenue" element={<DashboardRevenue />} />
-            <Route path="lecturer/setting" element={<DashboardSetting />} />
+              <Route
+                path="lecturer/my-students"
+                element={<DashboardMyStudents />}
+              />
+              <Route path="lecturer/revenue" element={<DashboardRevenue />} />
+              <Route path="lecturer/setting" element={<DashboardSetting />} />
+            </Route>
 
             {/* Dashboard Admin */}
-            <Route path="admin" element={<DashboardAdminMain />} />
-            <Route path="admin/blog" element={<DashboardBlog />} />
-            <Route path="admin/courses" element={<DashboardCourses />} />
-            <Route path="admin/courses/:id" element={<AdminCourseDetail />} />
-            <Route
-              path="/dashboard/admin/courses/:courseId/chapter/:chapterId"
-              element={<CourseDetailChapter />}
-            />
-            <Route
-              path="admin/instructor-requests"
-              element={<DashboardInstructorRequests />}
-            />
-            <Route path="admin/payouts" element={<DashboardPayouts />} />
-            <Route
-              path="admin/transactions"
-              element={<DashboardTransactions />}
-            />
-            <Route path="admin/user" element={<DashboardUser />} />
-            <Route path="admin/vouchers" element={<DashboardVoucher />} />
+            <Route element={<AdminRoutes user={currentUser} />}>
+              <Route path="admin" element={<DashboardAdminMain />} />
+              <Route path="admin/blog" element={<DashboardBlog />} />
+              <Route path="admin/courses" element={<DashboardCourses />} />
+              <Route path="admin/courses/:id" element={<AdminCourseDetail />} />
+              <Route
+                path="admin/courses/:courseId/chapter/:chapterId"
+                element={<CourseDetailChapter />}
+              />
+              <Route
+                path="admin/instructor-requests"
+                element={<DashboardInstructorRequests />}
+              />
+              <Route path="admin/payouts" element={<DashboardPayouts />} />
+              <Route
+                path="admin/transactions"
+                element={<DashboardTransactions />}
+              />
+              <Route path="admin/user" element={<DashboardUser />} />
+              <Route path="admin/vouchers" element={<DashboardVoucher />} />
+            </Route>
           </Route>
         </Route>
 
@@ -154,47 +201,57 @@ const App = () => {
             </div>
           }
         >
-          {/* <Route element={<ProtectedRoutes />}> */}
+          {/* Auth */}
+          <Route element={<UnauthorizedRoutes user={currentUser} />}>
+            <Route path="/auth/login" element={<LoginPage />} />
+            <Route path="/auth/register" element={<SignUpPage />} />
+            <Route
+              path="/auth/forgot-password"
+              element={<ForgotPasswordPage />}
+            />
+            <Route path="/auth/verification" element={<VerificationPage />} />
+            <Route
+              path="/auth/google/callback"
+              element={<OAuthGoogleCallbackPage />}
+            />
+          </Route>
+
           {/* Homepage */}
           <Route path="/" element={<Homepage />} />
-
-          {/* Auth */}
-          <Route path="/auth/login" element={<LoginPage />} />
-          <Route path="/auth/register" element={<SignUpPage />} />
-          <Route
-            path="/auth/forgot-password"
-            element={<ForgotPasswordPage />}
-          />
-          <Route path="/auth/verification" element={<VerificationPage />} />
-          <Route path="/auth/google/callback" element={<OAuthGoogleCallbackPage/>} />
 
           {/* Contact */}
           <Route path="/contact" element={<Contact />} />
 
-          {/* Profile */}
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/profile/my-courses" element={<Profile />} />
-          <Route path="/profile/lecturers" element={<Profile />} />
-
           {/* Course */}
           <Route path="/courses" element={<Course />} />
           <Route path="/courses/:id" element={<CourseDetail />} />
-          <Route path="/learning/:id" element={<CourseLearning />} />
 
           {/* Lecturer */}
           <Route path="/lecturer" element={<Lecturer />} />
-          <Route path="/lecturer/:id" element={<LecturerDetails />} />
-          <Route path="/registration" element={<Registration />} />
-
-          {/* Payment */}
-          <Route path="/payment/:id" element={<Payment />} />
 
           {/* Blog */}
           <Route path="/blog" element={<BlogList />} />
           <Route path="/blog/:id" element={<BlogDetail />} />
-        </Route>
-        {/* </Route> */}
 
+          <Route element={<ProtectedRoutes user={currentUser} />}>
+            {/* Profile */}
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/my-courses" element={<Profile />} />
+            <Route path="/profile/lecturers" element={<Profile />} />
+
+            {/* Course */}
+            <Route path="/learning/:id" element={<CourseLearning />} />
+
+            {/* Lecturer */}
+            <Route path="/lecturer/:id" element={<LecturerDetails />} />
+            <Route path="/registration" element={<Registration />} />
+
+            {/* Payment */}
+            <Route path="/payment/:id" element={<Payment />} />
+          </Route>
+        </Route>
+
+        <Route path="/access-denied" element={<AccessDenied />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
