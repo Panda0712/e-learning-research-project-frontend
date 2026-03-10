@@ -120,6 +120,7 @@ const LoginPage: React.FC = () => {
             <Input
               type="email"
               id="email"
+              variant="outline"
               {...register("email", {
                 required: "Email is required",
                 pattern: {
@@ -156,7 +157,9 @@ const LoginPage: React.FC = () => {
                   },
                 })}
                 placeholder="Enter your password"
-                className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-blue-500"
+                variant="outline"
+                className="w-full rounded-md border border-gray-300 p-10
+                focus:border-blue-500 focus:ring-blue-500"
                 rightIcon={
                   <span
                     className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600 transition"
@@ -222,21 +225,25 @@ const LoginPage: React.FC = () => {
           </div>
 
           <div className="flex justify-center space-x-4">
-            <button className="flex items-center rounded-md border border-gray-300 bg-white p-2 hover:bg-gray-50">
-              <FaFacebookF className="h-6 w-6 text-blue-600" />
-            </button>
             <button
-              className="flex items-center rounded-md border border-gray-300 bg-white p-2 hover:bg-gray-50"
-              onClick={onSubmitOAuthLogin}
+              className="relative flex items-center rounded-md border 
+            border-gray-300 bg-white p-2 hover:bg-gray-50"
             >
-              <FcGoogle className="h-6 w-6" />
+              <FaFacebookF className="h-6 w-6 text-blue-600" />
               <FacebookLogin
                 appId={Environment.FACEBOOK_APP_ID!}
                 autoLoad={true}
                 fields="name,email,picture"
                 onClick={handleClickFacebook}
                 callback={handleFacebookResponse}
+                cssClass="w-full h-full absolute top-0 left-0 right-0 bottom-0 opacity-0"
               />
+            </button>
+            <button
+              className="flex items-center rounded-md border border-gray-300 bg-white p-2 hover:bg-gray-50"
+              onClick={onSubmitOAuthLogin}
+            >
+              <FcGoogle className="h-6 w-6" />
             </button>
           </div>
         </div>

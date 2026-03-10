@@ -32,6 +32,7 @@ type SignUpFormValues = {
 const SignUpPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showRePassword, setShowRePassword] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(false);
 
   const {
     register,
@@ -110,12 +111,18 @@ const SignUpPage: React.FC = () => {
             <Input
               type="text"
               id="fullName"
+              variant="outline"
               placeholder="Enter your FullName"
               className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-blue-500"
               {...register("firstName", {
                 required: "First name is required",
               })}
             />
+            {errors?.firstName && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.firstName.message}
+              </p>
+            )}
           </div>
 
           <div className="mb-4">
@@ -129,12 +136,18 @@ const SignUpPage: React.FC = () => {
             <Input
               type="text"
               id="lastName"
+              variant="outline"
               placeholder="Enter your last name"
               className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-blue-500"
               {...register("lastName", {
                 required: "Last name is required",
               })}
             />
+            {errors?.lastName && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.lastName.message}
+              </p>
+            )}
           </div>
 
           <div className="mb-4">
@@ -148,6 +161,7 @@ const SignUpPage: React.FC = () => {
             <Input
               type="email"
               id="email"
+              variant="outline"
               placeholder="Enter your email"
               className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-blue-500"
               {...register("email", {
@@ -176,6 +190,7 @@ const SignUpPage: React.FC = () => {
             <div className="relative">
               <Input
                 type={showPassword ? "text" : "password"}
+                variant="outline"
                 id="password"
                 placeholder="Enter your password"
                 className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-blue-500"
@@ -214,6 +229,7 @@ const SignUpPage: React.FC = () => {
             <div className="relative">
               <Input
                 type={showRePassword ? "text" : "password"}
+                variant="outline"
                 id="rePassword"
                 placeholder="Re-enter your password"
                 className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-blue-500"
@@ -244,6 +260,8 @@ const SignUpPage: React.FC = () => {
               <input
                 id="agree-terms"
                 type="checkbox"
+                checked={agreeTerms}
+                onChange={(e) => setAgreeTerms(e.target.checked)}
                 className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
             </div>
@@ -267,7 +285,10 @@ const SignUpPage: React.FC = () => {
 
           <button
             type="submit"
-            className="w-full rounded-md bg-sky-500 py-2 text-lg font-semibold text-white transition duration-200 hover:bg-sky-600"
+            disabled={!agreeTerms}
+            className={`w-full rounded-md bg-sky-500 py-2 text-lg font-semibold 
+            text-white transition duration-200 hover:bg-sky-600 
+            ${!agreeTerms ? "opacity-50 cursor-not-allowed" : ""}`}
           >
             Create account
           </button>
@@ -292,7 +313,7 @@ const SignUpPage: React.FC = () => {
           </div>
 
           <div className="flex justify-center space-x-4">
-            <button className="flex items-center rounded-md border border-gray-300 bg-white p-2 hover:bg-gray-50">
+            <button className="relative flex items-center rounded-md border border-gray-300 bg-white p-2 hover:bg-gray-50">
               <FaFacebookF className="h-6 w-6 text-blue-600" />
               <FacebookLogin
                 appId={Environment.FACEBOOK_APP_ID!}
@@ -300,6 +321,7 @@ const SignUpPage: React.FC = () => {
                 fields="name,email,picture"
                 onClick={handleClickFacebook}
                 callback={handleFacebookResponse}
+                cssClass="w-full h-full absolute top-0 left-0 right-0 bottom-0 opacity-0"
               />
             </button>
             <button
