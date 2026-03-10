@@ -3,6 +3,7 @@ export interface UserProfile {
   firstName: string;
   lastName?: string;
   email: string;
+  role: string;
   phone?: string;
   avatarUrl?: string;
   birthDay?: number | null;

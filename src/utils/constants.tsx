@@ -189,6 +189,12 @@ export const FILE_TYPES = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // docx
 ];
 
+export const ACCOUNT_ROLES = {
+  ADMIN: "ADMIN",
+  STUDENT: "STUDENT",
+  LECTURER: "LECTURER",
+};
+
 export const EMAIL_RULE = /^\S+@\S+\.\S+$/;
 export const EMAIL_RULE_MESSAGE = "Error email. (example@gmail.com)";
 
