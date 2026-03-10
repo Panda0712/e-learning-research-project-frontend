@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
+import FacebookLogin from "react-facebook-login";
 import { useForm } from "react-hook-form";
 import { FaFacebookF } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
@@ -7,7 +8,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { authService } from "../../apis/auth";
 import Input from "../../components/ui/Input";
-import { startGoogleAuth } from "../../redux/activeUser/activeUserSlice";
+import { Environment } from "../../configs/environment";
+import {
+  handleFacebookAuthAPI,
+  startGoogleAuth,
+} from "../../redux/activeUser/activeUserSlice";
+import { useAppDispatch } from "../../redux/hooks";
 import {
   EMAIL_RULE,
   EMAIL_RULE_MESSAGE,
@@ -36,6 +42,7 @@ const SignUpPage: React.FC = () => {
   } = useForm<SignUpFormValues>();
   const passwordValue = watch("password");
 
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
   const onSubmit = async (data: SignUpFormValues) => {
@@ -59,6 +66,26 @@ const SignUpPage: React.FC = () => {
 
   const onSubmitOAuthSignUp = () => {
     startGoogleAuth("/auth/google/callback");
+  };
+
+  const handleClickFacebook = () => {};
+
+  const handleFacebookResponse = async (data: any) => {
+    try {
+      await toast.promise(
+        dispatch(
+          handleFacebookAuthAPI({ accessToken: data.accessToken }),
+        ).unwrap(),
+        {
+          pending: "Logging in...",
+        },
+      );
+
+      toast.success("Login successfully!");
+      navigate("/");
+    } catch (error: any) {
+      toast.error(error?.message || "Login failed");
+    }
   };
 
   return (
@@ -267,6 +294,13 @@ const SignUpPage: React.FC = () => {
           <div className="flex justify-center space-x-4">
             <button className="flex items-center rounded-md border border-gray-300 bg-white p-2 hover:bg-gray-50">
               <FaFacebookF className="h-6 w-6 text-blue-600" />
+              <FacebookLogin
+                appId={Environment.FACEBOOK_APP_ID!}
+                autoLoad={true}
+                fields="name,email,picture"
+                onClick={handleClickFacebook}
+                callback={handleFacebookResponse}
+              />
             </button>
             <button
               onClick={onSubmitOAuthSignUp}
