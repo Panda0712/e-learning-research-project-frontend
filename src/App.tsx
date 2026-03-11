@@ -51,6 +51,8 @@ import { selectCurrentUser } from "./redux/activeUser/activeUserSlice";
 import { useAppSelector } from "./redux/hooks";
 import type { UserProfile } from "./types/user.type";
 import { ACCOUNT_ROLES } from "./utils/constants";
+import RbacRoute from "./components/core/RbacRoute";
+import { permissions } from "./configs/rbacConfig";
 
 const ProtectedRoutes = ({ user }: { user: UserProfile | null }) => {
   if (!user) return <Navigate to="/auth/login" replace={true} />;
@@ -103,90 +105,109 @@ const App = () => {
           <Route path="/dashboard" element={<DashboardLayout />}>
             {/* Dashboard lecturer */}
             <Route element={<LecturerRoutes user={currentUser} />}>
-              <Route path="lecturer" element={<DashboardLecturerMain />} />
               <Route
-                path="lecturer/assessment"
-                element={<DashboardAssessment />}
-              />
-              <Route
-                path="lecturer/communication"
-                element={<DashboardCommunication />}
-              />
-              <Route
-                path="lecturer/my-courses"
-                element={<DashboardMyCourses />}
-              />
+                element={
+                  <RbacRoute
+                    requiredPermission={permissions.VIEW_DASHBOARD_LECTURER}
+                  />
+                }
+              >
+                <Route path="lecturer" element={<DashboardLecturerMain />} />
+                <Route
+                  path="lecturer/assessment"
+                  element={<DashboardAssessment />}
+                />
+                <Route
+                  path="lecturer/communication"
+                  element={<DashboardCommunication />}
+                />
+                <Route
+                  path="lecturer/my-courses"
+                  element={<DashboardMyCourses />}
+                />
 
-              <Route
-                path="lecturer/my-courses/create-course/commission"
-                element={<DashboardCreateCourse />}
-              />
-              <Route
-                path="lecturer/my-courses/create-course/curriculum"
-                element={<DashboardCreateCourse />}
-              />
-              <Route
-                path="lecturer/my-courses/create-course/curriculum/edit-curriculum/:id"
-                element={<DashboardCreateEditCurriculum />}
-              />
-              <Route
-                path="lecturer/my-courses/create-course/curriculum/create-curriculum"
-                element={<DashboardCreateEditCurriculum />}
-              />
-              <Route
-                path="lecturer/my-courses/create-course/customer"
-                element={<DashboardCreateCourse />}
-              />
-              <Route
-                path="lecturer/my-courses/create-course/detail"
-                element={<DashboardCreateCourse />}
-              />
-              <Route
-                path="lecturer/my-courses/create-course/promotion"
-                element={<DashboardCreateCourse />}
-              />
-              <Route
-                path="lecturer/my-courses/create-course/promotion/edit-coupon/:id"
-                element={<DashboardCreateCourse />}
-              />
-              <Route
-                path="lecturer/my-courses/create-course/promotion/create-coupon"
-                element={<DashboardCreateCourse />}
-              />
-              <Route
-                path="lecturer/my-courses/create-course/reviews"
-                element={<DashboardCreateCourse />}
-              />
+                <Route
+                  path="lecturer/my-courses/create-course/commission"
+                  element={<DashboardCreateCourse />}
+                />
+                <Route
+                  path="lecturer/my-courses/create-course/curriculum"
+                  element={<DashboardCreateCourse />}
+                />
+                <Route
+                  path="lecturer/my-courses/create-course/curriculum/edit-curriculum/:id"
+                  element={<DashboardCreateEditCurriculum />}
+                />
+                <Route
+                  path="lecturer/my-courses/create-course/curriculum/create-curriculum"
+                  element={<DashboardCreateEditCurriculum />}
+                />
+                <Route
+                  path="lecturer/my-courses/create-course/customer"
+                  element={<DashboardCreateCourse />}
+                />
+                <Route
+                  path="lecturer/my-courses/create-course/detail"
+                  element={<DashboardCreateCourse />}
+                />
+                <Route
+                  path="lecturer/my-courses/create-course/promotion"
+                  element={<DashboardCreateCourse />}
+                />
+                <Route
+                  path="lecturer/my-courses/create-course/promotion/edit-coupon/:id"
+                  element={<DashboardCreateCourse />}
+                />
+                <Route
+                  path="lecturer/my-courses/create-course/promotion/create-coupon"
+                  element={<DashboardCreateCourse />}
+                />
+                <Route
+                  path="lecturer/my-courses/create-course/reviews"
+                  element={<DashboardCreateCourse />}
+                />
 
-              <Route
-                path="lecturer/my-students"
-                element={<DashboardMyStudents />}
-              />
-              <Route path="lecturer/revenue" element={<DashboardRevenue />} />
-              <Route path="lecturer/setting" element={<DashboardSetting />} />
+                <Route
+                  path="lecturer/my-students"
+                  element={<DashboardMyStudents />}
+                />
+                <Route path="lecturer/revenue" element={<DashboardRevenue />} />
+                <Route path="lecturer/setting" element={<DashboardSetting />} />
+              </Route>
             </Route>
 
             {/* Dashboard Admin */}
             <Route element={<AdminRoutes user={currentUser} />}>
-              <Route path="admin" element={<DashboardAdminMain />} />
-              <Route path="admin/blog" element={<DashboardBlog />} />
-              <Route path="admin/courses" element={<DashboardCourses />} />
-              <Route path="admin/courses/:id" element={<AdminCourseDetail />} />
               <Route
-                path="admin/courses/:courseId/chapter/:chapterId"
-                element={<CourseDetailChapter />}
-              />
-              <Route
-                path="admin/instructor-requests"
-                element={<DashboardInstructorRequests />}
-              />
-              <Route path="admin/payouts" element={<DashboardPayouts />} />
-              <Route
-                path="admin/transactions"
-                element={<DashboardTransactions />}
-              />
-              <Route path="admin/user" element={<DashboardUser />} />
-              <Route path="admin/vouchers" element={<DashboardVoucher />} />
+                element={
+                  <RbacRoute
+                    requiredPermission={permissions.VIEW_DASHBOARD_ADMIN}
+                  />
+                }
+              >
+                <Route path="admin" element={<DashboardAdminMain />} />
+                <Route path="admin/blog" element={<DashboardBlog />} />
+                <Route path="admin/courses" element={<DashboardCourses />} />
+                <Route
+                  path="admin/courses/:id"
+                  element={<AdminCourseDetail />}
+                />
+                <Route
+                  path="admin/courses/:courseId/chapter/:chapterId"
+                  element={<CourseDetailChapter />}
+                />
+                <Route
+                  path="admin/instructor-requests"
+                  element={<DashboardInstructorRequests />}
+                />
+                <Route path="admin/payouts" element={<DashboardPayouts />} />
+                <Route
+                  path="admin/transactions"
+                  element={<DashboardTransactions />}
+                />
+                <Route path="admin/user" element={<DashboardUser />} />
+                <Route path="admin/vouchers" element={<DashboardVoucher />} />
+              </Route>
             </Route>
           </Route>
         </Route>
@@ -235,19 +256,51 @@ const App = () => {
 
           <Route element={<ProtectedRoutes user={currentUser} />}>
             {/* Profile */}
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/profile/my-courses" element={<Profile />} />
-            <Route path="/profile/lecturers" element={<Profile />} />
+            <Route
+              element={
+                <RbacRoute requiredPermission={permissions.VIEW_PROFILE} />
+              }
+            >
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/profile/my-courses" element={<Profile />} />
+              <Route path="/profile/lecturers" element={<Profile />} />
+            </Route>
 
             {/* Course */}
-            <Route path="/learning/:id" element={<CourseLearning />} />
+            <Route
+              element={
+                <RbacRoute requiredPermission={permissions.VIEW_COURSE} />
+              }
+            >
+              <Route path="/learning/:id" element={<CourseLearning />} />
+            </Route>
 
             {/* Lecturer */}
-            <Route path="/lecturer/:id" element={<LecturerDetails />} />
-            <Route path="/registration" element={<Registration />} />
+            <Route
+              element={
+                <RbacRoute requiredPermission={permissions.VIEW_LECTURER} />
+              }
+            >
+              <Route path="/lecturer/:id" element={<LecturerDetails />} />
+            </Route>
+            <Route
+              element={
+                <RbacRoute
+                  requiredPermission={permissions.VIEW_LECTURER_REGISTRATION}
+                />
+              }
+            >
+              <Route path="/registration" element={<Registration />} />
+            </Route>
 
             {/* Payment */}
-            <Route path="/payment/:id" element={<Payment />} />
+            <Route
+              element={
+                <RbacRoute requiredPermission={permissions.VIEW_PAYMENT} />
+              }
+            >
+              <Route path="/payment/:id" element={<Payment />} />
+            </Route>
           </Route>
         </Route>
 

@@ -190,9 +190,9 @@ export const FILE_TYPES = [
 ];
 
 export const ACCOUNT_ROLES = {
-  ADMIN: "ADMIN",
-  STUDENT: "STUDENT",
-  LECTURER: "LECTURER",
+  ADMIN: "admin",
+  STUDENT: "student",
+  LECTURER: "lecturer",
 };
 
 export const EMAIL_RULE = /^\S+@\S+\.\S+$/;
