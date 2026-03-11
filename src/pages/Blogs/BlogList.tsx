@@ -1,11 +1,11 @@
-import BlogCard from "../../components/BlogCard/BlogCard";
-import Sidebar from "../../components/SideBar/SideBar";
+import BlogCard from "../../components/cards/BlogCard";
+import Sidebar from "../../components/ui/SideBar";
 import { blogs } from "../../utils/blogData";
 
 const BlogList = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <div className="w-full h-[50px] bg-[#F5F5F5] flex items-center">
+      <div className="w-full h-12.5 bg-[#F5F5F5] flex items-center">
         <div className="container mx-auto px-4 max-w-7xl">
           <div className="flex items-center gap-2 text-sm font-medium">
             <span className="text-[#555555] cursor-pointer hover:underline">

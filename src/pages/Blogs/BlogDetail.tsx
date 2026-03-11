@@ -1,8 +1,8 @@
 import { Calendar, Quote, User } from "lucide-react";
 import { useParams } from "react-router-dom";
-import AuthorBox from "../../components/AuthorBox/AuthorBox";
-import CommentList from "../../components/CommentListBlog/CommentListBlog";
-import Sidebar from "../../components/SideBar/SideBar";
+import AuthorBox from "../../components/box/AuthorBox";
+import CommentList from "../../components/comment/CommentListBlog";
+import Sidebar from "../../components/ui/SideBar";
 import { blogs } from "../../utils/blogData";
 
 const BlogDetail = () => {
@@ -13,7 +13,7 @@ const BlogDetail = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <div className="w-full h-[50px] bg-[#F5F5F5] flex items-center mb-8">
+      <div className="w-full h-12.5 bg-[#F5F5F5] flex items-center mb-8">
         <div className="container mx-auto px-4 max-w-7xl">
           <div className="flex items-center gap-2 text-sm font-medium">
             <span className="text-[#555555] cursor-pointer hover:underline">
@@ -29,7 +29,7 @@ const BlogDetail = () => {
 
       <div className="container mx-auto px-4 pb-16 flex flex-col lg:flex-row gap-10 max-w-7xl">
         <div className="w-full lg:w-3/4">
-          <div className="w-full h-[300px] rounded-2xl overflow-hidden shadow-sm mb-8 relative">
+          <div className="w-full h-75 rounded-2xl overflow-hidden shadow-sm mb-8 relative">
             <img
               src={blog.image}
               alt={blog.title}

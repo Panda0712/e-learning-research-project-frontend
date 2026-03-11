@@ -1,6 +1,6 @@
 import { useState } from "react";
-import LecturerCard from "../../components/LecturerCard/LecturerCard";
-import Pagination from "../../components/Pagination/Pagination";
+import LecturerCard from "../../components/cards/LecturerCard";
+import Pagination from "../../components/ui/Pagination";
 
 interface LecturerData {
   id: number;

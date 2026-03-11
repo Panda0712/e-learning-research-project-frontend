@@ -1,28 +1,92 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
+import FacebookLogin from "react-facebook-login";
+import { useForm } from "react-hook-form";
 import { FaFacebookF } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
-import { Link } from "react-router-dom";
-import { removeVietnameseMarks } from "../../utils/stringUtils";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { authService } from "../../apis/auth";
+import Input from "../../components/ui/Input";
+import { Environment } from "../../configs/environment";
+import {
+  handleFacebookAuthAPI,
+  startGoogleAuth,
+} from "../../redux/activeUser/activeUserSlice";
+import { useAppDispatch } from "../../redux/hooks";
+import {
+  EMAIL_RULE,
+  EMAIL_RULE_MESSAGE,
+  PASSWORD_RULE,
+  PASSWORD_RULE_MESSAGE,
+} from "../../utils/constants";
+
+type SignUpFormValues = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  rePassword: string;
+};
 
 const SignUpPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showRePassword, setShowRePassword] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(false);
 
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [rePassword, setRePassword] = useState("");
+  const {
+    register,
+    watch,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<SignUpFormValues>();
+  const passwordValue = watch("password");
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    const cleanedValue = removeVietnameseMarks(value);
-    setPassword(cleanedValue);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  const onSubmit = async (data: SignUpFormValues) => {
+    try {
+      const { firstName, lastName, email, password } = data;
+
+      const user = await toast.promise(
+        authService.registerUserAPI({ firstName, lastName, email, password }),
+        {
+          pending: "Signing up...",
+        },
+      );
+
+      toast.success("Sign up successfully!");
+      navigate(`/auth/login?registeredEmail=${user.email}`);
+      reset();
+    } catch (error: any) {
+      toast.error(error?.message || "Sign up failed");
+    }
   };
 
-  const handleRePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    const cleanedValue = removeVietnameseMarks(value);
-    setRePassword(cleanedValue);
+  const onSubmitOAuthSignUp = () => {
+    startGoogleAuth("/auth/google/callback");
+  };
+
+  const handleClickFacebook = () => {};
+
+  const handleFacebookResponse = async (data: any) => {
+    try {
+      await toast.promise(
+        dispatch(
+          handleFacebookAuthAPI({ accessToken: data.accessToken }),
+        ).unwrap(),
+        {
+          pending: "Logging in...",
+        },
+      );
+
+      toast.success("Login successfully!");
+      navigate("/");
+    } catch (error: any) {
+      toast.error(error?.message || "Login failed");
+    }
   };
 
   return (
@@ -35,7 +99,7 @@ const SignUpPage: React.FC = () => {
           Join for execute access
         </p>
 
-        <form>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-4">
             <label
               htmlFor="fullName"
@@ -44,14 +108,46 @@ const SignUpPage: React.FC = () => {
               Full Name
               <span className="text-red-500">*</span>
             </label>
-            <input
+            <Input
               type="text"
               id="fullName"
+              variant="outline"
               placeholder="Enter your FullName"
               className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-blue-500"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              {...register("firstName", {
+                required: "First name is required",
+              })}
             />
+            {errors?.firstName && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.firstName.message}
+              </p>
+            )}
+          </div>
+
+          <div className="mb-4">
+            <label
+              htmlFor="lastName"
+              className="mb-1 block text-sm font-medium text-gray-700 required-label"
+            >
+              Last Name
+              <span className="text-red-500">*</span>
+            </label>
+            <Input
+              type="text"
+              id="lastName"
+              variant="outline"
+              placeholder="Enter your last name"
+              className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-blue-500"
+              {...register("lastName", {
+                required: "Last name is required",
+              })}
+            />
+            {errors?.lastName && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.lastName.message}
+              </p>
+            )}
           </div>
 
           <div className="mb-4">
@@ -62,14 +158,25 @@ const SignUpPage: React.FC = () => {
               Email
               <span className="text-red-500">*</span>
             </label>
-            <input
+            <Input
               type="email"
               id="email"
+              variant="outline"
               placeholder="Enter your email"
               className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-blue-500"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              {...register("email", {
+                required: "Email is required",
+                pattern: {
+                  value: EMAIL_RULE,
+                  message: EMAIL_RULE_MESSAGE,
+                },
+              })}
             />
+            {errors?.email && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.email.message}
+              </p>
+            )}
           </div>
 
           <div className="mb-4">
@@ -81,20 +188,33 @@ const SignUpPage: React.FC = () => {
               <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <input
+              <Input
                 type={showPassword ? "text" : "password"}
+                variant="outline"
                 id="password"
                 placeholder="Enter your password"
                 className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-blue-500"
-                value={password}
-                onChange={handlePasswordChange}
+                {...register("password", {
+                  required: "Password is required",
+                  pattern: {
+                    value: PASSWORD_RULE,
+                    message: PASSWORD_RULE_MESSAGE,
+                  },
+                })}
+                rightIcon={
+                  <span
+                    className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600 transition"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                  >
+                    {showPassword ? "🙈" : "👁"}
+                  </span>
+                }
               />
-              <span
-                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600 transition"
-                onClick={() => setShowPassword((prev) => !prev)}
-              >
-                {showPassword ? "🙈" : "👁"}
-              </span>
+              {errors?.password && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
           </div>
 
@@ -107,20 +227,31 @@ const SignUpPage: React.FC = () => {
               <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <input
+              <Input
                 type={showRePassword ? "text" : "password"}
+                variant="outline"
                 id="rePassword"
                 placeholder="Re-enter your password"
                 className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-blue-500"
-                value={rePassword}
-                onChange={handleRePasswordChange}
+                {...register("rePassword", {
+                  required: "Re-enter password is required",
+                  validate: (value) =>
+                    value === passwordValue || "Passwords do not match",
+                })}
+                rightIcon={
+                  <span
+                    className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600 transition"
+                    onClick={() => setShowRePassword((prev) => !prev)}
+                  >
+                    {showRePassword ? "🙈" : "👁"}
+                  </span>
+                }
               />
-              <span
-                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600 transition"
-                onClick={() => setShowRePassword((prev) => !prev)}
-              >
-                {showRePassword ? "🙈" : "👁"}
-              </span>
+              {errors?.rePassword && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.rePassword.message}
+                </p>
+              )}
             </div>
           </div>
 
@@ -129,6 +260,8 @@ const SignUpPage: React.FC = () => {
               <input
                 id="agree-terms"
                 type="checkbox"
+                checked={agreeTerms}
+                onChange={(e) => setAgreeTerms(e.target.checked)}
                 className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
             </div>
@@ -152,7 +285,10 @@ const SignUpPage: React.FC = () => {
 
           <button
             type="submit"
-            className="w-full rounded-md bg-sky-500 py-2 text-lg font-semibold text-white transition duration-200 hover:bg-sky-600"
+            disabled={!agreeTerms}
+            className={`w-full rounded-md bg-sky-500 py-2 text-lg font-semibold 
+            text-white transition duration-200 hover:bg-sky-600 
+            ${!agreeTerms ? "opacity-50 cursor-not-allowed" : ""}`}
           >
             Create account
           </button>
@@ -177,10 +313,21 @@ const SignUpPage: React.FC = () => {
           </div>
 
           <div className="flex justify-center space-x-4">
-            <button className="flex items-center rounded-md border border-gray-300 bg-white p-2 hover:bg-gray-50">
+            <button className="relative flex items-center rounded-md border border-gray-300 bg-white p-2 hover:bg-gray-50">
               <FaFacebookF className="h-6 w-6 text-blue-600" />
+              <FacebookLogin
+                appId={Environment.FACEBOOK_APP_ID!}
+                autoLoad={true}
+                fields="name,email,picture"
+                onClick={handleClickFacebook}
+                callback={handleFacebookResponse}
+                cssClass="w-full h-full absolute top-0 left-0 right-0 bottom-0 opacity-0"
+              />
             </button>
-            <button className="flex items-center rounded-md border border-gray-300 bg-white p-2 hover:bg-gray-50">
+            <button
+              onClick={onSubmitOAuthSignUp}
+              className="flex items-center rounded-md border border-gray-300 bg-white p-2 hover:bg-gray-50"
+            >
               <FcGoogle className="h-6 w-6" />
             </button>
           </div>
