@@ -1,14 +1,21 @@
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { selectCurrentUser } from "../../redux/activeUser/activeUserSlice";
+import { useAppSelector } from "../../redux/hooks";
 import { menuList } from "../../utils/constants";
 import Button from "./Button";
+import AvatarLoginImg from "/avatar-login.png";
 import Logo from "/logo.png";
+import NotificationIconImg from "/notification-icon.png";
+import ShoppingCartImg from "/shopping-cart.png";
 
 const Navbar = () => {
+  const [isLecturerDropdownOpen, setIsLecturerDropdownOpen] = useState(false);
+
+  const currentUser = useAppSelector(selectCurrentUser);
   const location = useLocation();
   const navigate = useNavigate();
-  const [isLecturerDropdownOpen, setIsLecturerDropdownOpen] = useState(false);
 
   return (
     <nav className="bg-white flex items-center justify-between px-10 py-2">
@@ -77,16 +84,48 @@ const Navbar = () => {
       </ul>
 
       <div className="flex items-center justify-center gap-6">
-        <Button
-          onClick={() => navigate("/auth/login")}
-          type="primary"
-          content="Log In"
-        />
-        <Button
-          onClick={() => navigate("/auth/register")}
-          type="primary"
-          content="Sign Up"
-        />
+        {currentUser ? (
+          <>
+            <img
+              src={ShoppingCartImg}
+              className="w-9.25 h-10.25 object-cover"
+              alt="shopping-cart-img"
+            />
+            <img
+              src={NotificationIconImg}
+              className="w-9.25 h-10.25 object-cover"
+              alt="notification-icon-img"
+            />
+            <div className="flex items-center gap-3">
+              <img
+                src={AvatarLoginImg}
+                className="w-14 h-15.25 object-cover"
+                alt=""
+              />
+              <div className="flex flex-col gap-1">
+                <h4 className="font-poppins font-medium text-[20px] text-black">
+                  {currentUser.firstName + " " + currentUser.lastName}
+                </h4>
+                <h5 className="font-poppins font-normal text-[13px] text-[#6A6B6C]">
+                  {currentUser.email}
+                </h5>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <Button
+              onClick={() => navigate("/auth/login")}
+              type="primary"
+              content="Log In"
+            />
+            <Button
+              onClick={() => navigate("/auth/register")}
+              type="primary"
+              content="Sign Up"
+            />
+          </>
+        )}
       </div>
     </nav>
   );
