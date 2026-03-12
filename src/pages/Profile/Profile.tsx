@@ -2,11 +2,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import AvatarUploader from "../../components/profile/AvatarUploader";
 import PersonalInfoCard from "../../components/profile/PersonalInfoCard";
 import SecuritySettingCard from "../../components/profile/SecuritySettingCard";
+import { selectCurrentUser } from "../../redux/activeUser/activeUserSlice";
+import { useAppSelector } from "../../redux/hooks";
 import ProfileLecturers from "./ProfileLecturers";
 import ProfileMyCourses from "./ProfileMyCourses";
 import PersonalIcon from "/icons/avatar.png";
 import BookIcon from "/icons/book.png";
 import TeacherIcon from "/icons/teacher.png";
+import { authService } from "../../apis/auth";
 
 const profile = {
   id: "1",
@@ -14,6 +17,7 @@ const profile = {
   lastName: "Tuan",
   email: "tuanpn.it@gmail.com",
   phone: "0369332842",
+  role: "student",
   avatarUrl: "",
   birthDay: 7,
   birthMonth: 12,
@@ -21,16 +25,19 @@ const profile = {
 };
 
 const Profile = () => {
-  const updateAvatar = async () => {};
-
-  const saveProfile = async () => {};
-
+  const currentUser = useAppSelector(selectCurrentUser);
   const location = useLocation();
   const navigate = useNavigate();
 
   const isPersonal = location.pathname === "/profile";
   const isCourses = location.pathname === "/profile/my-courses";
   const isLecturers = location.pathname === "/profile/lecturers";
+
+  const updateAvatar = async (file: File) => {
+    await authService.uploadUserAvatarAPI({ file });
+  };
+
+  const saveProfile = async () => {};
 
   return (
     <div className="bg-[#f5f6fa] py-6">
@@ -42,7 +49,7 @@ const Profile = () => {
         <aside className="bg-white rounded-lg p-6 max-h-151.25 mt-5">
           <div className="flex flex-col items-center">
             <AvatarUploader
-              avatarUrl={profile?.avatarUrl}
+              avatarUrl={currentUser?.avatar?.fileUrl || profile?.avatarUrl}
               onUpload={updateAvatar}
               size={105}
             />
