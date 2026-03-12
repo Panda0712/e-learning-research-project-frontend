@@ -10,11 +10,16 @@ import {
   Send,
   SquareArrowOutUpRight,
   Trash2,
+  Loader2,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
+// Lấy thông tin tài khoản đang đăng nhập từ Redux
+import { useAppSelector } from "../../../redux/hooks";
+import { selectCurrentUser } from "../../../redux/activeUser/activeUserSlice";
+
 import type { DashboardStudent } from "../../../types/course.type";
-import { MOCK_COURSES, STUDENT_DATA } from "../../../utils/mockData";
+import { MOCK_COURSES } from "../../../utils/mockData";
 
 // --- CONFIG COLORS ---
 const COLORS = {
@@ -45,26 +50,31 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 // --- MAIN COMPONENT ---
 const DashboardMyStudents = () => {
-  // State dùng DashboardStudent
-  const [selectedStudent, setSelectedStudent] =
-    useState<DashboardStudent | null>(null);
+  // Lấy thông tin Giảng viên đang đăng nhập
+  const currentUser = useAppSelector(selectCurrentUser);
+
+  // ====================================================================
+  // STATE DỮ LIỆU & UI
+  // ====================================================================
+  const [studentsList, setStudentsList] = useState<DashboardStudent[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [selectedStudent, setSelectedStudent] = useState<DashboardStudent | null>(null);
   const [openModule, setOpenModule] = useState<string | null>(null);
 
   const [filterCourse, setFilterCourse] = useState<string>("Course");
   const [sortOption, setSortOption] = useState<string>("Sort by");
-  const [activeDropdown, setActiveDropdown] = useState<
-    "course" | "sort" | null
-  >(null);
+  const [activeDropdown, setActiveDropdown] = useState<"course" | "sort" | null>(null);
 
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 8;
 
   const [isMessageMode, setIsMessageMode] = useState(false);
   const [messageText, setMessageText] = useState("");
-  const [sendingStatus, setSendingStatus] = useState<
-    "idle" | "sending" | "success"
-  >("idle");
+  const [sendingStatus, setSendingStatus] = useState<"idle" | "sending" | "success">("idle");
 
+  // Reset popup state khi đóng
   useEffect(() => {
     if (!selectedStudent) {
       setIsMessageMode(false);
@@ -74,11 +84,71 @@ const DashboardMyStudents = () => {
     }
   }, [selectedStudent]);
 
-  // Unique Courses từ STUDENT_DATA
+  // ====================================================================
+  // GỌI API LẤY DỮ LIỆU SINH VIÊN
+  // ====================================================================
+  useEffect(() => {
+    const fetchStudentsData = async () => {
+      // 1. Nếu chưa có user thì báo lỗi (chờ load)
+      if (!currentUser || !currentUser.id) {
+        setError("Đang tải thông tin tài khoản. Vui lòng đăng nhập lại nếu lỗi vẫn tiếp diễn.");
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const instructorId = currentUser.id;
+
+        const token = localStorage.getItem('accessToken'); 
+        const headers: HeadersInit = {
+          'Content-Type': 'application/json',
+        };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const response = await fetch(`http://localhost:3000/v1/enrollments/instructor/${instructorId}/students`, {
+          method: 'GET',
+          headers: headers,
+        });
+
+        if (!response.ok) throw new Error("Không thể lấy dữ liệu từ Server!");
+
+        const rawData = await response.json();
+
+        // 2. Map dữ liệu trả về từ DB
+        const mappedData: DashboardStudent[] = rawData.map((item: any) => ({
+          id: item.id,
+          name: item.student?.fullName || item.student?.name || "Học viên",
+          email: item.student?.email || "Chưa cập nhật",
+          course: item.course?.title || "Khóa học",
+          progress: item.progress || 0,
+          lastActivity: new Date(item.updatedAt || item.createdAt).toLocaleDateString('en-US', {
+            year: 'numeric', month: 'short', day: 'numeric'
+          }),
+          status: item.progress === 100 ? "Completed" : (item.status === "enrolled" || item.progress > 0 ? "Active" : "Inactive"),
+        }));
+
+        setStudentsList(mappedData);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStudentsData();
+  }, [currentUser]);
+
+  // ====================================================================
+  // LOGIC LỌC, SẮP XẾP VÀ PHÂN TRANG DỮ LIỆU
+  // ====================================================================
   const UNIQUE_COURSES = useMemo(
-    () => Array.from(new Set(STUDENT_DATA.map((s) => s.course))),
-    [],
+    () => Array.from(new Set(studentsList.map((s) => s.course))),
+    [studentsList]
   );
+  
   const SORT_OPTIONS = [
     "Newest First",
     "Oldest First",
@@ -86,9 +156,8 @@ const DashboardMyStudents = () => {
     "Progress (Low to High)",
   ];
 
-  // Logic lọc và sắp xếp
   const processedData = useMemo(() => {
-    let data = [...STUDENT_DATA];
+    let data = [...studentsList];
 
     if (filterCourse !== "Course" && filterCourse !== "All Courses") {
       data = data.filter((student) => student.course === filterCourse);
@@ -98,20 +167,15 @@ const DashboardMyStudents = () => {
       const dateA = new Date(a.lastActivity).getTime();
       const dateB = new Date(b.lastActivity).getTime();
       switch (sortOption) {
-        case "Newest First":
-          return dateB - dateA;
-        case "Oldest First":
-          return dateA - dateB;
-        case "Progress (High to Low)":
-          return b.progress - a.progress;
-        case "Progress (Low to High)":
-          return a.progress - b.progress;
-        default:
-          return 0;
+        case "Newest First": return dateB - dateA;
+        case "Oldest First": return dateA - dateB;
+        case "Progress (High to Low)": return b.progress - a.progress;
+        case "Progress (Low to High)": return a.progress - b.progress;
+        default: return 0;
       }
     });
     return data;
-  }, [filterCourse, sortOption]);
+  }, [filterCourse, sortOption, studentsList]);
 
   const totalPages = Math.ceil(processedData.length / itemsPerPage);
   const currentStudents = processedData.slice(
@@ -137,19 +201,15 @@ const DashboardMyStudents = () => {
     setTimeout(() => setSendingStatus("success"), 1000);
   };
 
-  // --- LOGIC CHI TIẾT KHÓA HỌC ---
+  // Giữ nguyên logic tính bài học giả lập từ Mock Data 
   const getStudentCourseDetails = (student: DashboardStudent) => {
-    // Tìm khóa học trong MOCK_COURSES
     const course = MOCK_COURSES.find((c) => c.title === student.course);
-
     if (!course || !course.curriculum) return null;
 
     let totalLessons = 0;
     course.curriculum.forEach((mod) => (totalLessons += mod.items.length));
 
-    const completedLessonsCount = Math.floor(
-      (student.progress / 100) * totalLessons,
-    );
+    const completedLessonsCount = Math.floor((student.progress / 100) * totalLessons);
     let counter = 0;
 
     const modulesWithStatus = course.curriculum.map((mod) => {
@@ -161,8 +221,7 @@ const DashboardMyStudents = () => {
         };
       });
 
-      const isModuleComplete =
-        itemsWithStatus.length > 0 && itemsWithStatus.every((i) => i.completed);
+      const isModuleComplete = itemsWithStatus.length > 0 && itemsWithStatus.every((i) => i.completed);
 
       return {
         ...mod,
@@ -174,16 +233,10 @@ const DashboardMyStudents = () => {
     return modulesWithStatus;
   };
 
-  const currentCourseModules = selectedStudent
-    ? getStudentCourseDetails(selectedStudent)
-    : null;
+  const currentCourseModules = selectedStudent ? getStudentCourseDetails(selectedStudent) : null;
 
   useEffect(() => {
-    if (
-      currentCourseModules &&
-      currentCourseModules.length > 0 &&
-      !openModule
-    ) {
+    if (currentCourseModules && currentCourseModules.length > 0 && !openModule) {
       setOpenModule(currentCourseModules[0].title);
     }
   }, [currentCourseModules, openModule]);
@@ -192,14 +245,12 @@ const DashboardMyStudents = () => {
     <div className="w-full h-full bg-slate-50 p-6 md:p-8 font-sans">
       <h1 className="text-2xl font-bold text-gray-800 mb-6">My Student</h1>
 
-      {/* Filter & Sort */}
+      {/* --- Filter & Sort --- */}
       <div className="flex gap-4 mb-6 relative z-20">
         {/* Course Select */}
         <div className="relative">
           <button
-            onClick={() =>
-              setActiveDropdown(activeDropdown === "course" ? null : "course")
-            }
+            onClick={() => setActiveDropdown(activeDropdown === "course" ? null : "course")}
             className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 
             rounded-full text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition 
             min-w-30 justify-between max-w-75"
@@ -211,8 +262,7 @@ const DashboardMyStudents = () => {
             />
           </button>
           {activeDropdown === "course" && (
-            <div
-              className="absolute top-full left-0 mt-2 w-72 bg-white border border-gray-100 
+            <div className="absolute top-full left-0 mt-2 w-72 bg-white border border-gray-100 
             rounded-xl shadow-lg animate-in fade-in zoom-in-95 duration-100 overflow-hidden max-h-80 overflow-y-auto"
             >
               <ul className="py-1 text-sm text-gray-700">
@@ -240,9 +290,7 @@ const DashboardMyStudents = () => {
         {/* Sort Select */}
         <div className="relative">
           <button
-            onClick={() =>
-              setActiveDropdown(activeDropdown === "sort" ? null : "sort")
-            }
+            onClick={() => setActiveDropdown(activeDropdown === "sort" ? null : "sort")}
             className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 
             rounded-full text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition 
             min-w-40 justify-between"
@@ -254,8 +302,7 @@ const DashboardMyStudents = () => {
             />
           </button>
           {activeDropdown === "sort" && (
-            <div
-              className="absolute top-full left-0 mt-2 w-56 bg-white border 
+            <div className="absolute top-full left-0 mt-2 w-56 bg-white border 
             border-gray-100 rounded-xl shadow-lg animate-in fade-in zoom-in-95 
             duration-100 overflow-hidden"
             >
@@ -275,12 +322,18 @@ const DashboardMyStudents = () => {
         </div>
       </div>
 
-      {/* Table */}
-      <div
-        className="bg-white rounded-xl shadow-sm border border-gray-100 
-      overflow-hidden relative z-10 min-h-100"
-      >
-        {processedData.length > 0 ? (
+      {/* --- Table & Loading State --- */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative z-10 min-h-100">
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+            <Loader2 className="animate-spin text-blue-500 mb-2" size={32} />
+            <p>Đang tải dữ liệu học viên...</p>
+          </div>
+        ) : error ? (
+           <div className="flex flex-col items-center justify-center py-20 text-red-500">
+            <p>Lỗi: {error}</p>
+          </div>
+        ) : processedData.length > 0 ? (
           <table className="w-full text-left border-collapse">
             <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-semibold">
               <tr>
@@ -304,21 +357,14 @@ const DashboardMyStudents = () => {
                   <td className="p-4 text-gray-400">
                     {(currentPage - 1) * itemsPerPage + idx + 1}
                   </td>
-                  <td className="p-4 font-medium text-gray-900">
-                    {student.name}
-                  </td>
+                  <td className="p-4 font-medium text-gray-900">{student.name}</td>
                   <td className="p-4 text-gray-500">{student.email}</td>
-                  <td
-                    className="p-4 text-gray-900 max-w-xs truncate"
-                    title={student.course}
-                  >
+                  <td className="p-4 text-gray-900 max-w-xs truncate" title={student.course}>
                     {student.course}
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <span className="font-semibold text-gray-700 w-8">
-                        {student.progress}%
-                      </span>
+                      <span className="font-semibold text-gray-700 w-8">{student.progress}%</span>
                       <div className="flex-1 w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full ${student.progress === 100 ? "bg-green-500" : "bg-yellow-400"}`}
@@ -333,16 +379,10 @@ const DashboardMyStudents = () => {
                   </td>
                   <td className="p-4">
                     <div className="flex items-center justify-center gap-2 text-gray-400">
-                      <button
-                        className="p-1 hover:text-red-500 hover:bg-red-50 rounded transition"
-                        onClick={(e) => e.stopPropagation()}
-                      >
+                      <button className="p-1 hover:text-red-500 hover:bg-red-50 rounded transition" onClick={(e) => e.stopPropagation()}>
                         <Trash2 size={18} />
                       </button>
-                      <button
-                        className="p-1 hover:text-blue-500 hover:bg-blue-50 rounded transition"
-                        onClick={(e) => e.stopPropagation()}
-                      >
+                      <button className="p-1 hover:text-blue-500 hover:bg-blue-50 rounded transition" onClick={(e) => e.stopPropagation()}>
                         <SquareArrowOutUpRight size={18} />
                       </button>
                     </div>
@@ -353,18 +393,17 @@ const DashboardMyStudents = () => {
           </table>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-            <p>No students found for this filter.</p>
+            <p>Không tìm thấy học viên nào.</p>
           </div>
         )}
 
         {/* Pagination */}
-        {totalPages > 0 && (
+        {!isLoading && !error && totalPages > 0 && (
           <div className="p-4 flex justify-center items-center gap-2 border-t border-gray-100">
             <button
               onClick={() => setCurrentPage((c) => Math.max(c - 1, 1))}
               disabled={currentPage === 1}
-              className="w-8 h-8 flex items-center justify-center rounded-md border 
-              border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50"
+              className="w-8 h-8 flex items-center justify-center rounded-md border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50"
             >
               <ChevronLeft size={16} />
             </button>
@@ -380,8 +419,7 @@ const DashboardMyStudents = () => {
             <button
               onClick={() => setCurrentPage((c) => Math.min(c + 1, totalPages))}
               disabled={currentPage === totalPages}
-              className="w-8 h-8 flex items-center justify-center rounded-md border 
-              border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50"
+              className="w-8 h-8 flex items-center justify-center rounded-md border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50"
             >
               <ChevronRight size={16} />
             </button>
@@ -389,68 +427,45 @@ const DashboardMyStudents = () => {
         )}
       </div>
 
-      {/* Modal Popup */}
+      {/* --- Modal Popup --- */}
       {selectedStudent && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center 
-        bg-black/25 backdrop-blur-[1px] p-4 animate-in fade-in duration-200"
-        >
-          <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl 
-          overflow-hidden relative animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]"
-          >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/25 backdrop-blur-[1px] p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden relative animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
             {isMessageMode ? (
-              // Message Mode
               <div className="flex flex-col h-full">
                 <div className="p-6 border-b border-gray-100 bg-gray-50">
                   <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                     Send Message to {selectedStudent.name}
                   </h2>
-                  <p className="text-sm text-gray-500 mt-1">
-                    To: {selectedStudent.email}
-                  </p>
+                  <p className="text-sm text-gray-500 mt-1">To: {selectedStudent.email}</p>
                 </div>
                 <div className="p-6 flex-1 overflow-y-auto">
                   {sendingStatus === "success" ? (
                     <div className="flex flex-col items-center justify-center h-full text-center py-10">
-                      <div
-                        className="w-16 h-16 bg-green-100 rounded-full flex items-center 
-                      justify-center mb-4 animate-in zoom-in"
-                      >
+                      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4 animate-in zoom-in">
                         <CheckCircle size={32} className="text-green-600" />
                       </div>
-                      <h3 className="text-lg font-bold text-gray-900">
-                        Message Sent!
-                      </h3>
-                      <p className="text-gray-500 mt-2">
-                        Your message has been sent.
-                      </p>
+                      <h3 className="text-lg font-bold text-gray-900">Message Sent!</h3>
+                      <p className="text-gray-500 mt-2">Your message has been sent.</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Subject
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
                         <input
                           type="text"
                           defaultValue={`Regarding: ${selectedStudent.course}`}
-                          className="w-full px-4 py-2 text-black border border-gray-200 rounded-lg 
-                          focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition"
+                          className="w-full px-4 py-2 text-black border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Message
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
                         <textarea
                           rows={6}
                           value={messageText}
                           onChange={(e) => setMessageText(e.target.value)}
                           placeholder="Type your message here..."
-                          className="w-full px-4 py-3 text-black border border-gray-200 
-                          rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 
-                          outline-none transition resize-none"
+                          className="w-full px-4 py-3 text-black border border-gray-200 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 outline-none transition resize-none"
                         ></textarea>
                       </div>
                     </div>
@@ -458,124 +473,62 @@ const DashboardMyStudents = () => {
                 </div>
                 <div className="p-6 border-t border-gray-100 flex justify-between bg-white">
                   <button
-                    onClick={() =>
-                      sendingStatus === "success"
-                        ? setSelectedStudent(null)
-                        : setIsMessageMode(false)
-                    }
-                    className="flex items-center gap-2 px-6 py-2.5 rounded-lg border border-gray-200 
-                    font-medium text-gray-700 hover:bg-gray-50 transition"
+                    onClick={() => sendingStatus === "success" ? setSelectedStudent(null) : setIsMessageMode(false)}
+                    className="flex items-center gap-2 px-6 py-2.5 rounded-lg border border-gray-200 font-medium text-gray-700 hover:bg-gray-50 transition"
                   >
-                    {sendingStatus === "success" ? (
-                      "Close"
-                    ) : (
-                      <>
-                        <ArrowLeft size={18} /> Back
-                      </>
-                    )}
+                    {sendingStatus === "success" ? "Close" : <><ArrowLeft size={18} /> Back</>}
                   </button>
                   {sendingStatus !== "success" && (
                     <button
                       onClick={handleSendMessage}
-                      disabled={
-                        !messageText.trim() || sendingStatus === "sending"
-                      }
-                      className="flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold 
-                      text-black shadow-sm hover:opacity-90 transition disabled:opacity-50 
-                      disabled:cursor-not-allowed"
+                      disabled={!messageText.trim() || sendingStatus === "sending"}
+                      className="flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold text-black shadow-sm hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{ backgroundColor: COLORS.yellowBtn }}
                     >
-                      {sendingStatus === "sending" ? (
-                        "Sending..."
-                      ) : (
-                        <>
-                          <Send size={18} /> Send Message
-                        </>
-                      )}
+                      {sendingStatus === "sending" ? "Sending..." : <><Send size={18} /> Send Message</>}
                     </button>
                   )}
                 </div>
               </div>
             ) : (
-              // Course Detail Mode
               <>
                 <div className="p-6 pb-2">
-                  <h2 className="text-xl font-bold text-gray-900">
-                    {selectedStudent.name}
-                  </h2>
-                  <p className="text-sm mt-1 font-medium text-blue-600">
-                    {selectedStudent.course}
-                  </p>
+                  <h2 className="text-xl font-bold text-gray-900">{selectedStudent.name}</h2>
+                  <p className="text-sm mt-1 font-medium text-blue-600">{selectedStudent.course}</p>
                 </div>
 
                 <div className="p-6 pt-2 overflow-y-auto space-y-4 bg-gray-50/50 flex-1">
                   {currentCourseModules ? (
                     currentCourseModules.map((mod, idx) => (
-                      <div
-                        key={idx}
-                        className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm"
-                      >
+                      <div key={idx} className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
                         <div
-                          onClick={() =>
-                            setOpenModule(
-                              openModule === mod.title ? null : mod.title,
-                            )
-                          }
+                          onClick={() => setOpenModule(openModule === mod.title ? null : mod.title)}
                           className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition"
                         >
                           <div className="flex items-center gap-3">
-                            <span className="font-semibold text-gray-800 text-sm md:text-base">
-                              {mod.title}
-                            </span>
-                            {mod.complete && (
-                              <CheckCircle
-                                size={20}
-                                className="text-white fill-green-600 shrink-0"
-                              />
-                            )}
+                            <span className="font-semibold text-gray-800 text-sm md:text-base">{mod.title}</span>
+                            {mod.complete && <CheckCircle size={20} className="text-white fill-green-600 shrink-0" />}
                           </div>
-                          <ChevronDown
-                            size={20}
-                            className={`text-gray-400 transition-transform ${openModule === mod.title ? "rotate-180" : ""}`}
-                          />
+                          <ChevronDown size={20} className={`text-gray-400 transition-transform ${openModule === mod.title ? "rotate-180" : ""}`} />
                         </div>
 
                         {openModule === mod.title && (
                           <div className="bg-white px-4 pb-4 space-y-2 border-t border-gray-100">
                             {mod.items.map((lesson, lIdx) => (
-                              <div
-                                key={lIdx}
-                                className="flex items-center justify-between py-2.5 px-2 rounded-lg 
-                                hover:bg-slate-50 transition"
-                              >
+                              <div key={lIdx} className="flex items-center justify-between py-2.5 px-2 rounded-lg hover:bg-slate-50 transition">
                                 <div className="flex items-center gap-3 text-sm text-gray-700">
                                   {lesson.completed ? (
-                                    <CheckCircle
-                                      size={18}
-                                      className="text-white fill-green-600 shrink-0"
-                                    />
+                                    <CheckCircle size={18} className="text-white fill-green-600 shrink-0" />
                                   ) : (
                                     <div className="w-4.5 h-4.5 rounded-full border-2 border-gray-300 shrink-0"></div>
                                   )}
 
                                   <div className="flex items-center gap-2">
-                                    {lesson.type === "video" ? (
-                                      <PlayCircle
-                                        size={16}
-                                        className="text-gray-400"
-                                      />
-                                    ) : (
-                                      <FileText
-                                        size={16}
-                                        className="text-gray-400"
-                                      />
-                                    )}
+                                    {lesson.type === "video" ? <PlayCircle size={16} className="text-gray-400" /> : <FileText size={16} className="text-gray-400" />}
                                     <span>{lesson.title}</span>
                                   </div>
                                 </div>
-                                <span className="text-xs text-gray-400 font-medium bg-gray-100 px-2 py-1 rounded">
-                                  {lesson.duration}
-                                </span>
+                                <span className="text-xs text-gray-400 font-medium bg-gray-100 px-2 py-1 rounded">{lesson.duration}</span>
                               </div>
                             ))}
                           </div>
@@ -583,25 +536,21 @@ const DashboardMyStudents = () => {
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-10 text-gray-500 italic">
-                      Course curriculum details not found.
-                    </div>
+                    <div className="text-center py-10 text-gray-500 italic">Course curriculum details not found.</div>
                   )}
                 </div>
 
                 <div className="p-6 border-t border-gray-100 flex justify-end gap-3 bg-white">
                   <button
                     onClick={() => setIsMessageMode(true)}
-                    className="flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold 
-                    text-black shadow-sm hover:opacity-90 transition"
+                    className="flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold text-black shadow-sm hover:opacity-90 transition"
                     style={{ backgroundColor: COLORS.yellowBtn }}
                   >
                     <Mail size={18} /> Send message
                   </button>
                   <button
                     onClick={() => setSelectedStudent(null)}
-                    className="flex items-center gap-2 px-6 py-2.5 rounded-lg border 
-                    border-gray-200 font-medium text-gray-700 hover:bg-gray-50 transition"
+                    className="flex items-center gap-2 px-6 py-2.5 rounded-lg border border-gray-200 font-medium text-gray-700 hover:bg-gray-50 transition"
                   >
                     Cancel <span className="text-lg leading-none">&rarr;</span>
                   </button>
