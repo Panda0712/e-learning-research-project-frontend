@@ -68,6 +68,15 @@ const facebookAuthAPI = async ({ accessToken }: { accessToken: string }) => {
   return res.data;
 };
 
+// handle user avatar upload
+const uploadUserAvatarAPI = async (data: any) => {
+  const res = await authorizedAxiosInstance.post(
+    `${API_ROOT}/v1/users/avatar`,
+    data,
+  );
+  return res.data;
+};
+
 export const authService = {
   refreshTokenAPI,
   registerUserAPI,
@@ -75,4 +84,5 @@ export const authService = {
   forgotPasswordAPI,
   resetPasswordAPI,
   facebookAuthAPI,
+  uploadUserAvatarAPI,
 };

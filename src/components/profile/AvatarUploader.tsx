@@ -1,7 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { toast } from "react-toastify";
 import Camera from "/camera.png";
 import DefaultAvatar from "/default-avatar.png";
+import { useAppDispatch } from "../../redux/hooks";
+import { fetchCurrentUserAPI } from "../../redux/activeUser/activeUserSlice";
 
 type AvatarProps = {
   avatarUrl?: string | null;
@@ -13,6 +16,8 @@ const AvatarUploader = ({ avatarUrl, onUpload, size = 112 }: AvatarProps) => {
   const [preview, setPreview] = useState<string | null>(avatarUrl ?? null);
   const [loading, setLoading] = useState(false);
 
+  const dispatch = useAppDispatch();
+
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -23,6 +28,12 @@ const AvatarUploader = ({ avatarUrl, onUpload, size = 112 }: AvatarProps) => {
     setLoading(true);
     try {
       await onUpload(file);
+      dispatch(fetchCurrentUserAPI())
+        .unwrap()
+        .then(() => {})
+        .catch((error: any) => {
+          toast.error(error?.message || "Cannot get current user!");
+        });
       toast.success("Avatar uploaded successfully!");
     } catch (error) {
       if (error instanceof Error) {
