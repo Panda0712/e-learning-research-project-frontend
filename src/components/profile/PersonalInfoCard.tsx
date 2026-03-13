@@ -3,14 +3,14 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import type { UserProfile } from "../../types/user.type";
-import Input from "../ui/Input";
 import Button from "../ui/Button";
+import Input from "../ui/Input";
 
 const schema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().optional(),
   email: z.email("Invalid email").min(1, "Email is required"),
-  phone: z.string().optional(),
+  phoneNumber: z.string().optional(),
   birthDay: z
     .number("Must be a number")
     .min(1, "Day must be between 1 and 31")
@@ -45,10 +45,12 @@ const PersonalInfoCard = ({ profile, onSave }: Props) => {
       firstName: profile?.firstName ?? "",
       lastName: profile?.lastName ?? undefined,
       email: profile?.email ?? "",
-      phone: profile?.phone ?? undefined,
-      birthDay: profile?.birthDay ?? undefined,
-      birthMonth: profile?.birthMonth ?? undefined,
-      birthYear: profile?.birthYear ?? undefined,
+      phoneNumber: profile?.phoneNumber ?? undefined,
+      birthDay: profile?.dateOfBirth?.getDate() ?? null,
+      birthMonth: profile?.dateOfBirth
+        ? profile?.dateOfBirth?.getMonth() + 1
+        : null,
+      birthYear: profile?.dateOfBirth?.getFullYear() ?? null,
     },
   });
 
@@ -57,10 +59,12 @@ const PersonalInfoCard = ({ profile, onSave }: Props) => {
       firstName: profile?.firstName ?? "",
       lastName: profile?.lastName ?? undefined,
       email: profile?.email ?? "",
-      phone: profile?.phone ?? undefined,
-      birthDay: profile?.birthDay ?? undefined,
-      birthMonth: profile?.birthMonth ?? undefined,
-      birthYear: profile?.birthYear ?? undefined,
+      phoneNumber: profile?.phoneNumber ?? undefined,
+      birthDay: profile?.dateOfBirth?.getDate() ?? undefined,
+      birthMonth: profile?.dateOfBirth
+        ? profile?.dateOfBirth?.getMonth() + 1
+        : null,
+      birthYear: profile?.dateOfBirth?.getFullYear() ?? undefined,
     });
   }, [profile, reset]);
 
@@ -151,7 +155,7 @@ const PersonalInfoCard = ({ profile, onSave }: Props) => {
           <Input
             variant="outline"
             type="text"
-            {...register("phone")}
+            {...register("phoneNumber")}
             className="mt-1 w-full border rounded px-3 py-2"
           />
         </div>

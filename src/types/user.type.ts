@@ -4,11 +4,32 @@ export interface UserProfile {
   lastName?: string;
   email: string;
   role: string;
-  phone?: string;
+  phoneNumber?: string;
   avatarUrl?: string;
-  birthDay?: number | null;
-  birthMonth?: number | null;
-  birthYear?: number | null;
+  dateOfBirth?: Date | null;
+}
+
+export interface ProfileLecturersAPIData {
+  lecturers: ProfileLecturerDetailAPIData[];
+  totalLecturers: number;
+}
+
+export interface ProfileLecturerDetailAPIData {
+  id: number;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  avatarId?: number;
+  phoneNumber?: string;
+  dateOfBirth?: string;
+  role: string;
+  isVerified: boolean;
+  avatar?: {
+    fileUrl?: string;
+  };
+  createdAt: Date;
+  updatedAt?: Date;
+  isDestroyed: boolean;
 }
 
 // Pick - take necessary properties
@@ -16,13 +37,7 @@ export interface UserProfile {
 export type UpdateProfilePayload = Partial<
   Pick<
     UserProfile,
-    | "firstName"
-    | "lastName"
-    | "email"
-    | "phone"
-    | "birthDay"
-    | "birthMonth"
-    | "birthYear"
+    "firstName" | "lastName" | "email" | "phoneNumber" | "dateOfBirth"
   >
 >;
 

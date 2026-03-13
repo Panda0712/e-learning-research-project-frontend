@@ -1,7 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import zxcvbn from "zxcvbn";
+import { updateUserAPI } from "../../redux/activeUser/activeUserSlice";
+import { useAppDispatch } from "../../redux/hooks";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
 import PasswordStrength from "./PasswordStrength";
@@ -27,18 +30,23 @@ export default function SecuritySettingsCard() {
   const newPassword = watch("newPassword") ?? "";
   const score = newPassword ? zxcvbn(newPassword).score : 0;
 
-  async function onSubmit(data: FormValues) {
+  const dispatch = useAppDispatch();
+
+  async function onSubmit(data: any) {
     if (data.newPassword !== data.confirmPassword) {
       toast.error("Password does not match!");
       return;
     }
     try {
-      // await changePassword({
-      //   currentPassword: data.currentPassword,
-      //   newPassword: data.newPassword,
-      // });
+      dispatch(updateUserAPI(data))
+        .unwrap()
+        .then(() => {
+          toast.success("Updated password successfully!");
+        })
+        .catch((error: any) => {
+          toast.error(error?.message || "Cannot update password!");
+        });
       reset();
-      toast.success("Updated password successfully!");
     } catch (err) {
       if (err instanceof Error) {
         toast.error(err.message);

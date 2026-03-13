@@ -181,6 +181,8 @@ export const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
 export const MAX_SIZE_GB = 4;
 export const MIN_VIDEO_HEIGHT = 720;
 
+export const DEFAULT_ITEMS_PER_PAGE = 6;
+
 export const VIDEO_TYPES = ["video/mp4", "video/quicktime"]; // mp4, mov
 export const IMAGE_TYPES = ["image/jpeg", "image/png"];
 export const FILE_TYPES = [
