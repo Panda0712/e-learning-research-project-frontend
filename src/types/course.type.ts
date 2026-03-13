@@ -69,27 +69,61 @@ export interface Course {
 }
 
 export interface DashboardStudent {
-    id: number | string;
-    name: string;
-    email: string;
-    course: string; 
-    progress: number;
-    lastActivity: string;
-    status: string;
+  id: number | string;
+  name: string;
+  email: string;
+  course: string;
+  progress: number;
+  lastActivity: string;
+  status: string;
 }
 
 export interface CourseItem {
-    title: string;
-    duration: string;
-    type: string;
-    isPreview: boolean;
-    completed?: boolean;
+  title: string;
+  duration: string;
+  type: string;
+  isPreview: boolean;
+  completed?: boolean;
 }
 
 export interface CourseCurriculum {
-    title: string;
-    lessonsCount: number;
-    duration: number;
-    items: CourseItem[];
-    complete?: boolean; 
+  title: string;
+  lessonsCount: number;
+  duration: number;
+  items: CourseItem[];
+  complete?: boolean;
 }
+
+export type ProfileCoursesAPIData = {
+  courses: ProfileCourseDetailAPIData[];
+  totalCourses: number;
+};
+
+export type ProfileCourseDetailAPIData = {
+  id: number;
+  lecturerId: number;
+  categoryId?: number;
+  thumbnailId?: number;
+  name: string;
+  lecturerName?: string;
+  duration?: string;
+  totalStudents: number;
+  totalLessons: number;
+  totalQuizzes: number;
+  level?: string;
+  overview?: string;
+  price: number;
+  createdAt: Date;
+  updatedAt?: Date;
+  status: string;
+  isDestroyed: boolean;
+  enrollments: ProfileCoursesEnrollmentAPIData[];
+  thumbnail: {
+    fileUrl?: string;
+  };
+};
+
+export type ProfileCoursesEnrollmentAPIData = {
+  progress: number;
+  lastAccessedAt: Date;
+};

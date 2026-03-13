@@ -1,15 +1,20 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { authService } from "../../apis/auth";
 import AvatarUploader from "../../components/profile/AvatarUploader";
 import PersonalInfoCard from "../../components/profile/PersonalInfoCard";
 import SecuritySettingCard from "../../components/profile/SecuritySettingCard";
-import { selectCurrentUser } from "../../redux/activeUser/activeUserSlice";
-import { useAppSelector } from "../../redux/hooks";
+import {
+  selectCurrentUser,
+  updateUserAPI,
+} from "../../redux/activeUser/activeUserSlice";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import ProfileLecturers from "./ProfileLecturers";
 import ProfileMyCourses from "./ProfileMyCourses";
 import PersonalIcon from "/icons/avatar.png";
 import BookIcon from "/icons/book.png";
 import TeacherIcon from "/icons/teacher.png";
-import { authService } from "../../apis/auth";
 
 const profile = {
   id: "1",
@@ -28,6 +33,7 @@ const Profile = () => {
   const currentUser = useAppSelector(selectCurrentUser);
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
   const isPersonal = location.pathname === "/profile";
   const isCourses = location.pathname === "/profile/my-courses";
@@ -37,7 +43,16 @@ const Profile = () => {
     await authService.uploadUserAvatarAPI({ file });
   };
 
-  const saveProfile = async () => {};
+  const saveProfile = async (data: any) => {
+    dispatch(updateUserAPI(data))
+      .unwrap()
+      .then(() => {
+        toast.success("Update profile successfully!");
+      })
+      .catch((error: any) => {
+        toast.error(error?.message || "Cannot update user profile!");
+      });
+  };
 
   return (
     <div className="bg-[#f5f6fa] py-6">
@@ -160,7 +175,10 @@ const Profile = () => {
         <main>
           {isPersonal && (
             <>
-              <PersonalInfoCard profile={profile} onSave={saveProfile} />
+              <PersonalInfoCard
+                profile={currentUser ?? profile}
+                onSave={saveProfile}
+              />
               <SecuritySettingCard />
             </>
           )}
