@@ -3,13 +3,44 @@ import { useParams } from "react-router-dom";
 import AuthorBox from "../../components/box/AuthorBox";
 import CommentList from "../../components/comment/CommentListBlog";
 import Sidebar from "../../components/ui/SideBar";
-import { blogs } from "../../utils/blogData";
+import { useEffect, useState } from "react";
+import { blogApi } from "../../apis/blog";
+
+interface BlogData {
+  id: number;
+  title: string;
+  image: string;
+  date: string;
+  author: string;
+  content: string;
+  description: string;
+  category: string;
+}
 
 const BlogDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const blog = blogs.find((b) => b.id === Number(id));
+  const [blog, setBlog] = useState<BlogData | null>(null); 
+  const [loading, setLoading] = useState(true);
 
-  if (!blog) return <div className="text-center py-10">Post not found!</div>;
+  useEffect(() => {
+    const fetchBlogDetail = async () => {
+      try {
+        setLoading(true);
+        if (id) {
+          const data = await blogApi.getBlogDetailAPI(id);
+          setBlog(data);
+        }
+      } catch (error) {
+        console.error("Lỗi lấy chi tiết blog:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBlogDetail();
+  }, [id]);
+
+  if (loading) return <div className="text-center py-10">Đang tải bài viết...</div>;
+  if (!blog) return <div className="text-center py-10">Không tìm thấy bài viết!</div>;
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
