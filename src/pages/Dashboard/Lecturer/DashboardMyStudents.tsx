@@ -21,6 +21,9 @@ import { selectCurrentUser } from "../../../redux/activeUser/activeUserSlice";
 import type { DashboardStudent } from "../../../types/course.type";
 import { MOCK_COURSES } from "../../../utils/mockData";
 
+// 👇 IMPORT HÀM GỌI API TỪ THƯ MỤC APIS
+import { lecturerService } from "../../../apis/lecturer";
+
 // --- CONFIG COLORS ---
 const COLORS = {
   yellowBtn: "#FFD900",
@@ -85,7 +88,7 @@ const DashboardMyStudents = () => {
   }, [selectedStudent]);
 
   // ====================================================================
-  // GỌI API LẤY DỮ LIỆU SINH VIÊN
+  // GỌI API LẤY DỮ LIỆU SINH VIÊN BẰNG AXIOS
   // ====================================================================
   useEffect(() => {
     const fetchStudentsData = async () => {
@@ -100,24 +103,10 @@ const DashboardMyStudents = () => {
         setIsLoading(true);
         setError(null);
         
-        const instructorId = currentUser.id;
+        // 2. Gọi API thông qua Axios (Nó tự động đính kèm Token)
+        const rawData = await lecturerService.getMyStudentsAPI(currentUser.id);
 
-        const token = localStorage.getItem('accessToken'); 
-        const headers: HeadersInit = {
-          'Content-Type': 'application/json',
-        };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-
-        const response = await fetch(`http://localhost:3000/v1/enrollments/instructor/${instructorId}/students`, {
-          method: 'GET',
-          headers: headers,
-        });
-
-        if (!response.ok) throw new Error("Không thể lấy dữ liệu từ Server!");
-
-        const rawData = await response.json();
-
-        // 2. Map dữ liệu trả về từ DB
+        // 3. Map dữ liệu trả về từ DB
         const mappedData: DashboardStudent[] = rawData.map((item: any) => ({
           id: item.id,
           name: item.student?.fullName || item.student?.name || "Học viên",
@@ -132,7 +121,8 @@ const DashboardMyStudents = () => {
 
         setStudentsList(mappedData);
       } catch (err: any) {
-        setError(err.message);
+        // Bắt lỗi từ Axios trả về
+        setError(err.response?.data?.message || err.message || "Đã xảy ra lỗi khi tải dữ liệu.");
       } finally {
         setIsLoading(false);
       }
