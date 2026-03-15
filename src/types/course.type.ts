@@ -127,3 +127,78 @@ export type ProfileCoursesEnrollmentAPIData = {
   progress: number;
   lastAccessedAt: Date;
 };
+
+export type CourseListAPIResponse = {
+  courses: CourseAPIData[];
+  totalCourses: number;
+};
+
+export type CourseAPIData = {
+  id: number;
+  categoryId?: number | null;
+  thumbnailId?: number | null;
+  name: string;
+  lecturerId?: number;
+  lecturerName?: string;
+  duration?: string | null;
+  totalStudents: number;
+  totalLessons: number;
+  totalQuizzes: number;
+  level?: string | null;
+  overview?: string | null;
+  price: number;
+  status: string;
+  thumbnail?: { fileUrl?: string | null };
+  category?: { id: number; name: string };
+  lecturer?: {
+    firstName?: string;
+    lastName?: string;
+    avatar?: { fileUrl?: string | null };
+  };
+};
+
+export type CourseCategoryAPIData = { id: number; name: string; slug: string };
+
+export type CourseFaqAPIData = {
+  id: number;
+  question: string;
+  answer?: string | null;
+};
+
+export type ModuleAPIData = {
+  id: number;
+  courseId: number;
+  title: string;
+  duration?: string | null;
+  totalLessons?: number | null;
+};
+
+export type LessonAPIData = {
+  id: number;
+  moduleId: number;
+  title: string;
+  description?: string | null;
+  note?: string | null;
+  duration?: string | null;
+  lessonVideoId?: number | null;
+  lessonFileId?: number | null;
+  lessonVideo?: { fileUrl?: string | null };
+  lessonFile?: { fileUrl?: string | null };
+};
+
+export type ReviewAPIData = {
+  id: number;
+  rating: number;
+  content?: string | null;
+  studentName?: string | null;
+  studentAvatar?: string | null;
+  createdAt?: string | null;
+};
+
+export type ResourceAPIData = {
+  id: number;
+  publicId: string;
+  fileUrl: string;
+  fileSize?: number | null;
+  fileType?: string | null;
+};
