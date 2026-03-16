@@ -7,7 +7,7 @@ type RevenuePoint = {
 };
 
 interface DashboardRevenueProps {
-  externalData: RevenuePoint[];
+  externalData?: RevenuePoint[];
 }
 
 const revenueByMonth: Record<string, RevenuePoint[]> = {
@@ -64,7 +64,7 @@ const DashboardRevenue = ({ externalData }: DashboardRevenueProps) => {
   const hasExternalData = Boolean(externalData && externalData.length > 0);
 
   const data = useMemo(() => {
-    if (hasExternalData) return externalData;
+    if (hasExternalData) return externalData!;
     return revenueByMonth[month] ?? [];
   }, [hasExternalData, externalData, month]);
 
