@@ -4,6 +4,10 @@ interface topCourses {
   students: number;
 }
 
+interface DashboardTopCoursesProps {
+  data?: topCourses[];
+}
+
 const mockTopCourses: topCourses[] = [
   {
     id: 1,
@@ -22,7 +26,9 @@ const mockTopCourses: topCourses[] = [
   },
 ];
 
-const DashboardTopCourses = () => {
+const DashboardTopCourses = ({ data }: DashboardTopCoursesProps) => {
+  const displayData = data && data.length > 0 ? data : mockTopCourses;
+
   return (
     <div className="flex flex-col gap-1">
       <div className="p-3 bg-white">
@@ -40,7 +46,7 @@ const DashboardTopCourses = () => {
           </h4>
         </div>
         <div className="px-3 py-2 bg-[#f5f7fa] flex flex-col gap-2">
-          {mockTopCourses.map((course) => (
+          {displayData.map((course) => (
             <div key={course.id} className="flex items-center justify-between">
               <h5 className="text-[16px] font-normal text-[#666666] w-1/2">
                 {course.courseName}

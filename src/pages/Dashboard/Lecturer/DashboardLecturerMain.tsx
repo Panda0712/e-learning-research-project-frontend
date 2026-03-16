@@ -7,6 +7,11 @@ import YearPicker from "../../../components/picker/YearPicker";
 import ChartSkeleton from "../../../components/skeleton/ChartSkeleton";
 import DashboardRecentActivities from "../../../components/dashboard/lecturer/main/DashboardRecentActivities";
 import DashboardRevenue from "../../../components/dashboard/lecturer/main/DashboardRevenue";
+import type {
+  DashboardChartsResponse,
+  LecturerOverviewResponse,
+} from "../../../types/dashboard.type";
+import { dashboardService } from "../../../apis/dashboard";
 
 type Year = 2023 | 2024 | 2025;
 
@@ -70,18 +75,33 @@ const lecturerStatisticData = {
 };
 
 const DashboardLecturerMain = () => {
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [isOverviewLoading, setIsOverviewLoading] = useState(true);
+  const [isChartLoading, setIsChartLoading] = useState(true);
+
+  const [overview, setOverview] = useState<LecturerOverviewResponse | null>(
+    null,
+  );
+  const [yearChart, setYearChart] = useState<DashboardChartsResponse | null>(
+    null,
+  );
+  const [monthRevenueChart, setMonthRevenueChart] =
+    useState<DashboardChartsResponse | null>(null);
 
   const selectedYear = selectedDate?.getFullYear() as Year | undefined;
 
   useEffect(() => {
-    if (!selectedYear) return;
-
-    setIsLoading(true);
-    const timer = setTimeout(() => setIsLoading(false), 2000);
-    return () => clearTimeout(timer);
-  }, [selectedYear]);
+    (async () => {
+      try {
+        const data = await dashboardService.getLecturerOverviewAPI();
+        setOverview(data);
+      } catch {
+        setOverview(null);
+      } finally {
+        setIsOverviewLoading(false);
+      }
+    })();
+  }, []);
 
   return (
     <div className="px-2 py-4 bg-[#f5f6fa]">
