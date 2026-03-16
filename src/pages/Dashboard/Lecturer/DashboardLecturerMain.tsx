@@ -1,5 +1,5 @@
 import { Bell } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DashboardBarChart from "../../../components/dashboard/DashboardBarChart";
 import DashboardStatistic from "../../../components/dashboard/DashboardStatistic";
 import DashboardTopCourses from "../../../components/dashboard/DashboardTopCourses";
@@ -103,6 +103,105 @@ const DashboardLecturerMain = () => {
     })();
   }, []);
 
+  useEffect(() => {
+    if (!selectedYear) return;
+
+    (async () => {
+      setIsChartLoading(true);
+      try {
+        const from = `${selectedYear}-01-01`;
+        const to = `${selectedYear}-12-31`;
+
+        const [yearData, monthRevenue] = await Promise.all([
+          dashboardService.getLecturerChartsAPI({
+            period: "custom",
+            from,
+            to,
+          }),
+          dashboardService.getLecturerChartsAPI({
+            period: "this_month",
+          }),
+        ]);
+
+        setYearChart(yearData);
+        setMonthRevenueChart(monthRevenue);
+      } catch {
+        setYearChart(null);
+        setMonthRevenueChart(null);
+      } finally {
+        setIsChartLoading(false);
+      }
+    })();
+  }, [selectedYear]);
+
+  const lecturerStatisticDataMapped = useMemo(
+    () => ({
+      totalStudents:
+        overview?.card.totalStudents ?? lecturerStatisticData.totalStudents,
+      coursesActive:
+        overview?.card.coursesActive ?? lecturerStatisticData.coursesActive,
+      totalEarning:
+        overview?.card.totalEarnings ?? lecturerStatisticData.totalEarning,
+      assignmentsGraded:
+        overview?.card.assignmentsGraded ??
+        lecturerStatisticData.assignmentsGraded,
+      completedCourses:
+        overview?.card.completedCourses ??
+        lecturerStatisticData.completedCourses,
+      newEnrollments:
+        overview?.card.newEnrollments ?? lecturerStatisticData.newEnrollments,
+    }),
+    [overview],
+  );
+
+  const engagementData = useMemo(() => {
+    if (!selectedYear) return [];
+
+    const apiData = yearChart?.datasets.engagement ?? [];
+    const hasApiData = apiData.length > 0 && apiData.some((v) => v > 0);
+
+    if (!hasApiData) return engagementByYear[selectedYear] ?? [];
+
+    return (yearChart?.labels ?? []).map((label, idx) => ({
+      month: label,
+      value: apiData[idx] ?? 0,
+    }));
+  }, [yearChart, selectedYear]);
+
+  const topCoursesData = useMemo(() => {
+    const apiData = overview?.topCourses ?? [];
+    if (apiData.length === 0) return undefined;
+
+    return apiData.map((item) => ({
+      id: item.id,
+      courseName: item.name,
+      students: item.totalStudents,
+    }));
+  }, [overview]);
+
+  const recentActivitiesData = useMemo(() => {
+    const apiData = overview?.recentActivities ?? [];
+    if (apiData.length === 0) return undefined;
+
+    return apiData.map((item, idx) => ({
+      id: `${idx}-${item.time}`,
+      type: item.type,
+      title: item.title,
+      createdAt: item.time,
+    }));
+  }, [overview]);
+
+  const externalRevenueData = useMemo(() => {
+    const apiData = monthRevenueChart?.datasets.revenue ?? [];
+    const hasApiData = apiData.length > 0 && apiData.some((v) => v > 0);
+    if (!hasApiData) return undefined;
+
+    return (monthRevenueChart?.labels ?? []).map((label, idx) => ({
+      day: Number(label.split("/")[0]) || idx + 1,
+      value: apiData[idx] ?? 0,
+    }));
+  }, [monthRevenueChart]);
+
   return (
     <div className="px-2 py-4 bg-[#f5f6fa]">
       <div className="flex items-center justify-between gap-5">
@@ -112,7 +211,7 @@ const DashboardLecturerMain = () => {
 
       <DashboardStatistic
         type="lecturer"
-        lecturerData={lecturerStatisticData}
+        lecturerData={lecturerStatisticDataMapped}
       />
 
       <div className="p-4">
@@ -124,23 +223,22 @@ const DashboardLecturerMain = () => {
         </div>
 
         <div className="h-80">
-          {isLoading || !selectedYear ? (
+          {isOverviewLoading || isChartLoading || !selectedYear ? (
             <ChartSkeleton />
-          ) : (!isLoading && !engagementByYear[selectedYear]) ||
-            !selectedYear ? (
+          ) : engagementData.length === 0 ? (
             <p className="text-[22px] font-bold text-center mt-12">
               No data found!
             </p>
           ) : (
-            <DashboardBarChart data={engagementByYear[selectedYear]} />
+            <DashboardBarChart data={engagementData} />
           )}
         </div>
       </div>
 
       <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[340px_1fr_248px] gap-5">
-        <DashboardRecentActivities />
-        <DashboardRevenue />
-        <DashboardTopCourses />
+        <DashboardRecentActivities data={recentActivitiesData} />
+        <DashboardRevenue externalData={externalRevenueData} />
+        <DashboardTopCourses data={topCoursesData} />
       </div>
     </div>
   );
