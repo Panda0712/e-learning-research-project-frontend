@@ -180,6 +180,7 @@ const App = () => {
             {/* Dashboard Admin */}
             <Route element={<AdminRoutes user={currentUser} />}>
               <Route
+                
                 element={
                   <RbacRoute
                     requiredPermission={permissions.VIEW_DASHBOARD_ADMIN}
