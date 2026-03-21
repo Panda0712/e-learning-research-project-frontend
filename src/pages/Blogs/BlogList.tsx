@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import BlogCard from "../../components/cards/BlogCard";
 import Sidebar from "../../components/ui/SideBar";
 import { useEffect, useState } from "react";
 import { blogApi } from "../../apis/blog";
+import { toast } from "react-toastify";
 
 interface BlogData {
   id: number;
@@ -24,8 +26,8 @@ const BlogList = () => {
         setLoading(true);
         const data = await blogApi.getAllBlogPostsAPI();
         setBlogList(data);
-      } catch (error) {
-        console.error(error);
+      } catch (error:any) {
+        toast.error(error?.message || "Failed to load blogs data!");
       } finally {
         setLoading(false);
       }
@@ -50,7 +52,7 @@ const BlogList = () => {
       <div className="container mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8 max-w-7xl">
         <div className="w-full lg:w-3/4">
           {loading ? (
-            <p>Đang tải bài viết...</p>
+            <p>Loading blogs data...</p>
           ) : (
             blogList.map((blog: BlogData) => (
               <BlogCard key={blog.id} data={blog} />
