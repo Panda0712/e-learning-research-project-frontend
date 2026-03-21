@@ -34,7 +34,7 @@ const BlogDetail = () => {
           setBlog(data);
         }
       } catch (error:any) {
-        toast.error(error?.message || "Failed to load blog detail data!");
+        toast.error(error?.message || "Failed to get blog detail data!");
       } finally {
         setLoading(false);
       }
@@ -43,10 +43,12 @@ const BlogDetail = () => {
   }, [id]);
 
   if (loading) 
-    return <div className="flex items-center justify-center">
-      <Loading caption="Loading blog detail data..."/>
-    </div>;
-  if (!blog) return <div className="text-center py-10">No data found!</div>;
+    return (
+      <div className="flex items-center justify-center">
+        <Loading caption="Loading blog detail data..." />
+      </div>
+    );
+  if (!blog) return <div className="text-center py-10">Blog detail not found! Please try again later!</div>;
 
   return (
     <div className="min-h-screen flex flex-col bg-white">

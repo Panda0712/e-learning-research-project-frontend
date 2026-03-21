@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import DashboardLineChart from "../../DashboardLineChart";
 
 type RevenuePoint = {
   day: number;
   value: number;
 };
+
+interface DashboardRevenueProps {
+  externalData?: RevenuePoint[];
+}
 
 const revenueByMonth: Record<string, RevenuePoint[]> = {
   January: [
@@ -55,9 +59,14 @@ const MONTHS = [
   "December",
 ];
 
-const DashboardRevenue = () => {
+const DashboardRevenue = ({ externalData }: DashboardRevenueProps) => {
   const [month, setMonth] = useState("August");
-  const data = revenueByMonth[month] ?? [];
+  const hasExternalData = Boolean(externalData && externalData.length > 0);
+
+  const data = useMemo(() => {
+    if (hasExternalData) return externalData!;
+    return revenueByMonth[month] ?? [];
+  }, [hasExternalData, externalData, month]);
 
   const activeDay = 7;
 
@@ -66,18 +75,20 @@ const DashboardRevenue = () => {
       <div className="py-3 px-4 flex items-center justify-between gap-4 border-b border-[#E9EAF0]">
         <h3 className="text-[16px] font-medium font-poppins">Revenue</h3>
 
-        <select
-          value={month}
-          onChange={(e) => setMonth(e.target.value)}
-          className="px-1 py-1 mr-3 border border-white
+        {!hasExternalData && (
+          <select
+            value={month}
+            onChange={(e) => setMonth(e.target.value)}
+            className="px-1 py-1 mr-3 border border-white
           focus:outline-none text-[14px] text-[#6E7485] font-normal"
-        >
-          {MONTHS.map((m) => (
-            <option key={m} value={m}>
-              {m}
-            </option>
-          ))}
-        </select>
+          >
+            {MONTHS.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       <div className="h-full mt-5">

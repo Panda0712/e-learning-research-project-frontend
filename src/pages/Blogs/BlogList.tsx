@@ -26,8 +26,8 @@ const BlogList = () => {
         setLoading(true);
         const data = await blogApi.getAllBlogPostsAPI();
         setBlogList(data);
-      } catch (error:any) {
-        toast.error(error?.message || "Failed to load blogs data!");
+      } catch (error: any) {
+        toast.error(error?.message || "Failed to get blogs data! Please try again later!");
       } finally {
         setLoading(false);
       }

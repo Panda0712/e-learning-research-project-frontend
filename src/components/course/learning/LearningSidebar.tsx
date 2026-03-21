@@ -7,14 +7,32 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import Button from "../../ui/Button";
-import type { Section } from "../../../types/course.type";
+
+type LessonItem = {
+  id: number;
+  title: string;
+  duration?: string;
+  type: "video" | "quiz" | "doc";
+  isPreview?: boolean;
+};
+
+type SectionItem = {
+  title: string;
+  duration?: number | string;
+  items: LessonItem[];
+};
 
 interface Props {
-  sections: Section[];
-  currentLessonId?: string;
+  sections: SectionItem[];
+  currentLessonId?: number;
+  onSelectLesson?: (lesson: LessonItem) => void;
 }
 
-const LearningSidebar = ({ sections, currentLessonId = "1" }: Props) => {
+const LearningSidebar = ({
+  sections,
+  currentLessonId,
+  onSelectLesson,
+}: Props) => {
   const [openSections, setOpenSections] = useState<number[]>([0, 1]);
 
   const toggleSection = (index: number) => {
@@ -58,35 +76,22 @@ const LearningSidebar = ({ sections, currentLessonId = "1" }: Props) => {
                   )}
                 </>
               }
-              additionalClass={`
-        !w-full !h-auto                // Bỏ width/height cố định
-        !bg-gray-50 hover:!bg-gray-100 // Đổi màu nền thành xám
-        !p-4                           // Padding rộng rãi
-        !rounded-none                  // Bỏ bo góc
-        !border-0                      // Bỏ viền
-        !flex !justify-between !items-start // Căn chỉnh nội dung sang 2 bên
-        !transition-colors
-        !text-base !font-normal        // Reset font chữ
-      `}
+              additionalClass="!w-full !h-auto !bg-gray-50 hover:!bg-gray-100 !p-4 !rounded-none !border-0 !flex !justify-between !items-start !transition-colors !text-base !font-normal"
             />
 
             {isOpen && (
               <div className="bg-white">
-                {section.items.map((lesson, lessonIdx) => {
-                  const lessonNumber = String(lessonIdx + 1);
-
-                  const isActive =
-                    idx === 0 && lessonNumber === currentLessonId;
-
+                {section.items.map((lesson) => {
+                  const isActive = currentLessonId === lesson.id;
                   const isLocked = !isActive && !lesson.isPreview;
                   const isCompleted = false;
 
                   return (
                     <div
-                      key={lessonIdx}
+                      key={lesson.id}
+                      onClick={() => onSelectLesson?.(lesson)}
                       className={`flex items-start gap-3 p-4 border-b border-gray-50 cursor-pointer transition-colors group
-                            ${isActive ? "bg-orange-50" : "hover:bg-gray-50"}
-                        `}
+                            ${isActive ? "bg-orange-50" : "hover:bg-gray-50"}`}
                     >
                       <div className="mt-0.5 shrink-0">
                         {isActive ? (
@@ -101,7 +106,7 @@ const LearningSidebar = ({ sections, currentLessonId = "1" }: Props) => {
                           <Lock size={16} className="text-gray-300" />
                         ) : (
                           <span className="w-6 h-6 rounded-full bg-gray-100 text-[10px] flex items-center justify-center font-bold text-gray-500 font-poppins">
-                            {String(lessonIdx + 1).padStart(2, "0")}
+                            {String(lesson.id).padStart(2, "0")}
                           </span>
                         )}
                       </div>
@@ -109,8 +114,7 @@ const LearningSidebar = ({ sections, currentLessonId = "1" }: Props) => {
                       <div className="flex-1">
                         <h5
                           className={`text-sm font-medium mb-1 leading-snug font-poppins group-hover:text-orange-500 transition-colors
-                            ${isActive ? "text-orange-500" : "text-[#07152F]"}
-                         `}
+                            ${isActive ? "text-orange-500" : "text-[#07152F]"}`}
                         >
                           {lesson.title}
                         </h5>

@@ -1,10 +1,24 @@
-import { ChevronLeft, ChevronRight, Eye, X } from "lucide-react";
-import { useState } from "react";
+import { ChevronLeft, ChevronRight, Eye, X, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { transactionService } from "../../../apis/transaction"; 
 
-import type { Transaction } from "../../../types/transaction.type";
-import { MOCK_TRANSACTIONS } from "../../../utils/mockData";
+interface TransactionType {
+  id: string;
+  studentName: string;
+  studentEmail: string;
+  courseTitle: string;
+  instructorName: string;
+  amount: number;
+  subtotal: number;
+  discount: number;
+  discountCode: string;
+  payoutMethod: string;
+  paymentMethodDetail: string;
+  bankRef: string;
+  date: string;
+  status: string;
+}
 
-// --- CẤU HÌNH MÀU SẮC ---
 const COLORS = {
   successBg: "#D7FFE7",
   successText: "#087B2E",
@@ -54,15 +68,70 @@ const StatusBadge = ({ status }: { status: string }) => {
 };
 
 const DashboardTransactions = () => {
+  const [transactionsList, setTransactionsList] = useState<TransactionType[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedTxn, setSelectedTxn] = useState<TransactionType | null>(null);
+  
   const itemsPerPage = 8;
-  const totalPages = Math.ceil(MOCK_TRANSACTIONS.length / itemsPerPage);
-  const currentData = MOCK_TRANSACTIONS.slice(
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const rawData = await transactionService.getAllTransactionsAPI();
+
+        const mappedData: TransactionType[] = rawData.map((item: any) => {
+          const courses = item.items?.map((st: any) => st.courseTitle).join(", ") || "Courses deleted";
+          
+          const totalDiscount = item.items?.reduce((acc: number, st: any) => acc + (st.discountAmount || 0), 0) || 0;
+          
+          const usedCode = item.items?.[0]?.discountCode || "";
+          const instructor = item.items?.[0]?.instructorName || "N/A";
+
+          return {
+            id: item.gatewayReference || `TXN-${item.id}`,
+            studentName: item.userFullName || "Unknown User",
+            studentEmail: item.userEmail || "N/A",
+            courseTitle: courses,
+            instructorName: instructor,
+            amount: item.amount || 0,
+            subtotal: (item.amount || 0) + totalDiscount,
+            discount: totalDiscount,
+            discountCode: usedCode,
+            
+            payoutMethod: `${item.paymentMethod || 'SYSTEM'} - Direct`,
+            paymentMethodDetail: item.paymentMethod || "Unknown",
+            bankRef: item.gatewayReference || "N/A",
+            
+            date: new Date(item.createdAt).toLocaleDateString('en-US', {
+              year: 'numeric', month: 'short', day: 'numeric',
+            }),
+            
+            status: item.status === "success" ? "Successful" : (item.status === "failed" ? "Failed" : "Pending"),
+          };
+        });
+
+        setTransactionsList(mappedData);
+      } catch (err: any) {
+        const errorMessage = err.response?.data?.message || err.message || "Failed to load transactions data!";
+        setError(errorMessage);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTransactions();
+  }, []);
+
+  const totalPages = Math.ceil(transactionsList.length / itemsPerPage);
+  const currentData = transactionsList.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage,
   );
-
-  const [selectedTxn, setSelectedTxn] = useState<Transaction | null>(null);
 
   return (
     <div className="w-full min-h-screen bg-white p-6 md:p-8 font-sans">
@@ -70,99 +139,122 @@ const DashboardTransactions = () => {
         Transactions
       </h1>
 
-      <div className="bg-white rounded-xl overflow-hidden min-h-125">
-        <table className="w-full text-left border-collapse">
-          <thead
-            className="bg-[#F8F9FA] text-gray-700 text-xs 
-          uppercase font-bold tracking-wider"
-          >
-            <tr>
-              <th className="p-4 pl-6">Transaction ID</th>
-              <th className="p-4">Student Name</th>
-              <th className="p-4">Course Title</th>
-              <th className="p-4">Amount</th>
-              <th className="p-4">Payout Method</th>
-              <th className="p-4">Date</th>
-              <th className="p-4">Status</th>
-              <th className="p-4 text-center"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100 text-sm font-[Poppins]">
-            {currentData.map((txn) => (
-              <tr key={txn.id} className="hover:bg-gray-50 transition-colors">
-                <td className="p-4 pl-6 text-gray-500 font-medium">{txn.id}</td>
-                <td className="p-4 text-gray-900 font-medium">
-                  {txn.studentName}
-                </td>
-                <td className="p-4 text-gray-900">{txn.courseTitle}</td>
-                <td className="p-4 text-gray-900 font-semibold">
-                  ${txn.amount}
-                </td>
-                <td className="p-4 text-gray-500 max-w-50">
-                  <div className="flex flex-col">
-                    <span>
-                      {txn.payoutMethod.split(" - ")[0]} -{" "}
-                      {txn.payoutMethod.split(" - ")[1]}
-                    </span>
-                    <span className="text-xs text-gray-400 mt-0.5">
-                      {txn.payoutMethod.split(" - ")[2]}
-                    </span>
-                  </div>
-                </td>
-                <td className="p-4 text-gray-500">{txn.date}</td>
-                <td className="p-4">
-                  <StatusBadge status={txn.status} />
-                </td>
-                <td className="p-4 text-center">
-                  <button
-                    onClick={() => setSelectedTxn(txn)}
-                    className="p-2 text-orange-800 bg-orange-100 
-                    rounded-full hover:bg-orange-200 transition"
-                  >
-                    <Eye size={16} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="flex justify-center mt-6">
-        <nav className="flex items-center gap-2">
-          <button
-            onClick={() => setCurrentPage((c) => Math.max(c - 1, 1))}
-            disabled={currentPage === 1}
-            className="w-8 h-8 flex items-center justify-center rounded-md border 
-            border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-          >
-            <ChevronLeft size={16} />
-          </button>
-          {[...Array(totalPages)].map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrentPage(i + 1)}
-              className={`w-8 h-8 flex items-center justify-center rounded-md text-sm 
-                font-medium transition ${
-                  currentPage === i + 1
-                    ? "bg-gray-900 text-white"
-                    : "text-gray-500 hover:bg-gray-50"
-                }`}
+      <div className="bg-white rounded-xl overflow-hidden min-h-125 border border-gray-100 shadow-sm">
+        {/* UI Loading / Error / Empty Data */}
+        {isLoading ? (
+           <div className="flex flex-col items-center justify-center py-20 text-gray-400 min-h-[400px]">
+            <Loader2 className="animate-spin text-blue-500 mb-4" size={32} />
+            <p className="font-medium text-gray-500">Loading transactions data...</p>
+          </div>
+        ) : error ? (
+           <div className="flex flex-col items-center justify-center py-20 text-red-500 min-h-[400px]">
+            <p className="text-lg font-semibold mb-2">Oops! Error occured!</p>
+            <p>{error}</p>
+          </div>
+        ) : transactionsList.length > 0 ? (
+          <table className="w-full text-left border-collapse">
+            <thead
+              className="bg-[#F8F9FA] text-gray-700 text-xs 
+            uppercase font-bold tracking-wider"
             >
-              {i + 1}
-            </button>
-          ))}
-          <button
-            onClick={() => setCurrentPage((c) => Math.min(c + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="w-8 h-8 flex items-center justify-center rounded-md border 
-            border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </nav>
+              <tr>
+                <th className="p-4 pl-6">Transaction ID</th>
+                <th className="p-4">Student Name</th>
+                <th className="p-4">Course Title</th>
+                <th className="p-4">Amount</th>
+                <th className="p-4">Payout Method</th>
+                <th className="p-4">Date</th>
+                <th className="p-4">Status</th>
+                <th className="p-4 text-center"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 text-sm font-[Poppins]">
+              {currentData.map((txn) => (
+                <tr key={txn.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="p-4 pl-6 text-gray-500 font-medium">{txn.id}</td>
+                  <td className="p-4 text-gray-900 font-medium">
+                    {txn.studentName}
+                  </td>
+                  <td className="p-4 text-gray-900 truncate max-w-[200px]" title={txn.courseTitle}>
+                    {txn.courseTitle}
+                  </td>
+                  <td className="p-4 text-gray-900 font-semibold">
+                    ${txn.amount}
+                  </td>
+                  <td className="p-4 text-gray-500 max-w-50">
+                    <div className="flex flex-col">
+                      <span>
+                        {txn.payoutMethod.split(" - ")[0]} -{" "}
+                        {txn.payoutMethod.split(" - ")[1]}
+                      </span>
+                      <span className="text-xs text-gray-400 mt-0.5">
+                        Online Payment
+                      </span>
+                    </div>
+                  </td>
+                  <td className="p-4 text-gray-500">{txn.date}</td>
+                  <td className="p-4">
+                    <StatusBadge status={txn.status} />
+                  </td>
+                  <td className="p-4 text-center">
+                    <button
+                      onClick={() => setSelectedTxn(txn)}
+                      className="p-2 text-orange-800 bg-orange-100 
+                      rounded-full hover:bg-orange-200 transition"
+                    >
+                      <Eye size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 text-gray-400 min-h-[400px]">
+            <p>No transaction has been added in our system.</p>
+          </div>
+        )}
       </div>
 
+      {/* Pagination */}
+      {!isLoading && !error && totalPages > 0 && (
+        <div className="flex justify-center mt-6">
+          <nav className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage((c) => Math.max(c - 1, 1))}
+              disabled={currentPage === 1}
+              className="w-8 h-8 flex items-center justify-center rounded-md border 
+              border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`w-8 h-8 flex items-center justify-center rounded-md text-sm 
+                  font-medium transition ${
+                    currentPage === i + 1
+                      ? "bg-gray-900 text-white"
+                      : "text-gray-500 hover:bg-gray-50"
+                  }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => setCurrentPage((c) => Math.min(c + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="w-8 h-8 flex items-center justify-center rounded-md border 
+              border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </nav>
+        </div>
+      )}
+
+      {/* Modal Popup */}
       {selectedTxn && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/25 
@@ -181,8 +273,9 @@ const DashboardTransactions = () => {
 
             <div className="mb-6">
               <h2 className="text-xl font-bold text-black">
-                Transaction Details {selectedTxn.id}
+                Transaction Details
               </h2>
+              <p className="text-sm text-gray-500 mt-1">Ref: {selectedTxn.id}</p>
             </div>
 
             <div className="flex flex-col gap-1 mb-6 pb-4 border-b border-gray-100">
@@ -201,7 +294,7 @@ const DashboardTransactions = () => {
                 </span>
               </div>
               <div className="text-sm text-gray-500">
-                Date: {selectedTxn.date} - 14:30 PM
+                Date: {selectedTxn.date}
               </div>
             </div>
 
@@ -226,7 +319,8 @@ const DashboardTransactions = () => {
                   <span className="font-semibold">
                     {selectedTxn.courseTitle}
                   </span>{" "}
-                  (Instructor: {selectedTxn.instructorName})
+                  <br />
+                  <span className="text-sm text-gray-500">(Instructor: {selectedTxn.instructorName})</span>
                 </p>
               </div>
 
@@ -238,23 +332,23 @@ const DashboardTransactions = () => {
                   <div className="flex justify-between">
                     <span>Method:</span>
                     <span className="font-medium">
-                      {selectedTxn.paymentMethodDetail || "MoMo"}
+                      {selectedTxn.paymentMethodDetail}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Bank Ref:</span>
                     <span className="font-medium">
-                      {selectedTxn.bankRef || "N/A"}
+                      {selectedTxn.bankRef}
                     </span>
                   </div>
                   <div className="flex justify-between pt-2 border-t border-dashed border-gray-200 mt-2">
                     <span>Subtotal:</span>
-                    <span>${selectedTxn.subtotal || selectedTxn.amount}</span>
+                    <span>${selectedTxn.subtotal}</span>
                   </div>
                   <div className="flex justify-between text-red-500">
                     <span>Discount:</span>
                     <span>
-                      -${selectedTxn.discount || 0}.00{" "}
+                      -${selectedTxn.discount}{" "}
                       {selectedTxn.discountCode
                         ? `(Code: ${selectedTxn.discountCode})`
                         : ""}
@@ -265,7 +359,7 @@ const DashboardTransactions = () => {
                   text-base font-bold text-black"
                   >
                     <span>TOTAL PAID:</span>
-                    <span>${selectedTxn.amount}.00</span>
+                    <span>${selectedTxn.amount}</span>
                   </div>
                 </div>
               </div>
