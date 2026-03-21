@@ -1,6 +1,5 @@
 import { ChevronLeft, ChevronRight, Eye, X, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
-
 import { transactionService } from "../../../apis/transaction"; 
 
 interface TransactionType {
@@ -20,7 +19,6 @@ interface TransactionType {
   status: string;
 }
 
-// --- CẤU HÌNH MÀU SẮC ---
 const COLORS = {
   successBg: "#D7FFE7",
   successText: "#087B2E",
@@ -70,38 +68,27 @@ const StatusBadge = ({ status }: { status: string }) => {
 };
 
 const DashboardTransactions = () => {
-  // ====================================================================
-  // STATE QUẢN LÝ DỮ LIỆU TỪ API
-  // ====================================================================
   const [transactionsList, setTransactionsList] = useState<TransactionType[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
   const [selectedTxn, setSelectedTxn] = useState<TransactionType | null>(null);
+  
+  const itemsPerPage = 8;
 
-  // ====================================================================
-  // GỌI API LẤY TẤT CẢ GIAO DỊCH BẰNG AXIOS
-  // ====================================================================
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
         setIsLoading(true);
         setError(null);
 
-        // 1. Gọi API thông qua thư mục apis (Tự động kèm Cookie/Token)
         const rawData = await transactionService.getAllTransactionsAPI();
 
-        // 2. MAPPING DỮ LIỆU TỪ BACKEND SANG FRONTEND
         const mappedData: TransactionType[] = rawData.map((item: any) => {
-          // Gộp tên các khóa học
-          const courses = item.items?.map((st: any) => st.courseTitle).join(", ") || "Khóa học đã xóa";
+          const courses = item.items?.map((st: any) => st.courseTitle).join(", ") || "Courses deleted";
           
-          // Tính tổng giảm giá
           const totalDiscount = item.items?.reduce((acc: number, st: any) => acc + (st.discountAmount || 0), 0) || 0;
           
-          // Lấy mã giảm giá và giảng viên đầu tiên
           const usedCode = item.items?.[0]?.discountCode || "";
           const instructor = item.items?.[0]?.instructorName || "N/A";
 
@@ -130,8 +117,7 @@ const DashboardTransactions = () => {
 
         setTransactionsList(mappedData);
       } catch (err: any) {
-        // Bắt lỗi từ Axios trả về (Ví dụ: 401 Unauthorized, 403 Forbidden)
-        const errorMessage = err.response?.data?.message || err.message || "Đã xảy ra lỗi khi tải dữ liệu giao dịch.";
+        const errorMessage = err.response?.data?.message || err.message || "Failed to load transactions data!";
         setError(errorMessage);
       } finally {
         setIsLoading(false);
@@ -141,9 +127,6 @@ const DashboardTransactions = () => {
     fetchTransactions();
   }, []);
 
-  // ====================================================================
-  // PHÂN TRANG DỰA TRÊN DỮ LIỆU API
-  // ====================================================================
   const totalPages = Math.ceil(transactionsList.length / itemsPerPage);
   const currentData = transactionsList.slice(
     (currentPage - 1) * itemsPerPage,
@@ -157,15 +140,15 @@ const DashboardTransactions = () => {
       </h1>
 
       <div className="bg-white rounded-xl overflow-hidden min-h-125 border border-gray-100 shadow-sm">
-        {/* Xử lý UI Loading / Error / Empty Data */}
+        {/* UI Loading / Error / Empty Data */}
         {isLoading ? (
            <div className="flex flex-col items-center justify-center py-20 text-gray-400 min-h-[400px]">
             <Loader2 className="animate-spin text-blue-500 mb-4" size={32} />
-            <p className="font-medium text-gray-500">Đang tải dữ liệu giao dịch...</p>
+            <p className="font-medium text-gray-500">Loading transactions data...</p>
           </div>
         ) : error ? (
            <div className="flex flex-col items-center justify-center py-20 text-red-500 min-h-[400px]">
-            <p className="text-lg font-semibold mb-2">Oops! Có lỗi xảy ra</p>
+            <p className="text-lg font-semibold mb-2">Oops! Error occured!</p>
             <p>{error}</p>
           </div>
         ) : transactionsList.length > 0 ? (
@@ -228,12 +211,12 @@ const DashboardTransactions = () => {
           </table>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400 min-h-[400px]">
-            <p>Chưa có giao dịch nào được ghi nhận trên hệ thống.</p>
+            <p>No transaction has been added in our system.</p>
           </div>
         )}
       </div>
 
-      {/* Hiển thị phân trang chỉ khi có dữ liệu và không lỗi */}
+      {/* Pagination */}
       {!isLoading && !error && totalPages > 0 && (
         <div className="flex justify-center mt-6">
           <nav className="flex items-center gap-2">
@@ -271,7 +254,7 @@ const DashboardTransactions = () => {
         </div>
       )}
 
-      {/* Modal Popup Chi tiết */}
+      {/* Modal Popup */}
       {selectedTxn && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/25 
