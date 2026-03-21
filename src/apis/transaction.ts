@@ -1,7 +1,7 @@
 import authorizedAxiosInstance from "../utils/authorizedAxios";
 import { API_ROOT } from "../utils/constants";
 
-// Gọi API lấy tất cả giao dịch cho Admin
+// Get all transactions API for admin
 const getAllTransactionsAPI = async () => {
   const res = await authorizedAxiosInstance.get(
     `${API_ROOT}/v1/transactions/get-all-transactions`
