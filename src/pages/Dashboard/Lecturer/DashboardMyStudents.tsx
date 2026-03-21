@@ -46,7 +46,8 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 const DashboardMyStudents = () => {
   const currentUser = useAppSelector(selectCurrentUser);
-
+  const itemsPerPage = 8;
+  
   const [studentsList, setStudentsList] = useState<DashboardStudent[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +60,6 @@ const DashboardMyStudents = () => {
   const [activeDropdown, setActiveDropdown] = useState<"course" | "sort" | null>(null);
 
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const itemsPerPage = 8;
 
   const [isMessageMode, setIsMessageMode] = useState(false);
   const [messageText, setMessageText] = useState("");
@@ -91,8 +91,8 @@ const DashboardMyStudents = () => {
         const mappedData: DashboardStudent[] = rawData.map((item: any) => ({
           id: item.id,
           name: item.student?.fullName || item.student?.name || "Student",
-          email: item.student?.email || "No email found!",
-          course: item.course?.title || "No course name found!",
+          email: item.student?.email || "No email found",
+          course: item.course?.title || "No course title found",
           progress: item.progress || 0,
           lastActivity: new Date(item.updatedAt || item.createdAt).toLocaleDateString('en-US', {
             year: 'numeric', month: 'short', day: 'numeric'
@@ -102,7 +102,7 @@ const DashboardMyStudents = () => {
 
         setStudentsList(mappedData);
       } catch (err: any) {
-        setError(err.response?.data?.message || err?.message || "Failed to load data!");
+        setError(err.response?.data?.message || err?.message || "Failed to load students data!");
       } finally {
         setIsLoading(false);
       }
