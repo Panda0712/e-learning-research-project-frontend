@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { toast } from "react-toastify";
 import { useState, useEffect } from 'react';
 import { notificationService } from '../../../../apis/notification'; 
 
@@ -9,7 +11,6 @@ const NotificationSetting = () => {
     email: true,
     doNotDisturb: false,
   });
-
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,8 +22,8 @@ const NotificationSetting = () => {
         if (data) {
           setSettings(data);
         }
-      } catch (error) {
-        console.error("Lỗi tải cài đặt thông báo:", error);
+      } catch (error:any) {
+        toast.error(error?.message || "Failed to get setting data!");
       } finally {
         setLoading(false);
       }
@@ -44,16 +45,14 @@ const NotificationSetting = () => {
         [key]: newValue
       });
       
-      console.log(`Đã cập nhật ${key}: ${newValue} lên Server thành công!`);
+      toast.success(`Update ${key}: ${newValue} successfully!`);
     } catch (error) {
-      console.error("Lỗi khi lưu cài đặt, đang hoàn tác...", error);
-
       setSettings(prev => ({
         ...prev,
         [key]: !newValue
       }));
       
-      alert("Không thể lưu thay đổi lúc này. Vui lòng thử lại!"); 
+      toast.error("Cannot save setting changes right now! Please try again later!");
     }
   };
 
@@ -79,7 +78,7 @@ const NotificationSetting = () => {
       <h2 className="text-xl font-bold text-gray-800 mb-8 font-poppins uppercase">Notification Settings</h2>
       
       {loading ? (
-        <div className="text-gray-500 italic py-4">Đang tải cài đặt của bạn...</div>
+        <div className="text-gray-500 italic py-4">Loading your setting data...</div>
       ) : (
         <div className="space-y-6">
           <div className="flex items-center justify-between pb-6 border-b border-gray-100">
