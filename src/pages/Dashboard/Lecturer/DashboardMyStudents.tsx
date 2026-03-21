@@ -13,18 +13,12 @@ import {
   Loader2,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-
-// Lấy thông tin tài khoản đang đăng nhập từ Redux
 import { useAppSelector } from "../../../redux/hooks";
 import { selectCurrentUser } from "../../../redux/activeUser/activeUserSlice";
-
 import type { DashboardStudent } from "../../../types/course.type";
 import { MOCK_COURSES } from "../../../utils/mockData";
-
-// 👇 IMPORT HÀM GỌI API TỪ THƯ MỤC APIS
 import { lecturerService } from "../../../apis/lecturer";
 
-// --- CONFIG COLORS ---
 const COLORS = {
   yellowBtn: "#FFD900",
   greenBadgeBg: "#D7FFE7",
@@ -33,7 +27,6 @@ const COLORS = {
   redBadgeText: "#FF0000",
 };
 
-// --- SUB-COMPONENT ---
 const StatusBadge = ({ status }: { status: string }) => {
   const isInactive = status === "Inactive";
   const bg = isInactive ? COLORS.redBadgeBg : COLORS.greenBadgeBg;
@@ -51,14 +44,9 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
-// --- MAIN COMPONENT ---
 const DashboardMyStudents = () => {
-  // Lấy thông tin Giảng viên đang đăng nhập
   const currentUser = useAppSelector(selectCurrentUser);
 
-  // ====================================================================
-  // STATE DỮ LIỆU & UI
-  // ====================================================================
   const [studentsList, setStudentsList] = useState<DashboardStudent[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -77,7 +65,6 @@ const DashboardMyStudents = () => {
   const [messageText, setMessageText] = useState("");
   const [sendingStatus, setSendingStatus] = useState<"idle" | "sending" | "success">("idle");
 
-  // Reset popup state khi đóng
   useEffect(() => {
     if (!selectedStudent) {
       setIsMessageMode(false);
@@ -87,14 +74,10 @@ const DashboardMyStudents = () => {
     }
   }, [selectedStudent]);
 
-  // ====================================================================
-  // GỌI API LẤY DỮ LIỆU SINH VIÊN BẰNG AXIOS
-  // ====================================================================
   useEffect(() => {
     const fetchStudentsData = async () => {
-      // 1. Nếu chưa có user thì báo lỗi (chờ load)
       if (!currentUser || !currentUser.id) {
-        setError("Đang tải thông tin tài khoản. Vui lòng đăng nhập lại nếu lỗi vẫn tiếp diễn.");
+        setError("Unauthorized! Please login and try again!");
         setIsLoading(false);
         return;
       }
@@ -103,15 +86,13 @@ const DashboardMyStudents = () => {
         setIsLoading(true);
         setError(null);
         
-        // 2. Gọi API thông qua Axios (Nó tự động đính kèm Token)
-        const rawData = await lecturerService.getMyStudentsAPI(currentUser.id);
+        const rawData = await lecturerService.getMyStudentsAPI(currentUser?.id);
 
-        // 3. Map dữ liệu trả về từ DB
         const mappedData: DashboardStudent[] = rawData.map((item: any) => ({
           id: item.id,
-          name: item.student?.fullName || item.student?.name || "Học viên",
-          email: item.student?.email || "Chưa cập nhật",
-          course: item.course?.title || "Khóa học",
+          name: item.student?.fullName || item.student?.name || "Student",
+          email: item.student?.email || "No email found!",
+          course: item.course?.title || "No course name found!",
           progress: item.progress || 0,
           lastActivity: new Date(item.updatedAt || item.createdAt).toLocaleDateString('en-US', {
             year: 'numeric', month: 'short', day: 'numeric'
@@ -121,8 +102,7 @@ const DashboardMyStudents = () => {
 
         setStudentsList(mappedData);
       } catch (err: any) {
-        // Bắt lỗi từ Axios trả về
-        setError(err.response?.data?.message || err.message || "Đã xảy ra lỗi khi tải dữ liệu.");
+        setError(err.response?.data?.message || err?.message || "Failed to load data!");
       } finally {
         setIsLoading(false);
       }
@@ -131,9 +111,6 @@ const DashboardMyStudents = () => {
     fetchStudentsData();
   }, [currentUser]);
 
-  // ====================================================================
-  // LOGIC LỌC, SẮP XẾP VÀ PHÂN TRANG DỮ LIỆU
-  // ====================================================================
   const UNIQUE_COURSES = useMemo(
     () => Array.from(new Set(studentsList.map((s) => s.course))),
     [studentsList]
@@ -191,7 +168,6 @@ const DashboardMyStudents = () => {
     setTimeout(() => setSendingStatus("success"), 1000);
   };
 
-  // Giữ nguyên logic tính bài học giả lập từ Mock Data 
   const getStudentCourseDetails = (student: DashboardStudent) => {
     const course = MOCK_COURSES.find((c) => c.title === student.course);
     if (!course || !course.curriculum) return null;
@@ -317,11 +293,11 @@ const DashboardMyStudents = () => {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400">
             <Loader2 className="animate-spin text-blue-500 mb-2" size={32} />
-            <p>Đang tải dữ liệu học viên...</p>
+            <p>Loading students data...</p>
           </div>
         ) : error ? (
            <div className="flex flex-col items-center justify-center py-20 text-red-500">
-            <p>Lỗi: {error}</p>
+            <p>Error: {error}</p>
           </div>
         ) : processedData.length > 0 ? (
           <table className="w-full text-left border-collapse">
@@ -383,7 +359,7 @@ const DashboardMyStudents = () => {
           </table>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-            <p>Không tìm thấy học viên nào.</p>
+            <p>No student data found.</p>
           </div>
         )}
 
