@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { toast } from "react-toastify";
 import { useState, useEffect } from 'react';
 import { Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react'; 
 import { profileService } from "../../../../apis/profile";
@@ -37,8 +39,8 @@ const AccountSetting = () => {
                 phone: data.phone || '',
                 bio: data.bio || ''
             });
-        } catch (error) {
-            console.error("Lỗi lấy dữ liệu giảng viên:", error);
+        } catch (error:any) {
+            toast.error(error?.message || "Failed to load lecturer data!");
         } finally {
             setLoading(false);
         }
@@ -68,10 +70,9 @@ const AccountSetting = () => {
   const handleSaveProfile = async () => {
     try {
         await profileService.updateProfileAPI(formData);
-        alert("Cập nhật thông tin thành công!");
-    } catch (error) {
-        console.error("Lỗi cập nhật Profile:", error);
-        alert("Không thể cập nhật thông tin lúc này!");
+        toast.success("Updated profile successfully!");
+    } catch (error:any) {
+        toast.error(error?.message || "Failed to update data!");
     }
   };
 
@@ -114,13 +115,8 @@ const AccountSetting = () => {
       setPassStatus({ type: 'success', message: 'Password updated successfully!' });
       setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' });
       
-    } catch (error) { // ĐÃ SỬA CHỖ NÀY: Xóa chữ "any"
-      console.error("Lỗi đổi pass:", error);
-      
-      // ĐÃ SỬA CHỖ NÀY: Thêm dòng ép kiểu an toàn cho TypeScript
-      const err = error as { response?: { data?: { message?: string } } };
-      
-      const errorMessage = err.response?.data?.message || 'Failed to update password. Please check your connection or current password.';
+    } catch (error:any) {       
+      toast.error(error?.message || "Failed to update password!");
       setPassStatus({ type: 'error', message: errorMessage });
     }
   };
@@ -133,7 +129,7 @@ const AccountSetting = () => {
         <div className="flex-1">
             {activeTab === 'account' && (
                 <div>
-                    {/* === PHẦN 1: ACCOUNT SETTINGS === */}
+                    {/* === ACCOUNT SETTINGS === */}
                     <h2 className="text-xl font-bold text-gray-800 mb-8">ACCOUNT SETTINGS</h2>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -186,12 +182,11 @@ const AccountSetting = () => {
 
                     <hr className="border-gray-100 my-8" />
 
-                    {/* === PHẦN 2: SECURITY SETTINGS === */}
+                    {/* === SECURITY SETTINGS === */}
                     <div>
                         <h2 className="text-xl font-bold text-gray-800 mb-8">SECURITY SETTINGS</h2>
                         
                         <div className="space-y-6 max-w-lg">
-                            {/* Cảnh báo trạng thái đổi pass */}
                             {passStatus.message && (
                               <div className={`p-3 rounded-lg text-sm flex items-center gap-2 ${passStatus.type === 'error' ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-green-50 text-green-600 border border-green-200'}`}>
                                 {passStatus.type === 'error' ? <AlertCircle size={16} /> : <CheckCircle2 size={16} />}
