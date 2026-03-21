@@ -86,7 +86,7 @@ const DashboardMyStudents = () => {
         setIsLoading(true);
         setError(null);
         
-        const rawData = await lecturerService.getMyStudentsAPI(currentUser.id);
+        const rawData = await lecturerService.getMyStudentsAPI(currentUser?.id);
 
         const mappedData: DashboardStudent[] = rawData.map((item: any) => ({
           id: item.id,

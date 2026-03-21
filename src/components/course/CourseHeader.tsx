@@ -1,7 +1,13 @@
 import { Search } from "lucide-react";
 import Input from "../ui/Input";
 
-const CourseHeader = () => {
+type Props = {
+  value: string;
+  onChange: (value: string) => void;
+  onSubmit?: () => void;
+};
+
+const CourseHeader = ({ value, onChange, onSubmit }: Props) => {
   return (
     <div className="bg-white/50 backdrop-blur-sm sticky top-0 z-20 border-b border-gray-100">
       <header className="max-w-7xl mx-auto px-4 py-6">
@@ -12,15 +18,23 @@ const CourseHeader = () => {
           <h1 className="text-3xl md:text-4xl font-extrabold text-[#07152F] font-poppins">
             All Courses
           </h1>
-          <div className="w-full md:w-80">
+          <form
+            className="w-full md:w-80"
+            onSubmit={(e) => {
+              e.preventDefault();
+              onSubmit?.();
+            }}
+          >
             <Input
               placeholder="Search"
               variant="underline"
               rightIcon={<Search size={20} />}
               containerClass="group"
               className="group-hover:border-black transition-colors"
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
             />
-          </div>
+          </form>
         </div>
       </header>
     </div>
