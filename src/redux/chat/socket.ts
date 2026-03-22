@@ -9,12 +9,20 @@ import {
 
 let socket: Socket | null = null;
 
-export const connectChatSocket = (store: any) => {
+export const connectChatSocket = (store: any, accessToken?: string) => {
   if (socket) return socket;
 
   socket = io(API_ROOT, {
     withCredentials: true,
     transports: ["websocket"],
+    auth: accessToken ? { token: accessToken } : undefined,
+  });
+
+  socket.on("connect", () => {
+    const conversations = store.getState()?.chat?.conversations ?? [];
+    conversations.forEach((conversation: { id: number }) => {
+      socket?.emit("join-conversation", conversation.id);
+    });
   });
 
   socket.on("new-message", (payload) => {
