@@ -5,7 +5,55 @@ import {
   type PayloadAction,
 } from "@reduxjs/toolkit";
 import { chatService } from "../../apis/chat";
-import type { ChatConversation, ChatMessage } from "../../types/chat.type";
+
+export type ChatSeenUser = {
+  id: number;
+  firstName: string | null;
+  lastName: string | null;
+  avatarUrl: string | null;
+};
+
+export type ChatParticipant = {
+  id: number;
+  firstName: string | null;
+  lastName: string | null;
+  avatarUrl: string | null;
+  role: "student" | "lecturer";
+  joinedAt: string;
+  lastReadAt: string | null;
+  unreadCount: number;
+};
+
+export type ChatConversation = {
+  id: number;
+  studentId: number;
+  lecturerId: number;
+  lastMessageId: number | null;
+  lastMessageContent: string | null;
+  lastMessageSenderId: number | null;
+  lastMessageAt: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  participants?: ChatParticipant[];
+  seenBy?: ChatSeenUser[];
+  unreadCounts?: Record<string, number>;
+  myUnreadCount?: number;
+};
+
+export type ChatMessage = {
+  id: number;
+  conversationId: number;
+  senderId: number;
+  content: string | null;
+  imgUrl: string | null;
+  createdAt: string;
+  sender: {
+    id: number;
+    firstName: string | null;
+    lastName: string | null;
+    avatarUrl: string | null;
+  };
+};
 
 type MessageBucket = {
   items: ChatMessage[];
@@ -29,36 +77,70 @@ const initialState: ChatState = {
   loadingMessages: false,
 };
 
+const upsertConversation = (
+  list: ChatConversation[],
+  incoming: ChatConversation,
+) => {
+  const exists = list.some((c) => c.id === incoming.id);
+  if (!exists) return [incoming, ...list];
+
+  return list.map((c) => (c.id === incoming.id ? { ...c, ...incoming } : c));
+};
+
+const sortConversations = (list: ChatConversation[]) => {
+  return [...list].sort((a, b) => {
+    const t1 = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+    const t2 = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+    return t2 - t1;
+  });
+};
+
+const mergeUniqueMessages = (older: ChatMessage[], newer: ChatMessage[]) => {
+  const merged = [...older, ...newer];
+  const map = new Map<number, ChatMessage>();
+
+  merged.forEach((msg) => {
+    map.set(msg.id, msg);
+  });
+
+  return Array.from(map.values()).sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+  );
+};
+
 export const fetchConversationsAPI = createAsyncThunk(
   "chat/fetchConversationsAPI",
   async () => {
-    return await chatService.getConversationsAPI();
+    const res = await chatService.getConversationsAPI();
+    return res;
   },
 );
 
 export const fetchMessagesAPI = createAsyncThunk(
   "chat/fetchMessagesAPI",
   async (payload: { conversationId: number }, { getState }) => {
-    const state = getState() as any;
-    const bucket = state.chat.messageByConversation[payload.conversationId];
+    const state = getState() as { chat: ChatState };
+    const bucket = state.chat.messagesByConversation[payload.conversationId];
     const cursor = bucket?.nextCursor;
+
     if (bucket && cursor === null) {
       return {
         conversationId: payload.conversationId,
-        messages: [],
-        nextCursor: null,
+        messages: [] as ChatMessage[],
+        nextCursor: null as string | null,
       };
     }
 
     const res = await chatService.getMessagesAPI({
       conversationId: payload.conversationId,
       cursor: cursor ?? undefined,
+      limit: 30,
     });
 
     return {
       conversationId: payload.conversationId,
-      messages: res.messages ?? [],
-      nextCursor: res.nextCursor ?? null,
+      messages: (res?.messages ?? []) as ChatMessage[],
+      nextCursor: (res?.nextCursor ?? null) as string | null,
     };
   },
 );
@@ -66,7 +148,8 @@ export const fetchMessagesAPI = createAsyncThunk(
 export const createConversationAPI = createAsyncThunk(
   "chat/createConversationAPI",
   async (recipientId: number) => {
-    return await chatService.createConversationAPI(recipientId);
+    const res = await chatService.createConversationAPI(recipientId);
+    return res;
   },
 );
 
@@ -78,27 +161,18 @@ export const sendDirectMessageAPI = createAsyncThunk(
     content?: string;
     imgUrl?: string;
   }) => {
-    return await chatService.sendDirectMessageAPI(payload);
+    const res = await chatService.sendDirectMessageAPI(payload);
+    return res;
   },
 );
 
 export const markAsSeenAPI = createAsyncThunk(
   "chat/markAsSeenAPI",
   async (conversationId: number) => {
-    return await chatService.markAsSeenAPI(conversationId);
+    const res = await chatService.markAsSeenAPI(conversationId);
+    return { ...res, conversationId };
   },
 );
-
-const upsertConversation = (
-  list: ChatConversation[],
-  incoming: ChatConversation,
-) => {
-  const found = list.find((item) => item.id === incoming.id);
-  if (!found) return [incoming, ...list];
-  return list.map((item) =>
-    item.id === incoming.id ? { ...item, ...incoming } : item,
-  );
-};
 
 const chatSlice = createSlice({
   name: "chat",
@@ -111,27 +185,43 @@ const chatSlice = createSlice({
       state,
       action: PayloadAction<{
         message: ChatMessage;
-        conversation: ChatConversation;
+        conversation: Partial<ChatConversation> & { id: number };
         unreadCounts?: Record<string, number>;
       }>,
     ) => {
       const { message, conversation, unreadCounts } = action.payload;
-      state.conversations = upsertConversation(state.conversations, {
+
+      const oldConversation =
+        state.conversations.find((c) => c.id === conversation.id) ?? null;
+
+      const mergedConversation: ChatConversation = {
+        ...(oldConversation ?? {
+          id: conversation.id,
+          studentId: 0,
+          lecturerId: 0,
+          lastMessageId: null,
+          lastMessageContent: null,
+          lastMessageSenderId: null,
+          lastMessageAt: null,
+        }),
         ...conversation,
-        unreadCounts,
-      });
+        unreadCounts: unreadCounts ?? oldConversation?.unreadCounts,
+      };
+
+      state.conversations = sortConversations(
+        upsertConversation(state.conversations, mergedConversation),
+      );
 
       const current = state.messagesByConversation[message.conversationId] ?? {
         items: [],
-        nextCursor: undefined,
+        nextCursor: null,
         hasMore: true,
       };
 
-      if (!current.items.some((m) => m.id === message.id)) {
-        current.items.push(message);
-      }
-
-      state.messagesByConversation[message.conversationId] = current;
+      state.messagesByConversation[message.conversationId] = {
+        ...current,
+        items: mergeUniqueMessages(current.items, [message]),
+      };
     },
     receiveSocketConversation: (
       state,
@@ -139,80 +229,125 @@ const chatSlice = createSlice({
         conversation: ChatConversation;
       }>,
     ) => {
-      state.conversations = upsertConversation(
-        state.conversations,
-        action.payload.conversation,
+      state.conversations = sortConversations(
+        upsertConversation(state.conversations, action.payload.conversation),
       );
     },
     receiveReadMessage: (
       state,
       action: PayloadAction<{
-        conversation: Pick<
-          ChatConversation,
-          "id" | "lastMessageId" | "lastMessageAt"
-        >;
-        seenBy: ChatConversation["seenBy"];
+        conversation: {
+          id: number;
+          lastMessageId: number | null;
+          lastMessageAt: string | null;
+        };
+        seenBy: ChatSeenUser[];
+        member: {
+          userId: number;
+          unreadCount: number;
+          lastReadAt: string | null;
+        };
       }>,
     ) => {
-      state.conversations = state.conversations.map((item) =>
-        item.id === action.payload.conversation.id
-          ? {
-              ...item,
-              ...action.payload.conversation,
-              seenBy: action.payload.seenBy,
-            }
-          : item,
-      );
+      const { conversation, seenBy, member } = action.payload;
+
+      state.conversations = state.conversations.map((c) => {
+        if (c.id !== conversation.id) return c;
+
+        const nextUnreadCounts = {
+          ...(c.unreadCounts ?? {}),
+          [String(member.userId)]: member.unreadCount,
+        };
+
+        return {
+          ...c,
+          lastMessageId: conversation.lastMessageId,
+          lastMessageAt: conversation.lastMessageAt,
+          seenBy,
+          unreadCounts: nextUnreadCounts,
+          myUnreadCount:
+            state.activeConversationId === c.id
+              ? member.unreadCount
+              : c.myUnreadCount,
+        };
+      });
     },
+
+    resetChatState: () => initialState,
   },
+
   extraReducers: (builder) => {
     builder.addCase(fetchConversationsAPI.pending, (state) => {
       state.loadingConversations = true;
     });
+
     builder.addCase(fetchConversationsAPI.fulfilled, (state, action) => {
       state.loadingConversations = false;
-      state.conversations = action.payload?.conversations ?? [];
+      state.conversations = sortConversations(
+        action.payload?.conversations ?? [],
+      );
     });
+
     builder.addCase(fetchConversationsAPI.rejected, (state) => {
       state.loadingConversations = false;
     });
+
     builder.addCase(fetchMessagesAPI.pending, (state) => {
       state.loadingMessages = true;
     });
+
     builder.addCase(fetchMessagesAPI.fulfilled, (state, action) => {
       state.loadingMessages = false;
+
       const { conversationId, messages, nextCursor } = action.payload;
-      const prev = state.messagesByConversation[conversationId]?.items ?? [];
-      const merged = [...messages, ...prev].filter(
-        (msg, idx, arr) => arr.findIndex((m) => m.id === msg.id) === idx,
-      );
+      const current = state.messagesByConversation[conversationId] ?? {
+        items: [],
+        nextCursor: null,
+        hasMore: true,
+      };
 
       state.messagesByConversation[conversationId] = {
-        items: merged,
+        items: mergeUniqueMessages(messages, current.items),
         nextCursor,
         hasMore: !!nextCursor,
       };
     });
+
     builder.addCase(fetchMessagesAPI.rejected, (state) => {
       state.loadingMessages = false;
     });
+
     builder.addCase(createConversationAPI.fulfilled, (state, action) => {
-      const conversation = action.payload?.conversation;
-      if (conversation)
-        state.conversations = upsertConversation(
-          state.conversations,
-          conversation,
-        );
-      if (conversation?.id) state.activeConversationId = conversation.id;
-    });
-    builder.addCase(markAsSeenAPI.fulfilled, (state, action) => {
-      const id = state.activeConversationId;
-      if (!id) return;
-      state.conversations = state.conversations.map((item) =>
-        item.id === id
-          ? { ...item, myUnreadCount: action.payload?.myUnreadCount ?? 0 }
-          : item,
+      const conversation = action.payload?.conversation as
+        | ChatConversation
+        | undefined;
+      if (!conversation) return;
+
+      state.conversations = sortConversations(
+        upsertConversation(state.conversations, conversation),
       );
+      state.activeConversationId = conversation.id;
+    });
+
+    builder.addCase(markAsSeenAPI.fulfilled, (state, action) => {
+      const conversationId = action.payload?.conversationId as number;
+      const myUnreadCount = action.payload?.myUnreadCount;
+
+      if (!conversationId || typeof myUnreadCount !== "number") return;
+
+      state.conversations = state.conversations.map((c) => {
+        if (c.id !== conversationId) return c;
+
+        const nextUnreadCounts = {
+          ...(c.unreadCounts ?? {}),
+        };
+
+        return {
+          ...c,
+          unreadCounts: nextUnreadCounts,
+          myUnreadCount,
+        };
+      });
     });
   },
 });
@@ -222,6 +357,15 @@ export const {
   receiveSocketMessage,
   receiveSocketConversation,
   receiveReadMessage,
+  resetChatState,
 } = chatSlice.actions;
 
 export const chatReducer = chatSlice.reducer;
+
+export const selectChatState = (state: any): ChatState => state.chat;
+export const selectChatConversations = (state: any): ChatConversation[] =>
+  state.chat.conversations ?? [];
+export const selectActiveConversationId = (state: any): number | null =>
+  state.chat.activeConversationId ?? null;
+export const selectMessagesByConversation = (state: any) =>
+  state.chat.messagesByConversation ?? {};
