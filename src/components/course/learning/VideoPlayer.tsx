@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Play } from "lucide-react";
 
 type Props = {
@@ -9,21 +9,17 @@ type Props = {
 
 const VideoPlayer = ({ thumbnail, videoUrl, onEnded }: Props) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
 
   const togglePlay = () => {
     if (!videoRef.current) return;
     if (videoRef.current.paused) {
       videoRef.current.play();
-      setIsPlaying(true);
     } else {
       videoRef.current.pause();
-      setIsPlaying(false);
     }
   };
 
   useEffect(() => {
-    setIsPlaying(false);
     if (videoRef.current) videoRef.current.currentTime = 0;
   }, [videoUrl]);
 
