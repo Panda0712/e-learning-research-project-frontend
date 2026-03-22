@@ -8,6 +8,12 @@ import {
   useForm,
 } from "react-hook-form";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "react-toastify";
+import { lecturerCourseService } from "../../../../../apis/lecturer/course";
+import { lecturerLessonService } from "../../../../../apis/lecturer/lesson";
+import { lecturerModuleService } from "../../../../../apis/lecturer/module";
+import { lecturerQuestionService } from "../../../../../apis/lecturer/question";
+import { lecturerQuizService } from "../../../../../apis/lecturer/quiz";
 import Button from "../../../../ui/Button";
 import Input from "../../../../ui/Input";
 import { Field } from "../../../../ui/InputBox";
@@ -24,6 +30,10 @@ const DashboardCreateEditCurriculum = () => {
   const [activeQuizLessonIndex, setActiveQuizLessonIndex] = useState<
     number | null
   >(null);
+  const [submitAction, setSubmitAction] = useState<"delete" | "save" | "publish">(
+    "save",
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [tab, setTab] = useState<"Details" | "Resources">("Details");
   const [searchParams] = useSearchParams();
 
@@ -97,8 +107,112 @@ const DashboardCreateEditCurriculum = () => {
     setActiveQuizLessonIndex(null);
   }, []);
 
-  const onSubmit = (data: CurriculumFormValues) => {
-    console.log("data", data);
+  const onSubmit = async (data: CurriculumFormValues) => {
+    if (submitAction === "delete") {
+      localStorage.removeItem("curriculumTitle");
+      localStorage.removeItem("cc");
+      navigate("/dashboard/lecturer/my-courses/create-course/curriculum");
+      return;
+    }
+
+    const contextRaw = localStorage.getItem("lecturerCreateCourseContext");
+    const courseIdFromContext = contextRaw
+      ? Number((JSON.parse(contextRaw) as { courseId?: number }).courseId)
+      : NaN;
+    const courseIdFromStorage = Number(localStorage.getItem("lecturerCreatedCourseId"));
+    const courseId = Number.isInteger(courseIdFromContext) && courseIdFromContext > 0
+      ? courseIdFromContext
+      : courseIdFromStorage;
+
+    if (!Number.isInteger(courseId) || courseId <= 0) {
+      toast.error("Course ID is missing. Please save course detail first.");
+      navigate("/dashboard/lecturer/my-courses/create-course/detail");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const createdModule = await lecturerModuleService.createModuleAPI({
+        courseId,
+        title: data.title.trim(),
+        description: `${data.subtitle.trim()} ${data.description.trim()}`.trim(),
+        duration: `${data.lessons.length} lessons`,
+        totalLessons: data.lessons.length,
+      });
+
+      const moduleId = Number((createdModule as { id?: number }).id);
+      if (!Number.isInteger(moduleId) || moduleId <= 0) {
+        throw new Error("Cannot create module.");
+      }
+
+      for (const lesson of data.lessons) {
+        const lessonVideo = await lecturerLessonService.uploadLessonVideoAPI(
+          lesson.lessonVideo,
+        );
+        const lessonFile =
+          lesson.lessonFile && lesson.lessonFile.size > 0
+            ? await lecturerLessonService.uploadLessonFileAPI(lesson.lessonFile)
+            : undefined;
+
+        const createdLesson = await lecturerLessonService.createLessonAPI({
+          moduleId,
+          title: lesson.title.trim(),
+          description: lesson.description.trim(),
+          note: lesson.note.trim(),
+          duration: "N/A",
+          video: lessonVideo,
+          resource: lessonFile,
+        });
+
+        const lessonId = Number((createdLesson as { id?: number }).id);
+        if (!Number.isInteger(lessonId) || lessonId <= 0) continue;
+
+        for (const quiz of lesson.quizzes || []) {
+          const createdQuiz = await lecturerQuizService.createQuizAPI({
+            lessonId,
+            title: quiz.title.trim(),
+            description: quiz.description.trim(),
+            timeLimit: Number(quiz.timeLimit),
+            passingScore: Number(quiz.passingScore),
+          });
+
+          const quizId = Number((createdQuiz as { id?: number }).id);
+          if (!Number.isInteger(quizId) || quizId <= 0) continue;
+
+          for (const question of quiz.questions) {
+            const correctAnswer = Array.isArray(question.correctAnswer)
+              ? question.correctAnswer.filter(Boolean).join(" | ")
+              : question.correctAnswer;
+
+            await lecturerQuestionService.createQuestionAPI({
+              quizId,
+              question: question.question.trim(),
+              type: question.type,
+              options: question.options.map((item) => item.trim()).filter(Boolean),
+              correctAnswer: String(correctAnswer || "").trim(),
+              point: Number(question.points),
+            });
+          }
+        }
+      }
+
+      if (submitAction === "publish") {
+        await lecturerCourseService.updateCourseAPI(courseId, {
+          status: "published",
+        });
+      } else {
+        await lecturerCourseService.updateCourseAPI(courseId, {
+          status: "pending",
+        });
+      }
+
+      toast.success("Curriculum saved successfully.");
+      localStorage.removeItem("curriculumTitle");
+      localStorage.removeItem("cc");
+      navigate("/dashboard/lecturer/my-courses/create-course/curriculum");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   useEffect(() => {
@@ -122,15 +236,31 @@ const DashboardCreateEditCurriculum = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button type="delete" content="Delete" />
-            <Button type="cancel-v2" content="Save & Change" />
-            <Button type="publish" content="Publish" />
+            <Button
+              type="delete"
+              content="Delete"
+              disabled={isSubmitting}
+              onClick={() => setSubmitAction("delete")}
+            />
+            <Button
+              type="cancel-v2"
+              content="Save & Change"
+              disabled={isSubmitting}
+              onClick={() => setSubmitAction("save")}
+            />
+            <Button
+              type="publish"
+              content="Publish"
+              disabled={isSubmitting}
+              onClick={() => setSubmitAction("publish")}
+            />
           </div>
         </div>
 
         <div className="mt-5">
           <div className="flex items-center gap-3 border-b border-[#E2E8F0]">
             <button
+              type="button"
               onClick={() => setTab("Details")}
               className={`outline-none py-4 px-2.5 text-[16px] font-medium
                 cursor-pointer transition duration-300 hover:opacity-90 ${
@@ -142,6 +272,7 @@ const DashboardCreateEditCurriculum = () => {
               Details
             </button>
             <button
+              type="button"
               onClick={() => setTab("Resources")}
               className={`outline-none py-4 px-2.5 text-[16px] font-medium
                 cursor-pointer transition duration-300 hover:opacity-90 ${
