@@ -1,13 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import PaginationV2 from "../../../../components/ui/PaginationV2";
+import { useEffect, useMemo, useState } from "react";
+import { lecturerCourseInsightsService } from "../../../../apis/lecturer/courseInsights";
 import { columns } from "../../../../components/dashboard/lecturer/create-course/customer/DashboardCustomerColumns";
-import { useEffect, useState } from "react";
 import TableSkeleton from "../../../../components/skeleton/TableSkeleton";
+import PaginationV2 from "../../../../components/ui/PaginationV2";
+import { selectCurrentUser } from "../../../../redux/activeUser/activeUserSlice";
+import { useAppSelector } from "../../../../redux/hooks";
 
 export interface CustomerData {
   id: number;
@@ -17,63 +21,14 @@ export interface CustomerData {
   progress: number;
 }
 
-const mockCustomerData: CustomerData[] = [
-  {
-    id: 1,
-    name: "Cristiano Ronaldo",
-    country: "Indonesia",
-    joinedDate: new Date(),
-    progress: 0,
-  },
-  {
-    id: 2,
-    name: "Tuan Kross",
-    country: "Indonesia",
-    joinedDate: new Date(),
-    progress: 20,
-  },
-  {
-    id: 3,
-    name: "Gareth Bang",
-    country: "Indonesia",
-    joinedDate: new Date(),
-    progress: 60,
-  },
-  {
-    id: 4,
-    name: "Kim jong Khoa",
-    country: "Indonesia",
-    joinedDate: new Date(),
-    progress: 40,
-  },
-  {
-    id: 5,
-    name: "Son Hieu ming",
-    country: "Indonesia",
-    joinedDate: new Date(),
-    progress: 50,
-  },
-  {
-    id: 6,
-    name: "Cristiano Ronaldo",
-    country: "Indonesia",
-    joinedDate: new Date(),
-    progress: 75,
-  },
-  {
-    id: 7,
-    name: "Harry Khai",
-    country: "Indonesia",
-    joinedDate: new Date(),
-    progress: 100,
-  },
-];
-
 const DashboardCustomer = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const [tableData, setTableData] = useState<CustomerData[]>([]);
+
+  const currentUser = useAppSelector(selectCurrentUser);
 
   const table = useReactTable({
-    data: mockCustomerData,
+    data: tableData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -86,9 +41,26 @@ const DashboardCustomer = () => {
   });
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 2000);
-    return () => clearTimeout(timer);
-  }, []);
+    setIsLoading(true);
+    lecturerCourseInsightsService
+      .getCustomersByCourseForLecturerAPI(currentUser?.id, {
+        page: 1,
+        limit: 100,
+      })
+      .then((res) => {
+        const mapped = (res?.data || []).map((item: any) => ({
+          id: Number(item.id),
+          name: String(item.name || ""),
+          country: String(item.country || "Unknown"),
+          joinedDate: new Date(item.joinedDate || item.createdAt || Date.now()),
+          progress: Number(item.progress || 0),
+        })) as CustomerData[];
+        setTableData(mapped);
+      })
+      .finally(() => setIsLoading(false));
+  }, [currentUser?.id]);
+
+  const rows = useMemo(() => table.getRowModel().rows, [table]);
 
   return (
     <div className="mt-7">
@@ -114,7 +86,7 @@ const DashboardCustomer = () => {
               </thead>
 
               <tbody>
-                {table.getRowModel().rows.map((row) => (
+                {rows.map((row) => (
                   <tr key={row.id} className="hover:bg-gray-50 transition">
                     {row.getVisibleCells().map((cell) => (
                       <td

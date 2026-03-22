@@ -5,7 +5,7 @@ import type { ControllerRenderProps } from "react-hook-form";
 import { useLockBodyScroll } from "../../../../../hooks/useLockBodyScroll";
 import { MAX_SIZE_GB, MIN_VIDEO_HEIGHT } from "../../../../../utils/constants";
 import { formatVideoDuration } from "../../../../../utils/helpers";
-import CurriculumModalVideoUpload from "../CurriculumModalVideoUpload/CurriculumModalVideoUpload";
+import CurriculumModalVideoUpload from "./CurriculumModalVideoUpload";
 
 type VideoPreview = {
   file: File;
