@@ -7,7 +7,15 @@ import {
   Share2,
   Twitter,
 } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
+import {
+  lecturerService,
+  type LecturerListItem,
+} from "../../apis/lecturer";
+import { selectCurrentUser } from "../../redux/activeUser/activeUserSlice";
+import { useAppSelector } from "../../redux/hooks";
 
 interface LecturerData {
   id: number;
@@ -22,77 +30,144 @@ interface LecturerData {
   expertise: string[];
 }
 
+interface InstructorCardData {
+  id: number;
+  name: string;
+  role: string;
+  image: string;
+}
+
+interface LecturerCourse {
+  id?: number;
+  name?: string;
+}
+
+const mapLecturerToDetails = (
+  lecturer: LecturerListItem,
+  expertise: string[],
+): LecturerData => {
+  const fullName =
+    `${lecturer.firstName ?? ""} ${lecturer.lastName ?? ""}`.trim() ||
+    lecturer.email;
+
+  return {
+    id: lecturer.id,
+    name: fullName,
+    role: "Lecturer",
+    image: lecturer.avatar?.fileUrl ?? "/avatar1.png",
+    phone: lecturer.phoneNumber || "Updating",
+    address: "Updating",
+    email: lecturer.email,
+    bio: "This lecturer is updating their profile details.",
+    education:
+      "Practical and project-based learning are the main teaching approach.",
+    expertise: expertise.length ? expertise : ["Lecturing"],
+  };
+};
+
 const LecturerDetails = () => {
   const { id } = useParams();
+  const currentUser = useAppSelector(selectCurrentUser);
+  const [isLoading, setIsLoading] = useState(true);
+  const [lecturer, setLecturer] = useState<LecturerData | null>(null);
+  const [otherInstructors, setOtherInstructors] = useState<InstructorCardData[]>(
+    [],
+  );
 
-  // Mock data - in real app, fetch based on id
-  const lecturer: LecturerData = {
-    id: Number(id),
-    name: "SÁMOL",
-    role: "Lecturer",
-    image:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop",
-    phone: "11000000000000000",
-    address: "An Duong Vuong",
-    email: "hienlu@gmail.com",
-    bio: "My greatest passion is sharing knowledge and helping beginners demystify the world of programming. I believe anyone can learn to code with the right roadmap and a dedicated instructor.",
-    education:
-      'My Philosophy: "Learning by doing." I focus on practical, project-based learning that helps you build real products, not just memorize theory.',
-    expertise: ["Lectures", "My Skill", "Consulting"],
-  };
+  const lecturerId = Number(id);
 
-  // Mock data for other instructors
-  const otherInstructors = [
-    {
-      id: 1,
-      name: "Tuan Andy",
-      role: "Lecturer",
-      image:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
-    },
-    {
-      id: 2,
-      name: "Samuel",
-      role: "Lecturer",
-      image:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop",
-    },
-    {
-      id: 3,
-      name: "Khai Travis",
-      role: "Lecturer",
-      image:
-        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop",
-    },
-    {
-      id: 4,
-      name: "Lina",
-      role: "Lecturer",
-      image:
-        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop",
-    },
-  ];
+  useEffect(() => {
+    const studentId = Number(currentUser?.id);
+    if (!lecturerId || !studentId) {
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+
+    Promise.all([
+      lecturerService.getLecturerByIdAPI({ studentId, lecturerId }),
+      lecturerService.getCoursesByLecturerIdAPI(lecturerId),
+      lecturerService.getLecturersAPI({
+        studentId,
+        page: 1,
+        itemsPerPage: 4,
+      }),
+    ])
+      .then(([lecturerResult, coursesResult, listResult]) => {
+        if (!lecturerResult) {
+          setLecturer(null);
+          return;
+        }
+
+        const expertise = Array.isArray(coursesResult)
+          ? (coursesResult as LecturerCourse[])
+              .map((course) => course?.name)
+              .filter((name): name is string => Boolean(name))
+              .slice(0, 6)
+          : [];
+
+        setLecturer(mapLecturerToDetails(lecturerResult, expertise));
+
+        const others = (listResult.lecturers || [])
+          .filter((item) => item.id !== lecturerId)
+          .map((item) => ({
+            id: item.id,
+            name:
+              `${item.firstName ?? ""} ${item.lastName ?? ""}`.trim() ||
+              item.email,
+            role: "Lecturer",
+            image: item.avatar?.fileUrl ?? "/avatar1.png",
+          }));
+
+        setOtherInstructors(others);
+      })
+      .catch((error) => {
+        toast.error(error?.message || "Cannot load lecturer details!");
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, [currentUser?.id, lecturerId]);
+
+  const displayLecturer = useMemo(() => lecturer, [lecturer]);
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 bg-white">
+        <div className="px-20 py-16 text-center text-[#737A86]">Loading lecturer details...</div>
+      </div>
+    );
+  }
+
+  if (!displayLecturer) {
+    return (
+      <div className="flex-1 bg-white">
+        <div className="px-20 py-16 text-center text-[#737A86]">Lecturer details not found.</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 bg-white">
       {/* Breadcrumb */}
       <div className="bg-[#F2F2F2] px-20 py-6">
         <div className="flex items-center gap-2 text-[16px]">
-          <a
-            href="/"
+          <Link
+            to="/"
             className="text-[#737A86] font-poppins hover:text-[#4D5756] transition-colors cursor-pointer"
           >
             Home
-          </a>
+          </Link>
           <span className="text-[#737A86]">›</span>
-          <a
-            href="/lecturer"
+          <Link
+            to="/lecturer"
             className="text-[#737A86] font-poppins hover:text-[#4D5756] transition-colors cursor-pointer"
           >
-            Lecture
-          </a>
+            Lecturer
+          </Link>
           <span className="text-[#737A86]">›</span>
-          <span className="text-[#737A86] font-poppins">Lecture Details</span>
+          <span className="text-[#737A86] font-poppins">Lecturer Details</span>
         </div>
       </div>
 
@@ -106,8 +181,8 @@ const LecturerDetails = () => {
                 {/* Profile Image */}
                 <div className="mb-6">
                   <img
-                    src={lecturer.image}
-                    alt={lecturer.name}
+                    src={displayLecturer.image}
+                    alt={displayLecturer.name}
                     className="w-full rounded-sm"
                   />
                 </div>
@@ -133,19 +208,19 @@ const LecturerDetails = () => {
                   <div className="flex items-start gap-3">
                     <Phone className="w-5 h-5 text-[#FC6441] mt-1" />
                     <span className="text-[16px] text-[#333931] font-poppins">
-                      {lecturer.phone}
+                      {displayLecturer.phone}
                     </span>
                   </div>
                   <div className="flex items-start gap-3">
                     <MapPin className="w-5 h-5 text-[#FC6441] mt-1" />
                     <span className="text-[16px] text-[#333931] font-poppins">
-                      {lecturer.address}
+                      {displayLecturer.address}
                     </span>
                   </div>
                   <div className="flex items-start gap-3">
                     <Mail className="w-5 h-5 text-[#FC6441] mt-1" />
                     <span className="text-[16px] text-[#333931] font-poppins">
-                      {lecturer.email}
+                      {displayLecturer.email}
                     </span>
                   </div>
                 </div>
@@ -163,15 +238,15 @@ const LecturerDetails = () => {
               <div className="bg-white p-10 shadow-sm">
                 {/* Name and Role */}
                 <h1 className="text-[30px] font-bold text-[#FC6441] mb-2">
-                  {lecturer.name}
+                  {displayLecturer.name}
                 </h1>
                 <p className="text-[18px] text-[#778BE5] font-poppins mb-6">
-                  {lecturer.role}
+                  {displayLecturer.role}
                 </p>
 
                 {/* Bio */}
                 <p className="text-[16px] text-[#333931] font-poppins leading-relaxed mb-8">
-                  {lecturer.bio}
+                  {displayLecturer.bio}
                 </p>
 
                 {/* Education */}
@@ -180,7 +255,7 @@ const LecturerDetails = () => {
                     Education:
                   </h2>
                   <p className="text-[16px] text-[#333931] font-poppins leading-relaxed">
-                    {lecturer.education}
+                    {displayLecturer.education}
                   </p>
                 </div>
 
@@ -190,7 +265,7 @@ const LecturerDetails = () => {
                     EXPERTISE & SKILLS:
                   </h2>
                   <div className="space-y-3">
-                    {lecturer.expertise.map((skill, index) => (
+                    {displayLecturer.expertise.map((skill, index) => (
                       <div
                         key={index}
                         className="flex items-center justify-between py-3 border-b border-gray-200"
@@ -216,9 +291,9 @@ const LecturerDetails = () => {
           {/* Instructors Grid */}
           <div className="grid grid-cols-4 gap-8">
             {otherInstructors.map((instructor) => (
-              <a
+              <Link
                 key={instructor.id}
-                href={`/lecturer/${instructor.id}`}
+                to={`/lecturer/${instructor.id}`}
                 className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow"
               >
                 {/* Image Container */}
@@ -243,7 +318,7 @@ const LecturerDetails = () => {
                     {instructor.role}
                   </p>
                 </div>
-              </a>
+              </Link>
             ))}
           </div>
 

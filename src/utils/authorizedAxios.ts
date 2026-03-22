@@ -21,6 +21,12 @@ authorizedAxiosInstance.interceptors.request.use(
   (config) => {
     interceptorLoadingElements(true);
 
+    const accessToken = axiosReduxStore?.getState?.()?.user?.currentUser?.accessToken;
+    if (accessToken) {
+      config.headers = config.headers || {};
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+
     return config;
   },
   (error) => {
@@ -38,10 +44,6 @@ authorizedAxiosInstance.interceptors.response.use(
   },
   (error) => {
     interceptorLoadingElements(false);
-
-    if (error.response?.status === 401) {
-      axiosReduxStore.dispatch(logoutUserAPI(false));
-    }
 
     const originalRequests = error.config;
     if (error.response?.status === 410 && !originalRequests._retry) {
@@ -70,7 +72,7 @@ authorizedAxiosInstance.interceptors.response.use(
       errorMessage = error.response.data.message;
     }
 
-    if (error.response?.status !== 410) {
+    if (error.response?.status !== 401) {
       toast.error(errorMessage);
     }
 

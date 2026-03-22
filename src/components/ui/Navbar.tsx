@@ -1,8 +1,11 @@
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { selectCurrentUser } from "../../redux/activeUser/activeUserSlice";
-import { useAppSelector } from "../../redux/hooks";
+import {
+  logoutUserAPI,
+  selectCurrentUser,
+} from "../../redux/activeUser/activeUserSlice";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { menuList } from "../../utils/constants";
 import Button from "./Button";
 import AvatarLoginImg from "/avatar-login.png";
@@ -12,10 +15,22 @@ import ShoppingCartImg from "/shopping-cart.png";
 
 const Navbar = () => {
   const [isLecturerDropdownOpen, setIsLecturerDropdownOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
+  const dispatch = useAppDispatch();
   const currentUser = useAppSelector(selectCurrentUser);
   const location = useLocation();
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await dispatch(logoutUserAPI(true)).unwrap();
+      setIsUserMenuOpen(false);
+      navigate("/auth/login");
+    } catch {
+      // Keep UI stable if logout request fails; toast is handled in async thunk.
+    }
+  };
 
   return (
     <nav className="bg-white flex items-center justify-between px-10 py-2">
@@ -96,12 +111,18 @@ const Navbar = () => {
               className="w-9.25 h-10.25 object-cover"
               alt="notification-icon-img"
             />
-            <div className="flex items-center gap-3">
-              <img
-                src={AvatarLoginImg}
-                className="w-14 h-15.25 object-cover"
-                alt=""
-              />
+            <div className="relative flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setIsUserMenuOpen((prev) => !prev)}
+                className="cursor-pointer"
+              >
+                <img
+                  src={AvatarLoginImg}
+                  className="w-14 h-15.25 object-cover"
+                  alt="user-avatar"
+                />
+              </button>
               <div className="flex flex-col gap-1">
                 <h4 className="font-poppins font-medium text-[20px] text-black">
                   {currentUser.firstName + " " + currentUser.lastName}
@@ -110,6 +131,18 @@ const Navbar = () => {
                   {currentUser.email}
                 </h5>
               </div>
+
+              {isUserMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 min-w-32 rounded-lg border border-gray-100 bg-white p-2 shadow-lg z-50">
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="w-full rounded-md px-3 py-2 text-left text-[14px] font-medium text-[#327186] hover:bg-gray-100 transition-colors"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
             </div>
           </>
         ) : (
