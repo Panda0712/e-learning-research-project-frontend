@@ -28,6 +28,11 @@ const DashboardCreateCourseModal = ({
       return;
     }
 
+    localStorage.removeItem("lecturerCreatedCourseId");
+    localStorage.removeItem("lecturerCreateCourseContext");
+    localStorage.removeItem("curriculumTitle");
+    localStorage.removeItem("cc");
+
     navigate(
       `/dashboard/lecturer/my-courses/create-course/detail?courseTitle=${courseTitle}`,
     );

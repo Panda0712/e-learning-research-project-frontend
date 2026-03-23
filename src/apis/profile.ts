@@ -29,6 +29,7 @@ const getLecturersByStudentIdAPI = async ({
   return res.data;
 };
 
+// get user profile data API
 const getUserFullProfileAPI = async () => {
   const res = await authorizedAxiosInstance.get(`${API_ROOT}/v1/users/me`);
   return res.data;
@@ -42,16 +43,19 @@ interface UserUpdatePayload {
   bio?: string;
 }
 
-=const updateProfileAPI = async (data: UserUpdatePayload) => {
+// Update profile API
+const updateProfileAPI = async (data: UserUpdatePayload) => {
   const res = await authorizedAxiosInstance.put(`${API_ROOT}/v1/users/update`, data);
   return res.data;
 };
 
+// Change password API
 const changePasswordAPI = async (data: Record<string, string>) => {
   const res = await authorizedAxiosInstance.put(`${API_ROOT}/v1/users/change-password`, data);
   return res.data;
 };
 
+// Upload avatar API
 const uploadAvatarAPI = async (formData: FormData) => {
   const res = await authorizedAxiosInstance.post(`${API_ROOT}/v1/users/avatar`, formData, {
     headers: {

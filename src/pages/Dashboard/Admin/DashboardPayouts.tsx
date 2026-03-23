@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { toast } from "react-toastify";
 import { useState, useEffect } from "react";
 import { Settings, ChevronLeft, ChevronRight, CheckCircle2, XCircle } from "lucide-react";
 import { getAllPayoutsAPI } from "../../../apis/payoutAdmin";
@@ -127,7 +129,7 @@ const DashboardPayouts = () => {
               </tr>
             ) : currentItems.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-8 text-center text-gray-500 italic">No data found.</td>
+                <td colSpan={6} className="p-8 text-center text-gray-500 italic">You have no payouts history.</td>
               </tr>
             ) : (
               currentItems.map((item) => (

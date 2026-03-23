@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { toast } from "react-toastify";
-import { useState, useEffect } from "react";
-import { Eye, EyeOff, AlertCircle, CheckCircle2 } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react'; 
 import { profileService } from "../../../../apis/profile";
 
 const AccountSetting = () => {
@@ -29,21 +29,21 @@ const AccountSetting = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      try {
-        setLoading(true);
-        const data = await profileService.getUserFullProfileAPI();
-        setFormData({
-          name: data.name || "",
-          email: data.email || "",
-          location: data.location || "",
-          phone: data.phone || "",
-          bio: data.bio || "",
-        });
-      } catch (error: any) {
-        toast.error(error?.message || "Failed to load lecturer data!");
-      } finally {
-        setLoading(false);
-      }
+        try {
+            setLoading(true);
+            const data = await profileService.getUserFullProfileAPI();
+            setFormData({
+                name: data.name || '',
+                email: data.email || '',
+                location: data.location || '',
+                phone: data.phone || '',
+                bio: data.bio || ''
+            });
+        } catch (error:any) {
+            toast.error(error?.message || "Failed to load lecturer data!");
+        } finally {
+            setLoading(false);
+        }
     };
     fetchProfile();
   }, []);
@@ -74,10 +74,10 @@ const AccountSetting = () => {
 
   const handleSaveProfile = async () => {
     try {
-      await profileService.updateProfileAPI(formData);
-      toast.success("Updated profile successfully!");
-    } catch (error: any) {
-      toast.error(error?.message || "Failed to update data!");
+        await profileService.updateProfileAPI(formData);
+        toast.success("Updated profile successfully!");
+    } catch (error:any) {
+        toast.error(error?.message || "Failed to update data!");
     }
   };
 
@@ -149,19 +149,13 @@ const AccountSetting = () => {
       };
 
       await profileService.changePasswordAPI(payload);
-
-      setPassStatus({
-        type: "success",
-        message: "Password updated successfully!",
-      });
-      setPasswords({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-    } catch (error: any) {
+      
+      setPassStatus({ type: 'success', message: 'Password updated successfully!' });
+      setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      
+    } catch (error:any) {       
       toast.error(error?.message || "Failed to update password!");
-      setPassStatus({ type: "error", message: error?.message });
+      setPassStatus({ type: 'error', message: errorMessage });
     }
   };
 
@@ -176,12 +170,30 @@ const AccountSetting = () => {
     <div className="font-poppins">
       <div className="flex flex-col lg:flex-row gap-8">
         <div className="flex-1">
-          {activeTab === "account" && (
-            <div>
-              {/* === ACCOUNT SETTINGS === */}
-              <h2 className="text-xl font-bold text-gray-800 mb-8">
-                ACCOUNT SETTINGS
-              </h2>
+            {activeTab === 'account' && (
+                <div>
+                    {/* === ACCOUNT SETTINGS === */}
+                    <h2 className="text-xl font-bold text-gray-800 mb-8">ACCOUNT SETTINGS</h2>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div className="space-y-2">
+                            <label className="text-sm text-gray-500">Name</label>
+                            <input name="name" type="text" value={formData.name} onChange={handleChange} className="w-full border border-gray-200 rounded-lg p-3 focus:outline-none focus:border-blue-500 text-sm" />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm text-gray-500">Email</label>
+                            <input name="email" type="email" value={formData.email} onChange={handleChange} onBlur={validateEmail} placeholder="Email" className={`w-full border rounded-lg p-3 focus:outline-none text-sm ${errors.email ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-blue-500'}`} />
+                            {errors.email && <p className="text-red-500 text-xs flex items-center gap-1"><AlertCircle size={12}/> {errors.email}</p>}
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm text-gray-500">Location</label>
+                            <input type="text" name="location" value={formData.location} onChange={handleChange} placeholder="Location" className="w-full border border-gray-200 rounded-lg p-3 focus:outline-none focus:border-blue-500 text-sm" />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm text-gray-500">Phone number</label>
+                            <input name="phone" type="text" value={formData.phone} onChange={handlePhoneChange} placeholder="Phone number" maxLength={11} className="w-full border border-gray-200 rounded-lg p-3 focus:outline-none focus:border-blue-500 text-sm" />
+                        </div>
+                    </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div className="space-y-2">
@@ -287,7 +299,17 @@ const AccountSetting = () => {
                 </button>
               </div>
 
-              <hr className="border-gray-100 my-8" />
+                    {/* === SECURITY SETTINGS === */}
+                    <div>
+                        <h2 className="text-xl font-bold text-gray-800 mb-8">SECURITY SETTINGS</h2>
+                        
+                        <div className="space-y-6 max-w-lg">
+                            {passStatus.message && (
+                              <div className={`p-3 rounded-lg text-sm flex items-center gap-2 ${passStatus.type === 'error' ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-green-50 text-green-600 border border-green-200'}`}>
+                                {passStatus.type === 'error' ? <AlertCircle size={16} /> : <CheckCircle2 size={16} />}
+                                {passStatus.message}
+                              </div>
+                            )}
 
               {/* === SECURITY SETTINGS === */}
               <div>

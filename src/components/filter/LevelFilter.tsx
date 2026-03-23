@@ -8,7 +8,7 @@ const LevelFilter = () => {
       </h3>
       <FilterItem label="All Levels" count={15} />
       <FilterItem label="Beginner" count={15} />
-      <FilterItem label="Intermediate" count={15} defaultChecked />
+      <FilterItem label="Intermediate" count={15} checked />
       <FilterItem label="Expert" count={15} />
     </div>
   );

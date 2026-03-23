@@ -6,7 +6,7 @@ const PriceFilter = () => {
       <h3 className="font-bold text-lg mb-4 text-[#07152F] font-poppins">
         Price
       </h3>
-      <FilterItem label="All" count={15} defaultChecked />
+      <FilterItem label="All" count={15} checked />
       <FilterItem label="Free" count={15} />
       <FilterItem label="Paid" count={15} />
     </div>
