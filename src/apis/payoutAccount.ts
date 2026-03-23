@@ -14,7 +14,6 @@ const getAccountsAPI = async (lecturerId: number | string) => {
   return response.data;
 };
 
-// Đã thay "any" bằng "CreateAccountPayload" ở đây nè
 const createAccountAPI = async (data: CreateAccountPayload) => {
   const response = await authorizedAxiosInstance.post(`${API_ROOT}/v1/lecturer-payout-accounts`, data);
   return response.data;
