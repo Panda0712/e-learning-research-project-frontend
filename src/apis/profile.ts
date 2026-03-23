@@ -29,7 +29,6 @@ const getLecturersByStudentIdAPI = async ({
   return res.data;
 };
 
-// lấy thông tin chi tiết
 const getUserFullProfileAPI = async () => {
   const res = await authorizedAxiosInstance.get(`${API_ROOT}/v1/users/me`);
   return res.data;
@@ -43,18 +42,16 @@ interface UserUpdatePayload {
   bio?: string;
 }
 
-// Cập nhật thông tin 
-const updateProfileAPI = async (data: UserUpdatePayload) => {
+=const updateProfileAPI = async (data: UserUpdatePayload) => {
   const res = await authorizedAxiosInstance.put(`${API_ROOT}/v1/users/update`, data);
   return res.data;
 };
-//thay doi mat khau
+
 const changePasswordAPI = async (data: Record<string, string>) => {
   const res = await authorizedAxiosInstance.put(`${API_ROOT}/v1/users/change-password`, data);
   return res.data;
 };
 
-// Up ảnh Avatar (Dùng FormData)
 const uploadAvatarAPI = async (formData: FormData) => {
   const res = await authorizedAxiosInstance.post(`${API_ROOT}/v1/users/avatar`, formData, {
     headers: {
