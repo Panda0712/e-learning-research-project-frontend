@@ -1,16 +1,19 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Check, Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { HiBars3BottomRight } from "react-icons/hi2";
+import { lecturerCourseInsightsService } from "../../../../apis/lecturer/courseInsights";
 import GraphIcon from "../../../../assets/graph.svg?react";
-import Input from "../../../../components/ui/Input";
-import TableSkeleton from "../../../../components/skeleton/TableSkeleton";
 import DashboardCommissionTable from "../../../../components/dashboard/lecturer/create-course/commission/DashboardCommissionTable";
+import TableSkeleton from "../../../../components/skeleton/TableSkeleton";
+import Input from "../../../../components/ui/Input";
+import { selectCurrentUser } from "../../../../redux/activeUser/activeUserSlice";
+import { useAppSelector } from "../../../../redux/hooks";
 
 type DateFilter = "all" | "last-month" | "this-month" | "this-year" | "custom";
-
 export type orderStatus = "received" | "pending";
 
-interface commissionData {
+interface CommissionSummary {
   totalCommission: number;
   received: number;
   pending: number;
@@ -25,123 +28,20 @@ export interface orderData {
   commission: number;
 }
 
-const mockCommissionData: commissionData = {
-  totalCommission: 1000,
-  received: 800,
-  pending: 200,
+const emptySummary: CommissionSummary = {
+  totalCommission: 0,
+  received: 0,
+  pending: 0,
 };
-
-const mockOrderData: orderData[] = [
-  {
-    id: 254841,
-    customerName: "Dianne Russell",
-    date: new Date(),
-    status: "received",
-    price: 100,
-    commission: 95,
-  },
-  {
-    id: 254841,
-    customerName: "Bessie Cooper",
-    date: new Date(),
-    status: "received",
-    price: 100,
-    commission: 95,
-  },
-  {
-    id: 254841,
-    customerName: "Cameron Williamson",
-    date: new Date(),
-    status: "received",
-    price: 100,
-    commission: 95,
-  },
-  {
-    id: 254841,
-    customerName: "Kathryn Murphy",
-    date: new Date(),
-    status: "received",
-    price: 100,
-    commission: 95,
-  },
-  {
-    id: 254841,
-    customerName: "Theresa Webb",
-    date: new Date(),
-    status: "received",
-    price: 100,
-    commission: 95,
-  },
-  {
-    id: 254841,
-    customerName: "Guy Hawkins",
-    date: new Date(),
-    status: "pending",
-    price: 100,
-    commission: 95,
-  },
-  {
-    id: 254841,
-    customerName: "Cody Fisher",
-    date: new Date(),
-    status: "pending",
-    price: 100,
-    commission: 95,
-  },
-  {
-    id: 254841,
-    customerName: "Savannah Nguyen",
-    date: new Date(),
-    status: "received",
-    price: 100,
-    commission: 95,
-  },
-  {
-    id: 254841,
-    customerName: "Leslie Alexander",
-    date: new Date(),
-    status: "pending",
-    price: 100,
-    commission: 95,
-  },
-  {
-    id: 254841,
-    customerName: "Floyd Miles",
-    date: new Date(),
-    status: "received",
-    price: 100,
-    commission: 95,
-  },
-  {
-    id: 254841,
-    customerName: "Floyd Miles",
-    date: new Date(),
-    status: "received",
-    price: 100,
-    commission: 95,
-  },
-  {
-    id: 254841,
-    customerName: "Floyd Miles",
-    date: new Date(),
-    status: "received",
-    price: 100,
-    commission: 95,
-  },
-  {
-    id: 254841,
-    customerName: "Floyd Miles",
-    date: new Date(),
-    status: "received",
-    price: 100,
-    commission: 95,
-  },
-];
 
 const DashboardCommission = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [openFilter, setOpenFilter] = useState(false);
   const [dateFilter, setDateFilter] = useState<DateFilter>("this-year");
+
+  const [search, setSearch] = useState("");
+  const [summary, setSummary] = useState<CommissionSummary>(emptySummary);
+  const [rows, setRows] = useState<orderData[]>([]);
 
   const options = [
     { label: "All Time", value: "all" },
@@ -150,10 +50,37 @@ const DashboardCommission = () => {
     { label: "This Year", value: "this-year" },
   ] as const;
 
+  const currentUser = useAppSelector(selectCurrentUser);
+
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 2000);
-    return () => clearTimeout(timer);
-  }, []);
+    setIsLoading(true);
+    lecturerCourseInsightsService
+      .getCommissionsByCourseForLecturerAPI(currentUser?.id, {
+        page: 1,
+        limit: 100,
+        q: search,
+        period: dateFilter,
+      })
+      .then((res) => {
+        const mapped = (res?.data || []).map((item: any) => ({
+          id: Number(item.id),
+          customerName: String(item.customerName || ""),
+          date: new Date(item.date || Date.now()),
+          status: item.status === "pending" ? "pending" : "received",
+          price: Number(item.price || 0),
+          commission: Number(item.commission || 0),
+        })) as orderData[];
+        setRows(mapped);
+        setSummary({
+          totalCommission: Number(res?.summary?.totalCommission || 0),
+          received: Number(res?.summary?.received || 0),
+          pending: Number(res?.summary?.pending || 0),
+        });
+      })
+      .finally(() => setIsLoading(false));
+  }, [dateFilter, search, currentUser?.id]);
+
+  const tableRows = useMemo(() => rows, [rows]);
 
   return (
     <>
@@ -162,7 +89,7 @@ const DashboardCommission = () => {
           <GraphIcon fontSize={24} />
           <div className="flex flex-col">
             <h4 className="font-inter text-[24px] font-semibold text-[#0F172A]">
-              ${mockCommissionData.totalCommission}
+              ${summary.totalCommission.toFixed(2)}
             </h4>
             <span className="font-inter font-normal text-[14px] text-[#334155]">
               Total Commission
@@ -173,7 +100,7 @@ const DashboardCommission = () => {
           <GraphIcon fontSize={24} />
           <div className="flex flex-col">
             <h4 className="font-inter text-[24px] font-semibold text-[#0F172A]">
-              ${mockCommissionData.received.toFixed(1)}
+              ${summary.received.toFixed(2)}
             </h4>
             <span className="font-inter font-normal text-[14px] text-[#334155]">
               Received
@@ -184,7 +111,7 @@ const DashboardCommission = () => {
           <GraphIcon fontSize={24} />
           <div className="flex flex-col">
             <h4 className="font-inter text-[24px] font-semibold text-[#0F172A]">
-              ${mockCommissionData.pending.toFixed(2)}
+              ${summary.pending.toFixed(2)}
             </h4>
             <span className="font-inter font-normal text-[14px] text-[#334155]">
               Pending
@@ -198,12 +125,13 @@ const DashboardCommission = () => {
           className="text-[14px] text-[#9D9D9D] border border-[#E2E8F0] bg-white"
           variant="outline"
           placeholder="Search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
           rightIcon={<Search size={24} className="mr-3 text-blue-900" />}
         />
 
         <div
-          className="relative rounded-md px-4 py-3 
-          flex items-center gap-2 cursor-pointer mr-5"
+          className="relative rounded-md px-4 py-3 flex items-center gap-2 cursor-pointer mr-5"
           onClick={(e) => {
             e.stopPropagation();
             setOpenFilter(!openFilter);
@@ -211,7 +139,6 @@ const DashboardCommission = () => {
         >
           <p className="font-semibold text-[14px]">Filter</p>
           <HiBars3BottomRight size={24} />
-
           {openFilter && (
             <div
               className="absolute -bottom-72 z-100 right-0 min-w-48.5 p-5 shadow-lg rounded-lg bg-white flex flex-col gap-5"
@@ -224,10 +151,7 @@ const DashboardCommission = () => {
                 <div
                   key={option.label}
                   className="flex items-center gap-5"
-                  onClick={() => {
-                    setDateFilter(option.value);
-                    // setOpenFilter(false);
-                  }}
+                  onClick={() => setDateFilter(option.value)}
                 >
                   <div
                     className={`w-6 h-6 rounded-sm ${
@@ -251,16 +175,6 @@ const DashboardCommission = () => {
                   </p>
                 </div>
               ))}
-
-              <p
-                className="text-[14px] text-[#3B82F6] font-normal"
-                onClick={() => {
-                  setDateFilter("custom");
-                  // setOpenFilter(false);
-                }}
-              >
-                Custom Range
-              </p>
             </div>
           )}
         </div>
@@ -269,7 +183,7 @@ const DashboardCommission = () => {
       {isLoading ? (
         <TableSkeleton />
       ) : (
-        <DashboardCommissionTable data={mockOrderData} />
+        <DashboardCommissionTable data={tableRows} />
       )}
     </>
   );

@@ -1,8 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import z from "zod";
+import { lecturerCourseService } from "../../../../apis/lecturer/course";
 import CheckCircleIcon from "../../../../assets/check-circle.svg?react";
 import XCircleIcon from "../../../../assets/x-circle.svg?react";
 import { SelectBox } from "../../../../components/box/SelectBox";
@@ -12,6 +15,9 @@ import Input from "../../../../components/ui/Input";
 import { Field } from "../../../../components/ui/InputBox";
 import ImageUploader from "../../../../components/uploader/ImageUploader";
 import VideoUploader from "../../../../components/uploader/VideoUploader";
+import { selectCurrentUser } from "../../../../redux/activeUser/activeUserSlice";
+import { useAppSelector } from "../../../../redux/hooks";
+import type { CourseCategoryAPIData } from "../../../../types/course.type";
 import {
   IMAGE_TYPES,
   MAX_IMAGE_SIZE,
@@ -31,11 +37,10 @@ const faqItemSchema = z.object({
 });
 
 const courseSchema = z.object({
-  /* ---------- BASIC INFO ---------- */
   courseName: z
     .string()
     .min(3, "Course name must be at least 3 characters")
-    .max(100, "Course name is too long"),
+    .max(50, "Course name is too long"),
   price: z
     .number("Price must be a number")
     .positive("Price must be greater than 0"),
@@ -44,10 +49,9 @@ const courseSchema = z.object({
 
   category: z.string().min(1, "Category is required"),
 
-  level: z.enum(["Beginner", "Intermediate", "Advance"], "Level is required"),
+  level: z.enum(["beginner", "intermediate", "advance"], "Level is required"),
   cc: z.array(z.string()).min(1, "Select at least one CC language"),
 
-  /* ---------- MEDIA ---------- */
   introVideo: z
     .instanceof(File)
     .refine((file) => VIDEO_TYPES.includes(file.type), {
@@ -65,10 +69,11 @@ const courseSchema = z.object({
       message: "Image size must be less than 5MB",
     }),
 
-  /* ---------- CONTENT ---------- */
-  description: z.string().min(20, "Description must be at least 20 characters"),
+  description: z
+    .string()
+    .min(20, "Description must be at least 20 characters")
+    .max(50, "Description must be less than 50 characters"),
 
-  /* ---------- FAQ ---------- */
   faqs: z
     .array(faqItemSchema)
     .min(1, "At least one FAQ is required")
@@ -92,7 +97,15 @@ const ccOptions = [
 ];
 
 const DashboardDetail = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const currentUser = useAppSelector(selectCurrentUser);
   const [openDropdown, setOpenDropDown] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<
+    "draft" | "pending" | "published"
+  >("draft");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [categories, setCategories] = useState<CourseCategoryAPIData[]>([]);
 
   const methods = useForm<CourseFormValues>({
     resolver: zodResolver(courseSchema),
@@ -101,7 +114,7 @@ const DashboardDetail = () => {
       price: 0,
       language: "",
       category: "",
-      level: "Beginner",
+      level: "beginner",
       cc: [],
       description: "",
       faqs: [
@@ -117,15 +130,108 @@ const DashboardDetail = () => {
     register,
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = methods;
 
-  const uploadImg = async () => {};
+  const courseTitle = useMemo<string>(() => {
+    const titleFromUrl = searchParams.get("courseTitle");
+    if (titleFromUrl) {
+      localStorage.setItem("courseTitle", JSON.stringify(titleFromUrl));
+      return titleFromUrl;
+    }
 
-  const uploadVideo = async () => {};
+    const stored = localStorage.getItem("courseTitle");
+    return stored ? (JSON.parse(stored) as string) : "";
+  }, [searchParams]);
 
-  const onSubmit = (data: CourseFormValues) => {
-    console.log("Form Data", data);
+  useEffect(() => {
+    if (courseTitle) setValue("courseName", courseTitle);
+  }, [courseTitle, setValue]);
+
+  useEffect(() => {
+    lecturerCourseService
+      .getCourseCategoriesAPI()
+      .then((data) => {
+        setCategories(data as CourseCategoryAPIData[]);
+      })
+      .catch(() => {
+        setCategories([]);
+      });
+  }, []);
+
+  const uploadImg = async (file: File) => {
+    setValue("introImage", file, { shouldValidate: true });
+  };
+
+  const uploadVideo = async (file: File) => {
+    setValue("introVideo", file, { shouldValidate: true });
+  };
+
+  const onSubmit = async (data: CourseFormValues) => {
+    const lecturerFullName = `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim();
+    const lecturerName = lecturerFullName || currentUser?.email || "Lecturer";
+    const categoryId = Number(data.category);
+    const storedCourseId = Number(localStorage.getItem("lecturerCreatedCourseId"));
+
+    if (!Number.isInteger(categoryId) || categoryId <= 0) {
+      toast.error("Category is invalid.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const thumbnail = await lecturerCourseService.uploadCourseThumbnailAPI(
+        data.introImage,
+      );
+
+      const payload = {
+        categoryId,
+        thumbnail,
+        name: data.courseName.trim(),
+        lecturerName,
+        duration: "N/A",
+        level: data.level,
+        overview: data.description.trim(),
+        price: Number(data.price),
+        status: submitStatus,
+      } as const;
+
+      let courseId = storedCourseId;
+
+      if (Number.isInteger(storedCourseId) && storedCourseId > 0) {
+        await lecturerCourseService.updateCourseAPI(storedCourseId, payload);
+      } else {
+        const createdCourse = await lecturerCourseService.createCourseAPI(payload);
+        courseId = Number((createdCourse as { id?: number }).id);
+      }
+
+      if (Number.isInteger(courseId) && courseId > 0) {
+        localStorage.setItem("lecturerCreatedCourseId", String(courseId));
+        localStorage.setItem(
+          "lecturerCreateCourseContext",
+          JSON.stringify({
+            courseId,
+            courseTitle: data.courseName.trim(),
+          }),
+        );
+
+        await Promise.allSettled(
+          data.faqs.map((faq) =>
+            lecturerCourseService.createCourseFaqAPI({
+              courseId,
+              question: faq.question.trim(),
+              answer: faq.answer.trim(),
+            }),
+          ),
+        );
+      }
+
+      toast.success("Course detail saved successfully.");
+      navigate("/dashboard/lecturer/my-courses/create-course/curriculum");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -137,11 +243,23 @@ const DashboardDetail = () => {
           </h3>
 
           <div className="flex items-center gap-2">
-            <Button type="cancel-v2" content="Draft" />
-            <Button type="submit-v2" content="Save" />
+            <Button
+              type="cancel-v2"
+              content="Draft"
+              disabled={isSubmitting}
+              onClick={() => setSubmitStatus("draft")}
+            />
+            <Button
+              type="submit-v2"
+              content="Save"
+              disabled={isSubmitting}
+              onClick={() => setSubmitStatus("pending")}
+            />
             <Button
               type="submit-v2"
               content="Publish"
+              disabled={isSubmitting}
+              onClick={() => setSubmitStatus("published")}
               additionalClass="bg-[#3B82F6]!"
             />
           </div>
@@ -216,13 +334,10 @@ const DashboardDetail = () => {
                     value={field.value}
                     onChange={field.onChange}
                     error={errors.category?.message}
-                    options={[
-                      { label: "Web development", value: "web-development" },
-                      {
-                        label: "Software Engineer",
-                        value: "software-engineer",
-                      },
-                    ]}
+                    options={categories.map((item) => ({
+                      label: item.name,
+                      value: String(item.id),
+                    }))}
                   />
                 )}
               />
@@ -342,7 +457,7 @@ const DashboardDetail = () => {
                     options={[
                       { label: "Beginner", value: "beginner" },
                       { label: "Intermediate", value: "intermediate" },
-                      { label: "Advance", value: "advance" },
+                      { label: "Advanced", value: "advance" },
                     ]}
                   />
                 )}

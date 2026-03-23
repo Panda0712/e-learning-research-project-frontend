@@ -1,12 +1,14 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Check, Plus, Search } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { HiBars3BottomRight } from "react-icons/hi2";
 import { useNavigate } from "react-router-dom";
-import Button from "../../../../components/ui/Button";
-import Input from "../../../../components/ui/Input";
+import { lecturerCourseInsightsService } from "../../../../apis/lecturer/courseInsights";
 import DashboardCouponChart from "../../../../components/dashboard/lecturer/create-course/promotion/DashboardCouponChart";
 import DashboardCouponTable from "../../../../components/dashboard/lecturer/create-course/promotion/DashboardCouponTable";
 import DashboardPromotionStatistic from "../../../../components/dashboard/lecturer/create-course/promotion/DashboardPromotionStatistic";
+import Button from "../../../../components/ui/Button";
+import Input from "../../../../components/ui/Input";
 
 type DateFilter = "all" | "last-month" | "this-month" | "this-year" | "custom";
 type HideFilter = "active" | "expired" | "scheduled";
@@ -33,83 +35,23 @@ interface CouponData {
   type: CouponAmount;
 }
 
-const mockPromotionStatisticData: PromotionStatisticData = {
-  totalRedeemed: 200,
-  totalCoupons: 551,
-  redeemedAmount: 8723,
-  totalRedeemedRate: 8,
-  totalCouponsRate: 8,
-  redeemedAmountRate: 8,
+const emptyStats: PromotionStatisticData = {
+  totalRedeemed: 0,
+  totalCoupons: 0,
+  redeemedAmount: 0,
+  totalRedeemedRate: 0,
+  totalCouponsRate: 0,
+  redeemedAmountRate: 0,
 };
-
-const mockCouponData: CouponData[] = [
-  {
-    id: 1,
-    name: "New Offer",
-    type: "amount",
-    code: "BOGO22",
-    amount: 21,
-    status: "active",
-    quantity: 3000,
-    redemptions: 2213,
-  },
-  {
-    id: 2,
-    name: "Buy 1 get 1",
-    code: "XMAS10",
-    type: "percent",
-    amount: 10,
-    status: "expired",
-    quantity: 100,
-    redemptions: 0,
-  },
-  {
-    id: 3,
-    name: "Summer Sale",
-    code: "BFA",
-    type: "amount",
-    amount: 25,
-    status: "active",
-    quantity: 0,
-    redemptions: 0,
-  },
-  {
-    id: 4,
-    name: "Offer",
-    code: "HAPPY20",
-    type: "percent",
-    amount: 20,
-    status: "active",
-    quantity: 0,
-    redemptions: 0,
-  },
-  {
-    id: 5,
-    name: "New Offer",
-    code: "TOUR10",
-    amount: 10,
-    type: "percent",
-    status: "scheduled",
-    quantity: 0,
-    redemptions: 0,
-  },
-  {
-    id: 6,
-    name: "New Offer",
-    code: "",
-    type: "amount",
-    amount: 0,
-    status: "active",
-    quantity: 0,
-    redemptions: 0,
-  },
-];
 
 const DashboardPromotion = () => {
   const [openHideStat, setOpenHideStat] = useState(false);
   const [openFilter, setOpenFilter] = useState(false);
   const [dateFilter, setDateFilter] = useState<DateFilter>("this-year");
   const [hideFilter, setHideFilter] = useState<HideFilter>("active");
+  const [search, setSearch] = useState("");
+  const [stats, setStats] = useState<PromotionStatisticData>(emptyStats);
+  const [tableData, setTableData] = useState<CouponData[]>([]);
 
   const navigate = useNavigate();
 
@@ -126,6 +68,50 @@ const DashboardPromotion = () => {
     { label: "Scheduled", value: "scheduled" },
   ] as const;
 
+  useEffect(() => {
+    lecturerCourseInsightsService
+      .getCouponsByCourseAPI({ page: 1, limit: 100, status: hideFilter })
+      .then((res) => {
+        const rows = (res?.data || []).map((item: any) => ({
+          id: Number(item.id),
+          name: String(item.name || ""),
+          code: String(item.code || ""),
+          amount: Number(item.amount || 0),
+          status:
+            item.status === "active" ||
+            item.status === "expired" ||
+            item.status === "scheduled"
+              ? item.status
+              : "active",
+          quantity: Number(item.quantity || 0),
+          redemptions: Number(item.redemptions || 0),
+          type: item.type === "fixed" ? "amount" : "percent",
+        })) as CouponData[];
+
+        setTableData(rows);
+        setStats({
+          totalRedeemed: rows.reduce((s, i) => s + i.redemptions, 0),
+          totalCoupons: rows.length,
+          redeemedAmount: rows.reduce(
+            (s, i) => s + i.redemptions * i.amount,
+            0,
+          ),
+          totalRedeemedRate: 0,
+          totalCouponsRate: 0,
+          redeemedAmountRate: 0,
+        });
+      });
+  }, [hideFilter, dateFilter]);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return tableData;
+    return tableData.filter(
+      (i) =>
+        i.name.toLowerCase().includes(q) || i.code.toLowerCase().includes(q),
+    );
+  }, [tableData, search]);
+
   return (
     <>
       <div className="flex items-center justify-between gap-5 mt-3">
@@ -134,14 +120,13 @@ const DashboardPromotion = () => {
         </h3>
         <Button
           content="Create New Coupon"
-          onClick={() => {
+          onClick={() =>
             navigate(
               "/dashboard/lecturer/my-courses/create-course/promotion/create-coupon",
-            );
-          }}
+            )
+          }
           icon={<Plus size={20} className="font-bold" />}
-          additionalClass="w-[221px] h-[54px] rounded-lg 
-          bg-[#FFD900]! text-[16px]! font-medium"
+          additionalClass="w-[221px] h-[54px] rounded-lg bg-[#FFD900]! text-[16px]! font-medium"
         />
       </div>
 
@@ -161,14 +146,15 @@ const DashboardPromotion = () => {
       </div>
 
       <DashboardCouponChart />
-
-      <DashboardPromotionStatistic data={mockPromotionStatisticData} />
+      <DashboardPromotionStatistic data={stats} />
 
       <div className="flex items-center justify-between gap-5">
         <Input
           className="text-[14px] text-[#9D9D9D] border border-[#E2E8F0] bg-white"
           variant="outline"
-          placeholder="Search User"
+          placeholder="Search Coupon"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
           rightIcon={<Search size={24} className="mr-3 text-blue-900" />}
         />
 
@@ -181,11 +167,9 @@ const DashboardPromotion = () => {
             }}
           >
             <p className="font-semibold text-[14px]">Hide Stats</p>
-
             {openHideStat && (
               <div
-                className="absolute -bottom-51 z-100 right-0 min-w-48.5 p-5 
-                shadow-lg rounded-lg bg-white flex flex-col gap-5"
+                className="absolute -bottom-51 z-100 right-0 min-w-48.5 p-5 shadow-lg rounded-lg bg-white flex flex-col gap-5"
                 onClick={(e) => e.stopPropagation()}
               >
                 <h4 className="text-[18px] text-[#475569] font-semibold">
@@ -195,10 +179,7 @@ const DashboardPromotion = () => {
                   <div
                     key={option.label}
                     className="flex items-center gap-5"
-                    onClick={() => {
-                      setHideFilter(option.value);
-                      // setOpenFilter(false);
-                    }}
+                    onClick={() => setHideFilter(option.value)}
                   >
                     <div
                       className={`w-6 h-6 rounded-sm ${
@@ -227,8 +208,7 @@ const DashboardPromotion = () => {
           </div>
 
           <div
-            className="relative rounded-md px-4 py-3 
-          flex items-center gap-2 cursor-pointer mr-5"
+            className="relative rounded-md px-4 py-3 flex items-center gap-2 cursor-pointer mr-5"
             onClick={(e) => {
               e.stopPropagation();
               setOpenFilter(!openFilter);
@@ -236,11 +216,9 @@ const DashboardPromotion = () => {
           >
             <p className="font-semibold text-[14px]">Filter</p>
             <HiBars3BottomRight size={24} />
-
             {openFilter && (
               <div
-                className="absolute -bottom-72 z-100 right-0 min-w-48.5 p-5 
-                shadow-lg rounded-lg bg-white flex flex-col gap-5"
+                className="absolute -bottom-72 z-100 right-0 min-w-48.5 p-5 shadow-lg rounded-lg bg-white flex flex-col gap-5"
                 onClick={(e) => e.stopPropagation()}
               >
                 <h4 className="text-[18px] text-[#475569] font-semibold">
@@ -250,10 +228,7 @@ const DashboardPromotion = () => {
                   <div
                     key={option.label}
                     className="flex items-center gap-5"
-                    onClick={() => {
-                      setDateFilter(option.value);
-                      // setOpenFilter(false);
-                    }}
+                    onClick={() => setDateFilter(option.value)}
                   >
                     <div
                       className={`w-6 h-6 rounded-sm ${
@@ -277,23 +252,13 @@ const DashboardPromotion = () => {
                     </p>
                   </div>
                 ))}
-
-                <p
-                  className="text-[14px] text-[#3B82F6] font-normal"
-                  onClick={() => {
-                    setDateFilter("custom");
-                    // setOpenFilter(false);
-                  }}
-                >
-                  Custom Range
-                </p>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      <DashboardCouponTable data={mockCouponData} />
+      <DashboardCouponTable data={filtered} />
     </>
   );
 };

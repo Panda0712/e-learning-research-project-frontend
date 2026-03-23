@@ -105,6 +105,7 @@ const App = () => {
           <Route path="/dashboard" element={<DashboardLayout />}>
             {/* Dashboard lecturer */}
             <Route element={<LecturerRoutes user={currentUser} />}>
+            
               <Route
                 element={
                   <RbacRoute

@@ -8,9 +8,9 @@ const CategoryFilter = () => {
       </h3>
       <FilterItem label="Web Development" count={15} />
       <FilterItem label="Mobile Development" count={15} />
-      <FilterItem label="3D & Animation" count={15} defaultChecked />
+      <FilterItem label="3D & Animation" count={15} checked />
       <FilterItem label="Soft Skills" count={15} />
-      <FilterItem label="Entrepreneurship" count={15} defaultChecked />
+      <FilterItem label="Entrepreneurship" count={15} checked />
       <FilterItem label="Cybersecurity" count={15} />
       <FilterItem label="Game Development" count={15} />
       <FilterItem label="Data Science" count={15} />

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ChevronLeft, ChevronRight, Eye, X, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { transactionService } from "../../../apis/transaction";
+import { transactionService } from "../../../apis/transaction"; 
 
 interface TransactionType {
   id: string;
@@ -69,14 +69,12 @@ const StatusBadge = ({ status }: { status: string }) => {
 };
 
 const DashboardTransactions = () => {
-  const [transactionsList, setTransactionsList] = useState<TransactionType[]>(
-    [],
-  );
+  const [transactionsList, setTransactionsList] = useState<TransactionType[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedTxn, setSelectedTxn] = useState<TransactionType | null>(null);
-
+  
   const itemsPerPage = 8;
 
   useEffect(() => {
@@ -133,10 +131,7 @@ const DashboardTransactions = () => {
 
         setTransactionsList(mappedData);
       } catch (err: any) {
-        const errorMessage =
-          err.response?.data?.message ||
-          err.message ||
-          "Failed to load transactions data!";
+        const errorMessage = err.response?.data?.message || err.message || "Failed to load transactions data!";
         setError(errorMessage);
       } finally {
         setIsLoading(false);
@@ -163,12 +158,10 @@ const DashboardTransactions = () => {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400 min-h-100">
             <Loader2 className="animate-spin text-blue-500 mb-4" size={32} />
-            <p className="font-medium text-gray-500">
-              Loading transactions data...
-            </p>
+            <p className="font-medium text-gray-500">Loading transactions data...</p>
           </div>
         ) : error ? (
-          <div className="flex flex-col items-center justify-center py-20 text-red-500 min-h-100">
+           <div className="flex flex-col items-center justify-center py-20 text-red-500 min-h-[400px]">
             <p className="text-lg font-semibold mb-2">Oops! Error occured!</p>
             <p>{error}</p>
           </div>

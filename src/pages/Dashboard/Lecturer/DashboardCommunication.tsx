@@ -1,9 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Messages from "../../../components/dashboard/lecturer/communication/Messages";
 import Reviews from "../../../components/dashboard/lecturer/communication/Reviews";
+import { useAppDispatch } from "../../../redux/hooks";
+import { connectChatSocket } from "../../../redux/chat/socket";
+import { store } from "../../../redux/store";
+import { fetchConversationsAPI } from "../../../redux/chat/chatSlice";
 
 const DashboardCommunication = () => {
   const [activeTab, setActiveTab] = useState<"reviews" | "messages">("reviews");
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    connectChatSocket(store);
+    dispatch(fetchConversationsAPI());
+  }, [dispatch]);
 
   return (
     <div className="min-h-screen bg-[#F5F7FA] p-8">

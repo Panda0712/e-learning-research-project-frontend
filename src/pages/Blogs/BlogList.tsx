@@ -1,8 +1,39 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import BlogCard from "../../components/cards/BlogCard";
 import Sidebar from "../../components/ui/SideBar";
-import { blogs } from "../../utils/blogData";
+import { useEffect, useState } from "react";
+import { blogApi } from "../../apis/blog";
+import { toast } from "react-toastify";
+
+interface BlogData {
+  id: number;
+  title: string;
+  image: string;
+  date: string;
+  author: string;
+  description: string;
+  category: string;
+  content: string;
+}
 
 const BlogList = () => {
+  const [blogList, setBlogList] = useState<BlogData[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        setLoading(true);
+        const data = await blogApi.getAllBlogPostsAPI();
+        setBlogList(data);
+      } catch (error: any) {
+        toast.error(error?.message || "Failed to get blogs data! Please try again later!");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBlogs();
+  }, []);
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <div className="w-full h-12.5 bg-[#F5F5F5] flex items-center">
@@ -20,10 +51,13 @@ const BlogList = () => {
 
       <div className="container mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8 max-w-7xl">
         <div className="w-full lg:w-3/4">
-          {blogs.map((blog) => (
-            <BlogCard key={blog.id} data={blog} />
-          ))}
-
+          {loading ? (
+            <p>Loading blogs data...</p>
+          ) : (
+            blogList.map((blog: BlogData) => (
+              <BlogCard key={blog.id} data={blog} />
+            ))
+          )}
           <div className="flex gap-2 mt-8 ml-20">
             <button className="px-4 py-2 bg-blue-600 text-white rounded">
               1

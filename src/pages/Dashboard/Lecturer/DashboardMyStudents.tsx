@@ -48,7 +48,7 @@ const StatusBadge = ({ status }: { status: string }) => {
 const DashboardMyStudents = () => {
   const currentUser = useAppSelector(selectCurrentUser);
   const itemsPerPage = 8;
-
+  
   const [studentsList, setStudentsList] = useState<DashboardStudent[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -91,7 +91,7 @@ const DashboardMyStudents = () => {
       try {
         setIsLoading(true);
         setError(null);
-
+        
         const rawData = await lecturerService.getMyStudentsAPI(currentUser?.id);
 
         const mappedData: DashboardStudent[] = rawData.map((item: any) => ({
@@ -335,7 +335,7 @@ const DashboardMyStudents = () => {
             <p>Loading students data...</p>
           </div>
         ) : error ? (
-          <div className="flex flex-col items-center justify-center py-20 text-red-500">
+           <div className="flex flex-col items-center justify-center py-20 text-red-500">
             <p>Error: {error}</p>
           </div>
         ) : processedData.length > 0 ? (
