@@ -1,13 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ArrowRight, ShoppingCart, Tag, Trash2, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify"; 
-
 import { useAppSelector } from "../../redux/hooks";
 import { selectCurrentUser } from "../../redux/activeUser/activeUserSlice";
 import { cartService } from "../../apis/cart";
 
-// --- CẤU HÌNH MÀU SẮC DỰ ÁN ---
 const COLORS = {
   yellowBtn: "#FFD900",
 };
@@ -27,15 +26,11 @@ interface CartItemType {
 const Cart = () => {
   const currentUser = useAppSelector(selectCurrentUser);
 
-  // States
   const [cartItems, setCartItems] = useState<CartItemType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [promoCode, setPromoCode] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState(0);
 
-  // ==========================================
-  // 1. FETCH DATA GIỎ HÀNG TỪ BACKEND
-  // ==========================================
   useEffect(() => {
     const fetchCart = async () => {
       if (!currentUser || !currentUser.id) {
@@ -45,15 +40,13 @@ const Cart = () => {
 
       try {
         setIsLoading(true);
-        // ĐÃ SỬA: Đổi getCartByUserIdAPI -> getCartByUserId
         const cartData = await cartService.getCartByUserId(currentUser.id);
         
-        // Map dữ liệu BE sang FE
         if (cartData && cartData.items) {
           const mappedItems = cartData.items.map((item: any) => ({
             id: item.id, 
             courseId: item.courseId,
-            title: item.course?.name || "Khóa học",
+            title: item.course?.name || "Course",
             lecturer: item.course?.lecturerName || "N/A",
             price: item.price,
             originalPrice: item.price + 20, 
@@ -63,8 +56,8 @@ const Cart = () => {
           }));
           setCartItems(mappedItems);
         }
-      } catch (error) {
-        console.error("Lỗi lấy giỏ hàng:", error);
+      } catch (error:any) {
+        toast.error(error?.message || "Failed to get cart data!");
       } finally {
         setIsLoading(false);
       }
@@ -73,37 +66,26 @@ const Cart = () => {
     fetchCart();
   }, [currentUser]);
 
-  // ==========================================
-  // 2. TÍNH TOÁN TIỀN BẠC
-  // ==========================================
   const totalOriginalPrice = cartItems.reduce((acc, item) => acc + item.originalPrice, 0);
   const subtotal = cartItems.reduce((acc, item) => acc + item.price, 0);
   const total = subtotal - appliedDiscount;
 
-  // ==========================================
-  // 3. GỌI API XÓA KHỎI GIỎ HÀNG
-  // ==========================================
   const handleRemoveItem = async (itemId: number) => {
     try {
-      // 1. Xóa tạm ở giao diện (Optimistic Update)
       setCartItems((prev) => prev.filter((item) => item.id !== itemId));
-      
-      // 2. ĐÃ SỬA: Đổi removeCartItemAPI -> removeItem cho khớp với file apis/cart.ts
       await cartService.removeItem(itemId);
-      toast.success("Đã xóa khóa học khỏi giỏ hàng!");
-    } catch (error) {
-      toast.error("Xóa thất bại, vui lòng thử lại!");
-      // Nếu lỗi thì nên fetch lại data để đảm bảo UI đúng với DB
+      toast.success("Deleted course from cart!");
+    } catch (error:any) {
+      toast.error("Delete failed! Please try again later!");
     }
   };
 
-  // Áp dụng mã giảm giá giả lập
   const handleApplyPromo = () => {
     if (promoCode.trim().toUpperCase() === "LEARN2026") {
       setAppliedDiscount(5.0); 
-      toast.success("Áp dụng mã giảm giá thành công!");
+      toast.success("Applied coupon successfully!");
     } else {
-      toast.error("Mã giảm giá không hợp lệ!");
+      toast.error("Coupon code is not valid!");
       setAppliedDiscount(0);
     }
   };
@@ -124,7 +106,7 @@ const Cart = () => {
             {isLoading ? (
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 flex flex-col items-center justify-center">
                 <Loader2 className="animate-spin text-blue-500 mb-2" size={32} />
-                <p className="text-gray-500">Đang tải giỏ hàng...</p>
+                <p className="text-gray-500">Loading cart...</p>
               </div>
             ) : cartItems.length > 0 ? (
               <div className="flex flex-col gap-4">
