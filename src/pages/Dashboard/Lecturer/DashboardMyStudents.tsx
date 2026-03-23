@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   ArrowLeft,
   CheckCircle,
@@ -13,18 +14,12 @@ import {
   Loader2,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-
-// Lấy thông tin tài khoản đang đăng nhập từ Redux
 import { useAppSelector } from "../../../redux/hooks";
 import { selectCurrentUser } from "../../../redux/activeUser/activeUserSlice";
-
 import type { DashboardStudent } from "../../../types/course.type";
 import { MOCK_COURSES } from "../../../utils/mockData";
-
-// 👇 IMPORT HÀM GỌI API TỪ THƯ MỤC APIS
 import { lecturerService } from "../../../apis/lecturer";
 
-// --- CONFIG COLORS ---
 const COLORS = {
   yellowBtn: "#FFD900",
   greenBadgeBg: "#D7FFE7",
@@ -33,7 +28,6 @@ const COLORS = {
   redBadgeText: "#FF0000",
 };
 
-// --- SUB-COMPONENT ---
 const StatusBadge = ({ status }: { status: string }) => {
   const isInactive = status === "Inactive";
   const bg = isInactive ? COLORS.redBadgeBg : COLORS.greenBadgeBg;
@@ -51,33 +45,32 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
-// --- MAIN COMPONENT ---
 const DashboardMyStudents = () => {
-  // Lấy thông tin Giảng viên đang đăng nhập
   const currentUser = useAppSelector(selectCurrentUser);
+  const itemsPerPage = 8;
 
-  // ====================================================================
-  // STATE DỮ LIỆU & UI
-  // ====================================================================
   const [studentsList, setStudentsList] = useState<DashboardStudent[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [selectedStudent, setSelectedStudent] = useState<DashboardStudent | null>(null);
+  const [selectedStudent, setSelectedStudent] =
+    useState<DashboardStudent | null>(null);
   const [openModule, setOpenModule] = useState<string | null>(null);
 
   const [filterCourse, setFilterCourse] = useState<string>("Course");
   const [sortOption, setSortOption] = useState<string>("Sort by");
-  const [activeDropdown, setActiveDropdown] = useState<"course" | "sort" | null>(null);
+  const [activeDropdown, setActiveDropdown] = useState<
+    "course" | "sort" | null
+  >(null);
 
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const itemsPerPage = 8;
 
   const [isMessageMode, setIsMessageMode] = useState(false);
   const [messageText, setMessageText] = useState("");
-  const [sendingStatus, setSendingStatus] = useState<"idle" | "sending" | "success">("idle");
+  const [sendingStatus, setSendingStatus] = useState<
+    "idle" | "sending" | "success"
+  >("idle");
 
-  // Reset popup state khi đóng
   useEffect(() => {
     if (!selectedStudent) {
       setIsMessageMode(false);
@@ -87,14 +80,10 @@ const DashboardMyStudents = () => {
     }
   }, [selectedStudent]);
 
-  // ====================================================================
-  // GỌI API LẤY DỮ LIỆU SINH VIÊN BẰNG AXIOS
-  // ====================================================================
   useEffect(() => {
     const fetchStudentsData = async () => {
-      // 1. Nếu chưa có user thì báo lỗi (chờ load)
       if (!currentUser || !currentUser.id) {
-        setError("Đang tải thông tin tài khoản. Vui lòng đăng nhập lại nếu lỗi vẫn tiếp diễn.");
+        setError("Unauthorized! Please login and try again!");
         setIsLoading(false);
         return;
       }
@@ -102,27 +91,37 @@ const DashboardMyStudents = () => {
       try {
         setIsLoading(true);
         setError(null);
-        
-        // 2. Gọi API thông qua Axios (Nó tự động đính kèm Token)
-        const rawData = await lecturerService.getMyStudentsAPI(currentUser.id);
 
-        // 3. Map dữ liệu trả về từ DB
+        const rawData = await lecturerService.getMyStudentsAPI(currentUser?.id);
+
         const mappedData: DashboardStudent[] = rawData.map((item: any) => ({
           id: item.id,
-          name: item.student?.fullName || item.student?.name || "Học viên",
-          email: item.student?.email || "Chưa cập nhật",
-          course: item.course?.title || "Khóa học",
+          name: item.student?.fullName || item.student?.name || "Student",
+          email: item.student?.email || "No email found",
+          course: item.course?.title || "No course title found",
           progress: item.progress || 0,
-          lastActivity: new Date(item.updatedAt || item.createdAt).toLocaleDateString('en-US', {
-            year: 'numeric', month: 'short', day: 'numeric'
+          lastActivity: new Date(
+            item.updatedAt || item.createdAt,
+          ).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
           }),
-          status: item.progress === 100 ? "Completed" : (item.status === "enrolled" || item.progress > 0 ? "Active" : "Inactive"),
+          status:
+            item.progress === 100
+              ? "Completed"
+              : item.status === "enrolled" || item.progress > 0
+                ? "Active"
+                : "Inactive",
         }));
 
         setStudentsList(mappedData);
       } catch (err: any) {
-        // Bắt lỗi từ Axios trả về
-        setError(err.response?.data?.message || err.message || "Đã xảy ra lỗi khi tải dữ liệu.");
+        setError(
+          err.response?.data?.message ||
+            err?.message ||
+            "Failed to load students data!",
+        );
       } finally {
         setIsLoading(false);
       }
@@ -131,14 +130,11 @@ const DashboardMyStudents = () => {
     fetchStudentsData();
   }, [currentUser]);
 
-  // ====================================================================
-  // LOGIC LỌC, SẮP XẾP VÀ PHÂN TRANG DỮ LIỆU
-  // ====================================================================
   const UNIQUE_COURSES = useMemo(
     () => Array.from(new Set(studentsList.map((s) => s.course))),
-    [studentsList]
+    [studentsList],
   );
-  
+
   const SORT_OPTIONS = [
     "Newest First",
     "Oldest First",
@@ -157,11 +153,16 @@ const DashboardMyStudents = () => {
       const dateA = new Date(a.lastActivity).getTime();
       const dateB = new Date(b.lastActivity).getTime();
       switch (sortOption) {
-        case "Newest First": return dateB - dateA;
-        case "Oldest First": return dateA - dateB;
-        case "Progress (High to Low)": return b.progress - a.progress;
-        case "Progress (Low to High)": return a.progress - b.progress;
-        default: return 0;
+        case "Newest First":
+          return dateB - dateA;
+        case "Oldest First":
+          return dateA - dateB;
+        case "Progress (High to Low)":
+          return b.progress - a.progress;
+        case "Progress (Low to High)":
+          return a.progress - b.progress;
+        default:
+          return 0;
       }
     });
     return data;
@@ -191,7 +192,6 @@ const DashboardMyStudents = () => {
     setTimeout(() => setSendingStatus("success"), 1000);
   };
 
-  // Giữ nguyên logic tính bài học giả lập từ Mock Data 
   const getStudentCourseDetails = (student: DashboardStudent) => {
     const course = MOCK_COURSES.find((c) => c.title === student.course);
     if (!course || !course.curriculum) return null;
@@ -199,7 +199,9 @@ const DashboardMyStudents = () => {
     let totalLessons = 0;
     course.curriculum.forEach((mod) => (totalLessons += mod.items.length));
 
-    const completedLessonsCount = Math.floor((student.progress / 100) * totalLessons);
+    const completedLessonsCount = Math.floor(
+      (student.progress / 100) * totalLessons,
+    );
     let counter = 0;
 
     const modulesWithStatus = course.curriculum.map((mod) => {
@@ -211,7 +213,8 @@ const DashboardMyStudents = () => {
         };
       });
 
-      const isModuleComplete = itemsWithStatus.length > 0 && itemsWithStatus.every((i) => i.completed);
+      const isModuleComplete =
+        itemsWithStatus.length > 0 && itemsWithStatus.every((i) => i.completed);
 
       return {
         ...mod,
@@ -223,10 +226,16 @@ const DashboardMyStudents = () => {
     return modulesWithStatus;
   };
 
-  const currentCourseModules = selectedStudent ? getStudentCourseDetails(selectedStudent) : null;
+  const currentCourseModules = selectedStudent
+    ? getStudentCourseDetails(selectedStudent)
+    : null;
 
   useEffect(() => {
-    if (currentCourseModules && currentCourseModules.length > 0 && !openModule) {
+    if (
+      currentCourseModules &&
+      currentCourseModules.length > 0 &&
+      !openModule
+    ) {
       setOpenModule(currentCourseModules[0].title);
     }
   }, [currentCourseModules, openModule]);
@@ -240,7 +249,9 @@ const DashboardMyStudents = () => {
         {/* Course Select */}
         <div className="relative">
           <button
-            onClick={() => setActiveDropdown(activeDropdown === "course" ? null : "course")}
+            onClick={() =>
+              setActiveDropdown(activeDropdown === "course" ? null : "course")
+            }
             className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 
             rounded-full text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition 
             min-w-30 justify-between max-w-75"
@@ -252,7 +263,8 @@ const DashboardMyStudents = () => {
             />
           </button>
           {activeDropdown === "course" && (
-            <div className="absolute top-full left-0 mt-2 w-72 bg-white border border-gray-100 
+            <div
+              className="absolute top-full left-0 mt-2 w-72 bg-white border border-gray-100 
             rounded-xl shadow-lg animate-in fade-in zoom-in-95 duration-100 overflow-hidden max-h-80 overflow-y-auto"
             >
               <ul className="py-1 text-sm text-gray-700">
@@ -280,7 +292,9 @@ const DashboardMyStudents = () => {
         {/* Sort Select */}
         <div className="relative">
           <button
-            onClick={() => setActiveDropdown(activeDropdown === "sort" ? null : "sort")}
+            onClick={() =>
+              setActiveDropdown(activeDropdown === "sort" ? null : "sort")
+            }
             className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 
             rounded-full text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition 
             min-w-40 justify-between"
@@ -292,7 +306,8 @@ const DashboardMyStudents = () => {
             />
           </button>
           {activeDropdown === "sort" && (
-            <div className="absolute top-full left-0 mt-2 w-56 bg-white border 
+            <div
+              className="absolute top-full left-0 mt-2 w-56 bg-white border 
             border-gray-100 rounded-xl shadow-lg animate-in fade-in zoom-in-95 
             duration-100 overflow-hidden"
             >
@@ -317,11 +332,11 @@ const DashboardMyStudents = () => {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400">
             <Loader2 className="animate-spin text-blue-500 mb-2" size={32} />
-            <p>Đang tải dữ liệu học viên...</p>
+            <p>Loading students data...</p>
           </div>
         ) : error ? (
-           <div className="flex flex-col items-center justify-center py-20 text-red-500">
-            <p>Lỗi: {error}</p>
+          <div className="flex flex-col items-center justify-center py-20 text-red-500">
+            <p>Error: {error}</p>
           </div>
         ) : processedData.length > 0 ? (
           <table className="w-full text-left border-collapse">
@@ -347,14 +362,21 @@ const DashboardMyStudents = () => {
                   <td className="p-4 text-gray-400">
                     {(currentPage - 1) * itemsPerPage + idx + 1}
                   </td>
-                  <td className="p-4 font-medium text-gray-900">{student.name}</td>
+                  <td className="p-4 font-medium text-gray-900">
+                    {student.name}
+                  </td>
                   <td className="p-4 text-gray-500">{student.email}</td>
-                  <td className="p-4 text-gray-900 max-w-xs truncate" title={student.course}>
+                  <td
+                    className="p-4 text-gray-900 max-w-xs truncate"
+                    title={student.course}
+                  >
                     {student.course}
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <span className="font-semibold text-gray-700 w-8">{student.progress}%</span>
+                      <span className="font-semibold text-gray-700 w-8">
+                        {student.progress}%
+                      </span>
                       <div className="flex-1 w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full ${student.progress === 100 ? "bg-green-500" : "bg-yellow-400"}`}
@@ -369,10 +391,16 @@ const DashboardMyStudents = () => {
                   </td>
                   <td className="p-4">
                     <div className="flex items-center justify-center gap-2 text-gray-400">
-                      <button className="p-1 hover:text-red-500 hover:bg-red-50 rounded transition" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        className="p-1 hover:text-red-500 hover:bg-red-50 rounded transition"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <Trash2 size={18} />
                       </button>
-                      <button className="p-1 hover:text-blue-500 hover:bg-blue-50 rounded transition" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        className="p-1 hover:text-blue-500 hover:bg-blue-50 rounded transition"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <SquareArrowOutUpRight size={18} />
                       </button>
                     </div>
@@ -383,7 +411,7 @@ const DashboardMyStudents = () => {
           </table>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-            <p>Không tìm thấy học viên nào.</p>
+            <p>No student data found.</p>
           </div>
         )}
 
@@ -427,7 +455,9 @@ const DashboardMyStudents = () => {
                   <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                     Send Message to {selectedStudent.name}
                   </h2>
-                  <p className="text-sm text-gray-500 mt-1">To: {selectedStudent.email}</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    To: {selectedStudent.email}
+                  </p>
                 </div>
                 <div className="p-6 flex-1 overflow-y-auto">
                   {sendingStatus === "success" ? (
@@ -435,13 +465,19 @@ const DashboardMyStudents = () => {
                       <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4 animate-in zoom-in">
                         <CheckCircle size={32} className="text-green-600" />
                       </div>
-                      <h3 className="text-lg font-bold text-gray-900">Message Sent!</h3>
-                      <p className="text-gray-500 mt-2">Your message has been sent.</p>
+                      <h3 className="text-lg font-bold text-gray-900">
+                        Message Sent!
+                      </h3>
+                      <p className="text-gray-500 mt-2">
+                        Your message has been sent.
+                      </p>
                     </div>
                   ) : (
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Subject
+                        </label>
                         <input
                           type="text"
                           defaultValue={`Regarding: ${selectedStudent.course}`}
@@ -449,7 +485,9 @@ const DashboardMyStudents = () => {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Message
+                        </label>
                         <textarea
                           rows={6}
                           value={messageText}
@@ -463,19 +501,37 @@ const DashboardMyStudents = () => {
                 </div>
                 <div className="p-6 border-t border-gray-100 flex justify-between bg-white">
                   <button
-                    onClick={() => sendingStatus === "success" ? setSelectedStudent(null) : setIsMessageMode(false)}
+                    onClick={() =>
+                      sendingStatus === "success"
+                        ? setSelectedStudent(null)
+                        : setIsMessageMode(false)
+                    }
                     className="flex items-center gap-2 px-6 py-2.5 rounded-lg border border-gray-200 font-medium text-gray-700 hover:bg-gray-50 transition"
                   >
-                    {sendingStatus === "success" ? "Close" : <><ArrowLeft size={18} /> Back</>}
+                    {sendingStatus === "success" ? (
+                      "Close"
+                    ) : (
+                      <>
+                        <ArrowLeft size={18} /> Back
+                      </>
+                    )}
                   </button>
                   {sendingStatus !== "success" && (
                     <button
                       onClick={handleSendMessage}
-                      disabled={!messageText.trim() || sendingStatus === "sending"}
+                      disabled={
+                        !messageText.trim() || sendingStatus === "sending"
+                      }
                       className="flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold text-black shadow-sm hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{ backgroundColor: COLORS.yellowBtn }}
                     >
-                      {sendingStatus === "sending" ? "Sending..." : <><Send size={18} /> Send Message</>}
+                      {sendingStatus === "sending" ? (
+                        "Sending..."
+                      ) : (
+                        <>
+                          <Send size={18} /> Send Message
+                        </>
+                      )}
                     </button>
                   )}
                 </div>
@@ -483,42 +539,81 @@ const DashboardMyStudents = () => {
             ) : (
               <>
                 <div className="p-6 pb-2">
-                  <h2 className="text-xl font-bold text-gray-900">{selectedStudent.name}</h2>
-                  <p className="text-sm mt-1 font-medium text-blue-600">{selectedStudent.course}</p>
+                  <h2 className="text-xl font-bold text-gray-900">
+                    {selectedStudent.name}
+                  </h2>
+                  <p className="text-sm mt-1 font-medium text-blue-600">
+                    {selectedStudent.course}
+                  </p>
                 </div>
 
                 <div className="p-6 pt-2 overflow-y-auto space-y-4 bg-gray-50/50 flex-1">
                   {currentCourseModules ? (
                     currentCourseModules.map((mod, idx) => (
-                      <div key={idx} className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
+                      <div
+                        key={idx}
+                        className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm"
+                      >
                         <div
-                          onClick={() => setOpenModule(openModule === mod.title ? null : mod.title)}
+                          onClick={() =>
+                            setOpenModule(
+                              openModule === mod.title ? null : mod.title,
+                            )
+                          }
                           className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition"
                         >
                           <div className="flex items-center gap-3">
-                            <span className="font-semibold text-gray-800 text-sm md:text-base">{mod.title}</span>
-                            {mod.complete && <CheckCircle size={20} className="text-white fill-green-600 shrink-0" />}
+                            <span className="font-semibold text-gray-800 text-sm md:text-base">
+                              {mod.title}
+                            </span>
+                            {mod.complete && (
+                              <CheckCircle
+                                size={20}
+                                className="text-white fill-green-600 shrink-0"
+                              />
+                            )}
                           </div>
-                          <ChevronDown size={20} className={`text-gray-400 transition-transform ${openModule === mod.title ? "rotate-180" : ""}`} />
+                          <ChevronDown
+                            size={20}
+                            className={`text-gray-400 transition-transform ${openModule === mod.title ? "rotate-180" : ""}`}
+                          />
                         </div>
 
                         {openModule === mod.title && (
                           <div className="bg-white px-4 pb-4 space-y-2 border-t border-gray-100">
                             {mod.items.map((lesson, lIdx) => (
-                              <div key={lIdx} className="flex items-center justify-between py-2.5 px-2 rounded-lg hover:bg-slate-50 transition">
+                              <div
+                                key={lIdx}
+                                className="flex items-center justify-between py-2.5 px-2 rounded-lg hover:bg-slate-50 transition"
+                              >
                                 <div className="flex items-center gap-3 text-sm text-gray-700">
                                   {lesson.completed ? (
-                                    <CheckCircle size={18} className="text-white fill-green-600 shrink-0" />
+                                    <CheckCircle
+                                      size={18}
+                                      className="text-white fill-green-600 shrink-0"
+                                    />
                                   ) : (
                                     <div className="w-4.5 h-4.5 rounded-full border-2 border-gray-300 shrink-0"></div>
                                   )}
 
                                   <div className="flex items-center gap-2">
-                                    {lesson.type === "video" ? <PlayCircle size={16} className="text-gray-400" /> : <FileText size={16} className="text-gray-400" />}
+                                    {lesson.type === "video" ? (
+                                      <PlayCircle
+                                        size={16}
+                                        className="text-gray-400"
+                                      />
+                                    ) : (
+                                      <FileText
+                                        size={16}
+                                        className="text-gray-400"
+                                      />
+                                    )}
                                     <span>{lesson.title}</span>
                                   </div>
                                 </div>
-                                <span className="text-xs text-gray-400 font-medium bg-gray-100 px-2 py-1 rounded">{lesson.duration}</span>
+                                <span className="text-xs text-gray-400 font-medium bg-gray-100 px-2 py-1 rounded">
+                                  {lesson.duration}
+                                </span>
                               </div>
                             ))}
                           </div>
@@ -526,7 +621,9 @@ const DashboardMyStudents = () => {
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-10 text-gray-500 italic">Course curriculum details not found.</div>
+                    <div className="text-center py-10 text-gray-500 italic">
+                      Course curriculum details not found.
+                    </div>
                   )}
                 </div>
 
