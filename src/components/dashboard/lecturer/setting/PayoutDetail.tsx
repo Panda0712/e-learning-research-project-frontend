@@ -1,7 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useCallback } from 'react';
 import { CreditCard, Trash2, PlusCircle, CheckCircle } from 'lucide-react';
 import { payoutAccountService } from '../../../../apis/payoutAccount';
-import { useSelector } from 'react-redux'; 
+import { useAppSelector } from "../../../../redux/hooks";
+import { selectCurrentUser } from "../../../../redux/activeUser/activeUserSlice";
+import { toast } from "react-toastify";
 
 interface PayoutAccount {
   _id?: string;
@@ -12,16 +15,8 @@ interface PayoutAccount {
   isDefault?: boolean;
 }
 
-interface RootState {
-  activeUser?: {
-    user?: {
-      id: string | number;
-    };
-  };
-}
-
 const PayoutDetail = () => {
-  const currentUser = useSelector((state: RootState) => state.activeUser?.user);
+  const currentUser = useAppSelector(selectCurrentUser);
 
   const [accounts, setAccounts] = useState<PayoutAccount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,10 +32,10 @@ const PayoutDetail = () => {
     if (!currentUser?.id) return;
     try {
       setLoading(true);
-      const data = await payoutAccountService.getAccountsAPI(currentUser.id);
+      const data = await payoutAccountService.getAccountsAPI(currentUser?.id);
       setAccounts(Array.isArray(data) ? data : data?.data || []);
-    } catch (error) {
-      console.error("Lỗi tải danh sách tài khoản:", error);
+    } catch (error:any) {
+      toast.error(error?.message || "Failed to load payout accounts data!");
     } finally {
       setLoading(false);
     }
@@ -60,14 +55,13 @@ const PayoutDetail = () => {
       };
 
       await payoutAccountService.createAccountAPI(payload);
-      alert("Thêm tài khoản thành công!");
+      toast.success("Added account successfully!");
       
       setNewAccount({ bankName: '', accountNumber: '', accountName: '' });
       setShowAddForm(false);
       fetchAccounts(); 
-    } catch (error) {
-      console.error("Lỗi thêm tài khoản:", error);
-      alert("Thêm tài khoản thất bại!");
+    } catch (error:any) {
+      toast.error(error?.message || "Failed to create new account! Please try again later!");
     }
   };
 
@@ -76,38 +70,35 @@ const PayoutDetail = () => {
     try {
       await payoutAccountService.setDefaultAccountAPI(accountId);
       fetchAccounts(); 
-    } catch (error) {
-      console.error("Lỗi cập nhật mặc định:", error);
-      alert("Lỗi khi đổi thẻ mặc định!");
+    } catch (error:any) {
+      toast.error(error?.message || "Failed to updated default account data!");
     }
   };
 
   const handleDelete = async (accountId: string | number | undefined) => {
     if (!accountId) return;
-    if (!window.confirm("Bạn có chắc chắn muốn xóa tài khoản này?")) return;
     try {
       await payoutAccountService.deleteAccountAPI(accountId);
-      alert("Xóa tài khoản thành công!");
+      toast.success("Deleted account successfully!");
       fetchAccounts(); 
-    } catch (error) {
-      console.error("Lỗi xóa tài khoản:", error);
-      alert("Không thể xóa thẻ này!");
+    } catch (error:any) {
+      toast.error(error?.message || "Failed to delete account!");
     }
   };
 
-  if (loading) return <div className="text-gray-500 italic p-6">Đang tải tài khoản ngân hàng...</div>;
+  if (loading) return <div className="text-gray-500 italic p-6">Loading accounts data...</div>;
 
   return (
     <div className="font-poppins">
       <h2 className="text-xl font-bold text-gray-800 mb-6 uppercase">Payout Details</h2>
       <p className="text-sm text-gray-500 mb-8">
-        Quản lý các tài khoản ngân hàng để nhận tiền thanh toán từ nền tảng.
+        Manage bank accounts to receive money from EduLearn.
       </p>
 
       <div className="space-y-4 mb-8">
         {accounts.length === 0 ? (
           <div className="p-4 bg-gray-50 rounded-lg text-center text-gray-500 border border-dashed border-gray-300">
-            Bạn chưa thêm tài khoản nhận tiền nào.
+            You haven't added any account yet.
           </div>
         ) : (
           accounts.map((acc: PayoutAccount) => (
@@ -118,14 +109,14 @@ const PayoutDetail = () => {
                 </div>
                 <div>
                   <h4 className="font-bold text-gray-800">{acc.bankName}</h4>
-                  <p className="text-sm text-gray-500">STK: **** {acc.accountNumber?.slice(-4)} - {acc.accountName}</p>
+                  <p className="text-sm text-gray-500">Bank account: **** {acc.accountNumber?.slice(-4)} - {acc.accountName}</p>
                 </div>
               </div>
               
               <div className="flex items-center gap-3">
                 {acc.isDefault ? (
                   <span className="flex items-center gap-1 text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full font-medium">
-                    <CheckCircle size={14} /> Mặc định
+                    <CheckCircle size={14} /> Default
                   </span>
                 ) : (
                   <button 
@@ -152,28 +143,28 @@ const PayoutDetail = () => {
           onClick={() => setShowAddForm(true)}
           className="flex items-center gap-2 text-blue-600 font-medium hover:text-blue-700"
         >
-          <PlusCircle size={20} /> Thêm tài khoản ngân hàng mới
+          <PlusCircle size={20} /> Add new bank account
         </button>
       ) : (
         <form onSubmit={handleAddAccount} className="bg-gray-50 p-6 rounded-xl border border-gray-200 mt-6">
-          <h3 className="font-bold text-gray-800 mb-4">Thêm thẻ mới</h3>
+          <h3 className="font-bold text-gray-800 mb-4">Add new card</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="text-sm text-gray-500 block mb-1">Tên Ngân hàng</label>
-              <input required type="text" value={newAccount.bankName} onChange={e => setNewAccount({...newAccount, bankName: e.target.value})} placeholder="VD: Vietcombank" className="w-full border rounded-lg p-2.5 text-sm focus:border-blue-500 outline-none" />
+              <label className="text-sm text-gray-500 block mb-1">Bank name</label>
+              <input required type="text" value={newAccount.bankName} onChange={e => setNewAccount({...newAccount, bankName: e.target.value})} placeholder="EX: Vietcombank" className="w-full border rounded-lg p-2.5 text-sm focus:border-blue-500 outline-none" />
             </div>
             <div>
-              <label className="text-sm text-gray-500 block mb-1">Số tài khoản</label>
-              <input required type="text" value={newAccount.accountNumber} onChange={e => setNewAccount({...newAccount, accountNumber: e.target.value})} placeholder="Nhập số tài khoản" className="w-full border rounded-lg p-2.5 text-sm focus:border-blue-500 outline-none" />
+              <label className="text-sm text-gray-500 block mb-1">Bank account</label>
+              <input required type="text" value={newAccount.accountNumber} onChange={e => setNewAccount({...newAccount, accountNumber: e.target.value})} placeholder="Enter bank account" className="w-full border rounded-lg p-2.5 text-sm focus:border-blue-500 outline-none" />
             </div>
             <div className="md:col-span-2">
-              <label className="text-sm text-gray-500 block mb-1">Tên chủ tài khoản</label>
-              <input required type="text" value={newAccount.accountName} onChange={e => setNewAccount({...newAccount, accountName: e.target.value})} placeholder="VD: NGUYEN VAN A" className="w-full border rounded-lg p-2.5 text-sm focus:border-blue-500 outline-none uppercase" />
+              <label className="text-sm text-gray-500 block mb-1">Bank account name</label>
+              <input required type="text" value={newAccount.accountName} onChange={e => setNewAccount({...newAccount, accountName: e.target.value})} placeholder="EX: NGUYEN VAN A" className="w-full border rounded-lg p-2.5 text-sm focus:border-blue-500 outline-none uppercase" />
             </div>
           </div>
           <div className="flex gap-3">
-            <button type="submit" className="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">Lưu tài khoản</button>
-            <button type="button" onClick={() => setShowAddForm(false)} className="px-5 py-2 border border-gray-300 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-100">Hủy</button>
+            <button type="submit" className="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">Save account</button>
+            <button type="button" onClick={() => setShowAddForm(false)} className="px-5 py-2 border border-gray-300 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-100">Cancel</button>
           </div>
         </form>
       )}
