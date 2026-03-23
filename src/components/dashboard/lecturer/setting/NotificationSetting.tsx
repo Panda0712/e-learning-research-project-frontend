@@ -44,15 +44,18 @@ const NotificationSetting = () => {
       await notificationService.updateNotificationSettingAPI({
         [key]: newValue,
       });
-      
+
       toast.success(`Update ${key}: ${newValue} successfully!`);
-    } catch (error) {
-      setSettings(prev => ({
+    } catch (error: any) {
+      setSettings((prev) => ({
         ...prev,
         [key]: !newValue,
       }));
-      
-      toast.error("Cannot save setting changes right now! Please try again later!");
+
+      toast.error(
+        error?.message ||
+          "Cannot save setting changes right now! Please try again later!",
+      );
     }
   };
 

@@ -30,8 +30,8 @@ const DashboardPayouts = () => {
         setLoading(true);
         const data = await getAllPayoutsAPI();
         setHistoryData(Array.isArray(data) ? data : data?.data || []);
-      } catch (error:any) {
-        toast.error(error?.message || "Failed to load payouts history!");
+      } catch (error) {
+        console.error("Failed to load payouts history data:", error);
       } finally {
         setLoading(false);
       }
