@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { toast } from "react-toastify";
 import { useState, useEffect } from "react";
 import SettingsMenu from "../../../components/dashboard/lecturer/setting/SettingMenu";
 import AccountSetting from "../../../components/dashboard/lecturer/setting/AccountSetting";
@@ -17,8 +19,8 @@ const DashboardSetting = () => {
           name: data.name,
           avatar: data.avatar
         });
-      } catch (error) {
-        console.error("Lỗi lấy profile cho Menu:", error);
+      } catch (error:any) {
+        toast.error(error?.message || "Failed to load profile data");
       }
     };
     fetchProfileForMenu();
