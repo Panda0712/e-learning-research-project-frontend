@@ -4,6 +4,7 @@ import { User, Bell, CreditCard, LogOut, Camera } from 'lucide-react';
 //import { useDispatch } from 'react-redux';
 //import { loginUserAPI } from '../../../../redux/activeUser/activeUserSlice';
 import { profileService } from '../../../../apis/profile'; 
+import { toast } from 'react-toastify';
 
 interface SettingsMenuProps {
   activeTab: string;

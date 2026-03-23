@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { toast } from "react-toastify";
 import { useState, useEffect } from "react";
 import SettingsMenu from "../../../components/dashboard/lecturer/setting/SettingMenu";
 import AccountSetting from "../../../components/dashboard/lecturer/setting/AccountSetting";
