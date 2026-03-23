@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Check,
   ChevronLeft,
@@ -177,9 +178,8 @@ const DashboardInstructorRequests = () => {
       }));
       
       setAllRequests(formattedData);
-    } catch (err) {
-      console.error("Lỗi fetch data:", err);
-      toast.error("Không thể tải danh sách yêu cầu!");
+    } catch (err:any) {
+      toast.error(error?.message || "Failed to load instructor requests data!");
     } finally {
       setLoading(false);
     }
@@ -221,22 +221,21 @@ const DashboardInstructorRequests = () => {
     try {
       if (actionType === "approve") {
         await instructorAdminAPI.approve(selectedRequest.id);
-        toast.success("Đã duyệt giảng viên thành công!");
+        toast.success("Approved successfully!");
       } else {
         await instructorAdminAPI.reject(selectedRequest.id);
-        toast.success("Đã từ chối hồ sơ giảng viên!");
+        toast.success("Rejected request!");
       }
       
-      await loadData(); // Load lại data từ DB
+      await loadData(); 
       setShowConfirmModal(false);
       
       if (viewMode === "detail") setViewMode("list");
       if (currentItems.length === 1 && currentPage > 1) {
         setCurrentPage(currentPage - 1);
       }
-    } catch (error) {
-      console.error("Lỗi action:", error);
-      toast.error(`Có lỗi xảy ra khi xử lý yêu cầu!`);
+    } catch (error:any) {
+      toast.error(`Error occured!`);
     }
   };
 
