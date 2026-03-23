@@ -29,7 +29,7 @@ const DashboardPayouts = () => {
         const data = await getAllPayoutsAPI();
         setHistoryData(Array.isArray(data) ? data : data?.data || []);
       } catch (error) {
-        console.error("Lỗi lấy danh sách lịch sử rút tiền:", error);
+        console.error("Failed to load payouts history data:", error);
       } finally {
         setLoading(false);
       }
@@ -123,11 +123,11 @@ const DashboardPayouts = () => {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6} className="p-8 text-center text-gray-500 italic">Đang tải dữ liệu...</td>
+                <td colSpan={6} className="p-8 text-center text-gray-500 italic">Loading data...</td>
               </tr>
             ) : currentItems.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-8 text-center text-gray-500 italic">Chưa có giao dịch rút tiền nào.</td>
+                <td colSpan={6} className="p-8 text-center text-gray-500 italic">No data found.</td>
               </tr>
             ) : (
               currentItems.map((item) => (
@@ -150,7 +150,7 @@ const DashboardPayouts = () => {
                   <td className="p-4 font-bold text-gray-800">${item.amount}</td>
                   <td className="p-4 text-sm text-gray-600">{formatDate(item.createdAt)}</td>
                   
-                  {/* CỘT STATUS MỚI */}
+                  {/* STATUS */}
                   <td className="p-4">
                     {item.status === 'success' ? (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">
