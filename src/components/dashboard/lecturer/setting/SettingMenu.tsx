@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
 import { User, Bell, CreditCard, LogOut, Camera } from 'lucide-react';
 //import { useDispatch } from 'react-redux';
 //import { loginUserAPI } from '../../../../redux/activeUser/activeUserSlice';
 import { profileService } from '../../../../apis/profile'; 
+import { toast } from 'react-toastify';
 
 interface SettingsMenuProps {
   activeTab: string;
@@ -11,7 +13,6 @@ interface SettingsMenuProps {
 }
 
 const SettingsMenu: React.FC<SettingsMenuProps> = ({ activeTab, setActiveTab, userProfile }) => {
-    // khi có api thì mở lại
   //const dispatch = useDispatch();
   
   const [currentAvatar, setCurrentAvatar] = useState<string | undefined>(userProfile?.avatar);
@@ -36,11 +37,10 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ activeTab, setActiveTab, us
          setCurrentAvatar(localImageUrl);
       }
       
-      alert("Cập nhật ảnh đại diện thành công!");
+      toast.success("Updated avatar successfully!");
 
-    } catch (error) {
-      console.error("Lỗi khi up ảnh:", error);
-      alert("Up ảnh thất bại, vui lòng thử lại sau!");
+    } catch (error:any) {
+      toast.error(error?.message || "Failed to update avatar!");
     } finally {
       setIsUploading(false);
     }
@@ -48,7 +48,6 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ activeTab, setActiveTab, us
 
   const handleLogout = () => {
     if (window.confirm("Bạn có chắc chắn muốn đăng xuất không?")) {
-        //đợi nhóm làm xong cái api thì mới đưa lên
         //dispatch(logoutUserAPI(false) as any); 
     }
   };
@@ -70,14 +69,12 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ activeTab, setActiveTab, us
     <div className="w-full lg:w-1/4 bg-white rounded-xl shadow-sm p-6 h-fit">
         <div className="flex flex-col items-center mb-8 relative">
             <div className="relative">
-                {/* Khu vực hiển thị ảnh đại diện */}
+                {/* Avatar UI */}
                 <img 
                     src={currentAvatar || "/public/avatar1.png"} 
                     alt="Profile" 
                     className={`w-24 h-24 rounded-full object-cover bg-blue-100 transition-opacity ${isUploading ? 'opacity-50' : 'opacity-100'}`}
                 />
-                
-                {/* Nút Bấm máy ảnh để đổi Avatar */}
                 <label className="absolute bottom-0 right-0 cursor-pointer bg-white p-1.5 rounded-full shadow border border-gray-200 text-blue-600 hover:text-blue-800 transition-colors">
                     <Camera size={16} />
                     <input 
@@ -100,7 +97,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ activeTab, setActiveTab, us
             {renderMenuItem('notification', 'Notification Settings', Bell)}
             {renderMenuItem('payout', 'Payout Details', CreditCard)}
             
-            {/* Nút Đăng Xuất */}
+            {/* Logout */}
             <button 
                 onClick={handleLogout}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 mt-4 transition-colors"
