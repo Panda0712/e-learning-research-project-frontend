@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ChevronLeft, ChevronRight, Eye, X, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { transactionService } from "../../../apis/transaction"; 
@@ -85,10 +86,16 @@ const DashboardTransactions = () => {
         const rawData = await transactionService.getAllTransactionsAPI();
 
         const mappedData: TransactionType[] = rawData.map((item: any) => {
-          const courses = item.items?.map((st: any) => st.courseTitle).join(", ") || "Courses deleted";
-          
-          const totalDiscount = item.items?.reduce((acc: number, st: any) => acc + (st.discountAmount || 0), 0) || 0;
-          
+          const courses =
+            item.items?.map((st: any) => st.courseTitle).join(", ") ||
+            "Courses deleted";
+
+          const totalDiscount =
+            item.items?.reduce(
+              (acc: number, st: any) => acc + (st.discountAmount || 0),
+              0,
+            ) || 0;
+
           const usedCode = item.items?.[0]?.discountCode || "";
           const instructor = item.items?.[0]?.instructorName || "N/A";
 
@@ -102,16 +109,23 @@ const DashboardTransactions = () => {
             subtotal: (item.amount || 0) + totalDiscount,
             discount: totalDiscount,
             discountCode: usedCode,
-            
-            payoutMethod: `${item.paymentMethod || 'SYSTEM'} - Direct`,
+
+            payoutMethod: `${item.paymentMethod || "SYSTEM"} - Direct`,
             paymentMethodDetail: item.paymentMethod || "Unknown",
             bankRef: item.gatewayReference || "N/A",
-            
-            date: new Date(item.createdAt).toLocaleDateString('en-US', {
-              year: 'numeric', month: 'short', day: 'numeric',
+
+            date: new Date(item.createdAt).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
             }),
-            
-            status: item.status === "success" ? "Successful" : (item.status === "failed" ? "Failed" : "Pending"),
+
+            status:
+              item.status === "success"
+                ? "Successful"
+                : item.status === "failed"
+                  ? "Failed"
+                  : "Pending",
           };
         });
 
@@ -142,7 +156,7 @@ const DashboardTransactions = () => {
       <div className="bg-white rounded-xl overflow-hidden min-h-125 border border-gray-100 shadow-sm">
         {/* UI Loading / Error / Empty Data */}
         {isLoading ? (
-           <div className="flex flex-col items-center justify-center py-20 text-gray-400 min-h-[400px]">
+          <div className="flex flex-col items-center justify-center py-20 text-gray-400 min-h-100">
             <Loader2 className="animate-spin text-blue-500 mb-4" size={32} />
             <p className="font-medium text-gray-500">Loading transactions data...</p>
           </div>
@@ -171,11 +185,16 @@ const DashboardTransactions = () => {
             <tbody className="divide-y divide-gray-100 text-sm font-[Poppins]">
               {currentData.map((txn) => (
                 <tr key={txn.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="p-4 pl-6 text-gray-500 font-medium">{txn.id}</td>
+                  <td className="p-4 pl-6 text-gray-500 font-medium">
+                    {txn.id}
+                  </td>
                   <td className="p-4 text-gray-900 font-medium">
                     {txn.studentName}
                   </td>
-                  <td className="p-4 text-gray-900 truncate max-w-[200px]" title={txn.courseTitle}>
+                  <td
+                    className="p-4 text-gray-900 truncate max-w-50"
+                    title={txn.courseTitle}
+                  >
                     {txn.courseTitle}
                   </td>
                   <td className="p-4 text-gray-900 font-semibold">
@@ -210,7 +229,7 @@ const DashboardTransactions = () => {
             </tbody>
           </table>
         ) : (
-          <div className="flex flex-col items-center justify-center py-20 text-gray-400 min-h-[400px]">
+          <div className="flex flex-col items-center justify-center py-20 text-gray-400 min-h-100">
             <p>No transaction has been added in our system.</p>
           </div>
         )}
@@ -275,7 +294,9 @@ const DashboardTransactions = () => {
               <h2 className="text-xl font-bold text-black">
                 Transaction Details
               </h2>
-              <p className="text-sm text-gray-500 mt-1">Ref: {selectedTxn.id}</p>
+              <p className="text-sm text-gray-500 mt-1">
+                Ref: {selectedTxn.id}
+              </p>
             </div>
 
             <div className="flex flex-col gap-1 mb-6 pb-4 border-b border-gray-100">
@@ -320,7 +341,9 @@ const DashboardTransactions = () => {
                     {selectedTxn.courseTitle}
                   </span>{" "}
                   <br />
-                  <span className="text-sm text-gray-500">(Instructor: {selectedTxn.instructorName})</span>
+                  <span className="text-sm text-gray-500">
+                    (Instructor: {selectedTxn.instructorName})
+                  </span>
                 </p>
               </div>
 
@@ -337,9 +360,7 @@ const DashboardTransactions = () => {
                   </div>
                   <div className="flex justify-between">
                     <span>Bank Ref:</span>
-                    <span className="font-medium">
-                      {selectedTxn.bankRef}
-                    </span>
+                    <span className="font-medium">{selectedTxn.bankRef}</span>
                   </div>
                   <div className="flex justify-between pt-2 border-t border-dashed border-gray-200 mt-2">
                     <span>Subtotal:</span>
