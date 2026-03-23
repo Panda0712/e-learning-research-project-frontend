@@ -1,13 +1,9 @@
-import { Heart, ShoppingCart, Loader2, Star } from "lucide-react"; // Đã xóa Trash2 dư thừa
+import { Heart, ShoppingCart, Loader2, Star } from "lucide-react"; 
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
-
-// Redux
 import { useAppSelector } from "../../redux/hooks";
 import { selectCurrentUser } from "../../redux/activeUser/activeUserSlice";
-
-// APIs
 import { wishlistService } from "../../apis/wishlist";
 import { cartService } from "../../apis/cart"; 
 
@@ -32,9 +28,6 @@ const Wishlist = () => {
   const [wishlistItems, setWishlistItems] = useState<WishlistItemType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // ==========================================
-  // GỌI API LẤY DANH SÁCH WISHLIST
-  // ==========================================
   useEffect(() => {
     const fetchWishlist = async () => {
       if (!currentUser || !currentUser.id) {
@@ -44,15 +37,14 @@ const Wishlist = () => {
       
       setIsLoading(true);
       try {
-        // Lưu ý: Đảm bảo wishlistService cũng export đúng tên hàm getWishlistsByUserIdAPI
         const response = await wishlistService.getWishlistsByUserIdAPI(currentUser.id);
         
         if (response && response.data) {
           const mappedItems = response.data.map((item: any) => ({
             id: item.id,
             courseId: item.courseId,
-            title: item.courseName || "Khóa học",
-            lecturer: item.lecturer || "Giảng viên",
+            title: item.courseName || "Course",
+            lecturer: item.lecturer || "Lecturer",
             thumbnail: item.courseThumbnail || "https://placehold.co/600x400/3b82f6/white?text=EduLearn",
             price: 19.99, 
             rating: 4.8,
@@ -61,8 +53,7 @@ const Wishlist = () => {
           setWishlistItems(mappedItems);
         }
       } catch (error: any) {
-        console.error("Lỗi lấy wishlist", error);
-        toast.error("Không thể tải danh sách yêu thích!");
+        toast.error(error?.message || "Failed to get wishlist data!");
       } finally {
         setIsLoading(false);
       }
@@ -71,40 +62,28 @@ const Wishlist = () => {
     fetchWishlist();
   }, [currentUser]);
 
-  // ==========================================
-  // XÓA KHỎI WISHLIST
-  // ==========================================
   const handleRemove = async (id: number) => {
     try {
       setWishlistItems((prev) => prev.filter((item) => item.id !== id));
       await wishlistService.removeWishlistItemAPI(id);
-      toast.success("Đã xóa khỏi danh sách yêu thích!");
+      toast.success("Removed successfully from wishlist!");
     } catch (error) {
-      toast.error("Xóa thất bại. Vui lòng thử lại!");
+      toast.error("Remove item failed! Please try again later");
     }
   };
 
-  // ==========================================
-  // THÊM VÀO GIỎ HÀNG TỪ WISHLIST
-  // ==========================================
   const handleAddToCart = async (item: WishlistItemType) => {
-    if (!currentUser) {
-      toast.info("Vui lòng đăng nhập để thực hiện chức năng này");
-      return;
-    }
-    
     try {
-      // ĐÃ SỬA: Đổi addToCartAPI -> addToCart để khớp với Backend Service
       await cartService.addToCart({
         userId: currentUser.id,
         courseId: item.courseId,
         price: item.price,
       });
-      toast.success("Đã thêm khóa học vào giỏ hàng!", { theme: "colored" });
+      toast.success("Added course to cart!", { theme: "colored" });
       
     } catch (error: any) {
-      const msg = error.response?.data?.message || "Lỗi khi thêm vào giỏ hàng";
-      toast.warning(msg);
+      const msg = error?.message || "Error when adding item to cart";
+      toast.error(msg);
     }
   };
 
@@ -125,7 +104,7 @@ const Wishlist = () => {
         {isLoading ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-20 flex flex-col items-center justify-center min-h-[50vh]">
             <Loader2 className="animate-spin text-blue-500 mb-4" size={40} />
-            <p className="font-medium text-gray-500">Đang tải danh sách yêu thích...</p>
+            <p className="font-medium text-gray-500">Loading wishlist data...</p>
           </div>
         ) : wishlistItems.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
