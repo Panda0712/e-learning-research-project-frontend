@@ -1,4 +1,4 @@
-import authorizedAxiosInstance from "../utils/authorizedAxios"; 
+import authorizedAxiosInstance from "../utils/authorizedAxios";
 import { API_ROOT } from "../utils/constants";
 
 export const blogApi = {

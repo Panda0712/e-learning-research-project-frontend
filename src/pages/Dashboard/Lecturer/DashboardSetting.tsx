@@ -6,6 +6,7 @@ import AccountSetting from "../../../components/dashboard/lecturer/setting/Accou
 import PayoutDetail from "../../../components/dashboard/lecturer/setting/PayoutDetail";
 import NotificationSetting from "../../../components/dashboard/lecturer/setting/NotificationSetting";
 import { profileService } from "../../../apis/profile";
+import { toast } from "react-toastify";
 
 const DashboardSetting = () => {
   const [activeTab, setActiveTab] = useState("account");
@@ -20,7 +21,7 @@ const DashboardSetting = () => {
           avatar: data.avatar
         });
       } catch (error:any) {
-        toast.error(error?.message || "Failed to load profile data");
+        toast.error(error?.message || "Failed to load profile data!");
       }
     };
     fetchProfileForMenu();

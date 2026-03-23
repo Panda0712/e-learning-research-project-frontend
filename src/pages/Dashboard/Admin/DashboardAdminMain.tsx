@@ -1,12 +1,18 @@
 import { Check, ChevronDown } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { HiBars3BottomRight } from "react-icons/hi2";
-import ChartSkeleton from "../../../components/skeleton/ChartSkeleton";
+import { dashboardService } from "../../../apis/dashboard";
 import DashboardBarChart from "../../../components/dashboard/DashboardBarChart";
 import DashboardLineChart from "../../../components/dashboard/DashboardLineChart";
 import DashboardStatistic from "../../../components/dashboard/DashboardStatistic";
 import DashboardTopCourses from "../../../components/dashboard/DashboardTopCourses";
 import DashboardPendingApprovals from "../../../components/dashboard/admin/main/DashboardPendingApprovals";
+import ChartSkeleton from "../../../components/skeleton/ChartSkeleton";
+import type {
+  AdminOverviewResponse,
+  DashboardChartsResponse,
+  DashboardPeriod,
+} from "../../../types/dashboard.type";
 
 type Year = 2023 | 2024 | 2025;
 
@@ -125,12 +131,31 @@ const adminStatisticData = {
   totalTransactions: 300,
 };
 
+const mapDateFilterToPeriod = (filter: DateFilter): DashboardPeriod => {
+  if (filter === "all") return "all_time";
+  if (filter === "last-month") return "last_month";
+  if (filter === "this-month") return "this_month";
+  return "this_year";
+};
+
+const toRevenueDay = (label: string, index: number) => {
+  const dayFromDateFormat = Number(label.split("/")[0]);
+  if (!Number.isNaN(dayFromDateFormat) && dayFromDateFormat > 0) {
+    return dayFromDateFormat;
+  }
+  return index + 1;
+};
+
 const DashboardAdminMain = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const [isChartLoading, setIsChartLoading] = useState(true);
   const [openFilter, setOpenFilter] = useState(false);
   const [month, setMonth] = useState("August");
   const [type, setType] = useState<string>("sign-up");
   const [dateFilter, setDateFilter] = useState<DateFilter>("this-year");
+
+  const [overview, setOverview] = useState<AdminOverviewResponse | null>(null);
+  const [chart, setChart] = useState<DashboardChartsResponse | null>(null);
 
   const options = [
     { label: "All Time", value: "all" },
@@ -139,7 +164,6 @@ const DashboardAdminMain = () => {
     { label: "This Year", value: "this-year" },
   ] as const;
 
-  const data = revenueByMonth[month] ?? [];
   const activeDay = 7;
 
   const handleChangeType = () => {
@@ -147,9 +171,114 @@ const DashboardAdminMain = () => {
   };
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 2000);
-    return () => clearTimeout(timer);
+    (async () => {
+      try {
+        const data = await dashboardService.getAdminOverviewAPI();
+        setOverview(data);
+      } catch {
+        setOverview(null);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
   }, []);
+
+  useEffect(() => {
+    (async () => {
+      setIsChartLoading(true);
+      try {
+        if (type === "revenue") {
+          const monthIndex = MONTHS.findIndex((m) => m === month);
+          const year = new Date().getFullYear();
+          const from = new Date(year, monthIndex, 1).toISOString().slice(0, 10);
+          const to = new Date(year, monthIndex + 1, 0)
+            .toISOString()
+            .slice(0, 10);
+
+          const data = await dashboardService.getAdminChartsAPI({
+            period: "custom",
+            from,
+            to,
+          });
+          setChart(data);
+        } else {
+          const period = mapDateFilterToPeriod(dateFilter);
+          const data = await dashboardService.getAdminChartsAPI({ period });
+          setChart(data);
+        }
+      } catch {
+        setChart(null);
+      } finally {
+        setIsChartLoading(false);
+      }
+    })();
+  }, [type, dateFilter, month]);
+
+  const adminStatisticDataMapped = useMemo(
+    () => ({
+      totalStudents:
+        overview?.cards.totalStudents ?? adminStatisticData.totalStudents,
+      totalInstructors:
+        overview?.cards.totalInstructors ?? adminStatisticData.totalInstructors,
+      totalPlatformRevenue:
+        overview?.cards.totalRevenue ?? adminStatisticData.totalPlatformRevenue,
+      pendingCourses:
+        overview?.cards.pendingCourses ?? adminStatisticData.pendingCourses,
+      newEnrollments:
+        overview?.cards.newEnrollments ?? adminStatisticData.newEnrollments,
+      totalTransactions:
+        overview?.cards.totalTransactions ??
+        adminStatisticData.totalTransactions,
+    }),
+    [overview],
+  );
+
+  const signUpBarData = useMemo(() => {
+    const apiData = chart?.datasets.signup ?? [];
+    const hasApiData = apiData.length > 0 && apiData.some((v) => v > 0);
+
+    if (!hasApiData) return engagementByYear[2025];
+
+    return (chart?.labels ?? []).map((label, idx) => ({
+      month: label,
+      value: apiData[idx] ?? 0,
+    }));
+  }, [chart]);
+
+  const revenueLineData = useMemo(() => {
+    const apiData = chart?.datasets.revenue ?? [];
+    const hasApiData = apiData.length > 0 && apiData.some((v) => v > 0);
+
+    if (!hasApiData) return revenueByMonth[month] ?? [];
+
+    return (chart?.labels ?? []).map((label, idx) => ({
+      day: toRevenueDay(label, idx),
+      value: apiData[idx] ?? 0,
+    }));
+  }, [chart, month]);
+
+  const pendingApprovalsData = useMemo(() => {
+    const apiData = overview?.lists.pendingApprovals ?? [];
+    if (apiData.length === 0) return undefined;
+
+    return apiData.map((item, idx) => ({
+      id: `${idx}-${item.time}`,
+      type: item.type,
+      title: item.title,
+      createdAt: item.time,
+    }));
+  }, [overview]);
+
+  const topCoursesData = useMemo(() => {
+    const apiData = overview?.lists.topCourses ?? [];
+    if (apiData.length === 0) return undefined;
+
+    return apiData.map((item) => ({
+      id: item.id,
+      courseName: item.name,
+      students: item.totalStudents,
+    }));
+  }, [overview]);
 
   return (
     <div className="px-2 py-4 bg-[#f5f6fa]">
@@ -157,7 +286,7 @@ const DashboardAdminMain = () => {
         <h2 className="font-semibold text-[40px] text-black">Dashboard</h2>
       </div>
 
-      <DashboardStatistic type="admin" adminData={adminStatisticData} />
+      <DashboardStatistic type="admin" adminData={adminStatisticDataMapped} />
 
       <div className="mt-5">
         <div className="flex items-center justify-between gap-4">
@@ -197,7 +326,6 @@ const DashboardAdminMain = () => {
                       className="flex items-center gap-5"
                       onClick={() => {
                         setDateFilter(option.value);
-                        // setOpenFilter(false);
                       }}
                     >
                       <div
@@ -227,7 +355,6 @@ const DashboardAdminMain = () => {
                     className="text-[14px] text-[#3B82F6] font-normal"
                     onClick={() => {
                       setDateFilter("custom");
-                      // setOpenFilter(false);
                     }}
                   >
                     Custom Range
@@ -254,25 +381,25 @@ const DashboardAdminMain = () => {
         <div className="h-80 mt-5">
           {type === "sign-up" ? (
             <>
-              {isLoading ? (
+              {isLoading || isChartLoading ? (
                 <ChartSkeleton />
-              ) : !isLoading && !engagementByYear[2025] ? (
+              ) : signUpBarData.length === 0 ? (
                 <p className="text-[22px] font-bold text-center mt-12">
                   No data found!
                 </p>
               ) : (
-                <DashboardBarChart data={engagementByYear[2025]} />
+                <DashboardBarChart data={signUpBarData} />
               )}
             </>
           ) : (
-            <DashboardLineChart data={data} activeDay={activeDay} />
+            <DashboardLineChart data={revenueLineData} activeDay={activeDay} />
           )}
         </div>
       </div>
 
       <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-12">
-        <DashboardPendingApprovals />
-        <DashboardTopCourses />
+        <DashboardPendingApprovals data={pendingApprovalsData} />
+        <DashboardTopCourses data={topCoursesData} />
       </div>
     </div>
   );

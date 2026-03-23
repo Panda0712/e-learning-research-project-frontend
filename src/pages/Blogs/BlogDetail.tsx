@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { toast } from "react-toastify";
 import { Calendar, Quote, User } from "lucide-react";
 import { useParams } from "react-router-dom";
 import AuthorBox from "../../components/box/AuthorBox";
@@ -7,6 +6,7 @@ import CommentList from "../../components/comment/CommentListBlog";
 import Sidebar from "../../components/ui/SideBar";
 import { useEffect, useState } from "react";
 import { blogApi } from "../../apis/blog";
+import { toast } from "react-toastify";
 import Loading from "../../components/ui/Loading";
 
 interface BlogData {
@@ -34,7 +34,7 @@ const BlogDetail = () => {
           setBlog(data);
         }
       } catch (error:any) {
-        toast.error(error?.message || "Failed to get blog detail data");
+        toast.error(error?.message || "Failed to get blog detail data!");
       } finally {
         setLoading(false);
       }

@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { toast } from "react-toastify";
 import BlogCard from "../../components/cards/BlogCard";
 import Sidebar from "../../components/ui/SideBar";
 import { useEffect, useState } from "react";
 import { blogApi } from "../../apis/blog";
+import { toast } from "react-toastify";
 
 interface BlogData {
   id: number;
@@ -26,8 +26,8 @@ const BlogList = () => {
         setLoading(true);
         const data = await blogApi.getAllBlogPostsAPI();
         setBlogList(data);
-      } catch (error:any) {
-        toast.error(error?.message || "Failed to get blogs data!");
+      } catch (error: any) {
+        toast.error(error?.message || "Failed to get blogs data! Please try again later!");
       } finally {
         setLoading(false);
       }
