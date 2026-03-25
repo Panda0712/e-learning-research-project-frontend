@@ -4,6 +4,11 @@ type BirthParts = {
   birthYear: number;
 };
 
+export const normalizeRole = (role?: string) =>
+  String(role || "")
+    .trim()
+    .toLowerCase();
+
 export const formatDate = (date: Date) => {
   return new Intl.DateTimeFormat("en-US", {
     month: "long",

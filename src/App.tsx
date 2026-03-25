@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   BrowserRouter,
   Navigate,
@@ -6,11 +7,14 @@ import {
   Routes,
 } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
+import RbacRoute from "./components/core/RbacRoute";
 import CourseDetailChapter from "./components/dashboard/admin/courses/course-detail-chapter/CourseDetailChapter";
 import AdminCourseDetail from "./components/dashboard/admin/courses/course-detail/AdminCourseDetail";
 import DashboardCreateEditCurriculum from "./components/dashboard/lecturer/create-course/curriculum/DashboardCreateEditCurriculum";
 import Footer from "./components/ui/Footer";
+import Loading from "./components/ui/Loading";
 import Navbar from "./components/ui/Navbar";
+import { permissions } from "./configs/rbacConfig";
 import AccessDenied from "./pages/AccessDenied/AccessDenied";
 import ForgotPasswordPage from "./pages/Auth/ForgotPasswordPage";
 import LoginPage from "./pages/Auth/LoginPage";
@@ -47,45 +51,90 @@ import Registration from "./pages/Lecturer/Registration";
 import NotFoundPage from "./pages/NotFound/NotFound";
 import Payment from "./pages/Payment/Payment";
 import Profile from "./pages/Profile/Profile";
-import { selectCurrentUser } from "./redux/activeUser/activeUserSlice";
-import { useAppSelector } from "./redux/hooks";
+import {
+  fetchCurrentUserAPI,
+  selectAuthResolved,
+  selectCurrentUser,
+} from "./redux/activeUser/activeUserSlice";
+import { useAppDispatch, useAppSelector } from "./redux/hooks";
 import type { UserProfile } from "./types/user.type";
 import { ACCOUNT_ROLES } from "./utils/constants";
-import RbacRoute from "./components/core/RbacRoute";
-import { permissions } from "./configs/rbacConfig";
+import { normalizeRole } from "./utils/helpers";
 
-const ProtectedRoutes = ({ user }: { user: UserProfile | null }) => {
+const AuthBootstrap = () => <Loading caption="Checking your session..." />;
+
+const ProtectedRoutes = ({
+  user,
+  authResolved,
+}: {
+  user: UserProfile | null;
+  authResolved: boolean;
+}) => {
+  if (!authResolved) return <AuthBootstrap />;
   if (!user) return <Navigate to="/auth/login" replace={true} />;
 
-  if (
-    user.role === ACCOUNT_ROLES.LECTURER ||
-    user.role === ACCOUNT_ROLES.ADMIN
-  ) {
+  const role = normalizeRole(user.role);
+  if (role !== ACCOUNT_ROLES.STUDENT) {
     return <Navigate to="/access-denied" replace={true} />;
   }
 
   return <Outlet />;
 };
 
-const AdminRoutes = ({ user }: { user: UserProfile | null }) => {
-  if (!user || user.role !== ACCOUNT_ROLES.ADMIN)
+const AdminRoutes = ({
+  user,
+  authResolved,
+}: {
+  user: UserProfile | null;
+  authResolved: boolean;
+}) => {
+  if (!authResolved) return <AuthBootstrap />;
+  if (!user) return <Navigate to="/auth/login" replace />;
+
+  const role = normalizeRole(user.role);
+  if (role !== ACCOUNT_ROLES.ADMIN)
     return <Navigate to="/access-denied" replace={true} />;
   return <Outlet />;
 };
 
-const LecturerRoutes = ({ user }: { user: UserProfile | null }) => {
-  if (!user || user.role !== ACCOUNT_ROLES.LECTURER)
+const LecturerRoutes = ({
+  user,
+  authResolved,
+}: {
+  user: UserProfile | null;
+  authResolved: boolean;
+}) => {
+  if (!authResolved) return <AuthBootstrap />;
+  if (!user) return <Navigate to="/auth/login" replace />;
+
+  const role = normalizeRole(user.role);
+  if (role !== ACCOUNT_ROLES.LECTURER)
     return <Navigate to="/access-denied" replace={true} />;
+
   return <Outlet />;
 };
 
-const UnauthorizedRoutes = ({ user }: { user: UserProfile | null }) => {
+const UnauthorizedRoutes = ({
+  user,
+  authResolved,
+}: {
+  user: UserProfile | null;
+  authResolved: boolean;
+}) => {
+  if (!authResolved) return <AuthBootstrap />;
   if (user) return <Navigate to="/" replace={true} />;
+
   return <Outlet />;
 };
 
 const App = () => {
+  const dispatch = useAppDispatch();
   const currentUser = useAppSelector(selectCurrentUser);
+  const authResolved = useAppSelector(selectAuthResolved);
+
+  useEffect(() => {
+    dispatch(fetchCurrentUserAPI()).catch(() => {});
+  }, [dispatch]);
 
   return (
     <BrowserRouter>
@@ -104,8 +153,14 @@ const App = () => {
         <Route>
           <Route path="/dashboard" element={<DashboardLayout />}>
             {/* Dashboard lecturer */}
-            <Route element={<LecturerRoutes user={currentUser} />}>
-            
+            <Route
+              element={
+                <LecturerRoutes
+                  user={currentUser}
+                  authResolved={authResolved}
+                />
+              }
+            >
               <Route
                 element={
                   <RbacRoute
@@ -178,9 +233,12 @@ const App = () => {
             </Route>
 
             {/* Dashboard Admin */}
-            <Route element={<AdminRoutes user={currentUser} />}>
+            <Route
+              element={
+                <AdminRoutes user={currentUser} authResolved={authResolved} />
+              }
+            >
               <Route
-                
                 element={
                   <RbacRoute
                     requiredPermission={permissions.VIEW_DASHBOARD_ADMIN}
@@ -225,7 +283,14 @@ const App = () => {
           }
         >
           {/* Auth */}
-          <Route element={<UnauthorizedRoutes user={currentUser} />}>
+          <Route
+            element={
+              <UnauthorizedRoutes
+                user={currentUser}
+                authResolved={authResolved}
+              />
+            }
+          >
             <Route path="/auth/login" element={<LoginPage />} />
             <Route path="/auth/register" element={<SignUpPage />} />
             <Route
@@ -256,7 +321,11 @@ const App = () => {
           <Route path="/blog" element={<BlogList />} />
           <Route path="/blog/:id" element={<BlogDetail />} />
 
-          <Route element={<ProtectedRoutes user={currentUser} />}>
+          <Route
+            element={
+              <ProtectedRoutes user={currentUser} authResolved={authResolved} />
+            }
+          >
             {/* Profile */}
             <Route
               element={
