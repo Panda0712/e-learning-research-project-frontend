@@ -1,8 +1,11 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { usePermission } from "../../hooks/usePermission";
-import { selectCurrentUser } from "../../redux/activeUser/activeUserSlice";
+import {
+  selectAuthResolved,
+  selectCurrentUser,
+} from "../../redux/activeUser/activeUserSlice";
 import { useAppSelector } from "../../redux/hooks";
-import { ACCOUNT_ROLES } from "../../utils/constants";
+import Loading from "../ui/Loading";
 
 const RbacRoute = ({
   requiredPermission,
@@ -12,12 +15,16 @@ const RbacRoute = ({
   redirectTo?: string;
 }) => {
   const currentUser = useAppSelector(selectCurrentUser);
-  const currentUserRole = currentUser?.role || ACCOUNT_ROLES.STUDENT;
+  const authResolved = useAppSelector(selectAuthResolved);
 
-  const { hasPermission } = usePermission(currentUserRole);
+  const { hasPermission } = usePermission(currentUser?.role);
+
+  if (!authResolved) return <Loading caption="Checking your session..." />;
+
+  if (!currentUser) return <Navigate to="/auth/login" replace />;
 
   if (!hasPermission(requiredPermission)) {
-    return <Navigate to={redirectTo} replace={true} />;
+    return <Navigate to={redirectTo} replace />;
   }
 
   return <Outlet />;

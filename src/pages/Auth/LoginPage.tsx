@@ -231,7 +231,7 @@ const LoginPage: React.FC = () => {
             >
               <FaFacebookF className="h-6 w-6 text-blue-600" />
               <FacebookLogin
-                appId={Environment.FACEBOOK_APP_ID!}
+                appId={Environment.FACEBOOK_APP_ID || ""}
                 autoLoad={true}
                 fields="name,email,picture"
                 onClick={handleClickFacebook}

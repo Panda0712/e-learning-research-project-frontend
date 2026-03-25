@@ -316,7 +316,7 @@ const SignUpPage: React.FC = () => {
             <button className="relative flex items-center rounded-md border border-gray-300 bg-white p-2 hover:bg-gray-50">
               <FaFacebookF className="h-6 w-6 text-blue-600" />
               <FacebookLogin
-                appId={Environment.FACEBOOK_APP_ID!}
+                appId={Environment.FACEBOOK_APP_ID || ""}
                 autoLoad={true}
                 fields="name,email,picture"
                 onClick={handleClickFacebook}
