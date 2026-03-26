@@ -9,6 +9,35 @@ export const normalizeRole = (role?: string) =>
     .trim()
     .toLowerCase();
 
+export const formatUpdatedAt = (value?: string | Date) => {
+  if (!value) return "Last updated recently";
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "Last updated recently";
+
+  return `Last updated ${date.toLocaleDateString("en-GB")}`;
+};
+
+export const buildDateOfBirthV2 = (
+  day?: number | null,
+  month?: number | null,
+  year?: number | null,
+) => {
+  if (!day || !month || !year) return undefined;
+
+  const date = new Date(year, month - 1, day);
+  if (
+    Number.isNaN(date.getTime()) ||
+    date.getDate() !== day ||
+    date.getMonth() !== month - 1 ||
+    date.getFullYear() !== year
+  ) {
+    return undefined;
+  }
+
+  return date.getTime();
+};
+
 export const formatDate = (date: Date) => {
   return new Intl.DateTimeFormat("en-US", {
     month: "long",

@@ -5,8 +5,12 @@ export interface UserProfile {
   email: string;
   role: string;
   phoneNumber?: string;
-  avatarUrl?: string;
-  dateOfBirth?: Date | null;
+  avatar?: {
+    fileUrl?: string;
+  };
+  dateOfBirth?: string | Date | null;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
 }
 
 export interface ProfileLecturersAPIData {
