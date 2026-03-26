@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import Messages from "../../../components/dashboard/lecturer/communication/Messages";
 import Reviews from "../../../components/dashboard/lecturer/communication/Reviews";
-import { useAppDispatch } from "../../../redux/hooks";
-import { connectChatSocket } from "../../../redux/chat/socket";
-import { store } from "../../../redux/store";
 import { fetchConversationsAPI } from "../../../redux/chat/chatSlice";
+import {
+  connectChatSocket,
+  disconnectChatSocket,
+  syncConversationRooms,
+} from "../../../redux/chat/socket";
+import { useAppDispatch } from "../../../redux/hooks";
+import { store } from "../../../redux/store";
 
 const DashboardCommunication = () => {
   const [activeTab, setActiveTab] = useState<"reviews" | "messages">("reviews");
@@ -12,7 +16,16 @@ const DashboardCommunication = () => {
 
   useEffect(() => {
     connectChatSocket(store);
-    dispatch(fetchConversationsAPI());
+    dispatch(fetchConversationsAPI())
+      .unwrap()
+      .then(() => {
+        syncConversationRooms(store);
+      })
+      .catch(() => {});
+
+    return () => {
+      disconnectChatSocket();
+    };
   }, [dispatch]);
 
   return (

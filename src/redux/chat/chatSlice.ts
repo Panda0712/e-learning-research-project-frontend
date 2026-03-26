@@ -57,7 +57,7 @@ export type ChatMessage = {
 
 type MessageBucket = {
   items: ChatMessage[];
-  nextCursor: string | null;
+  nextCursor: number | null | undefined;
   hasMore: boolean;
 };
 
@@ -127,20 +127,20 @@ export const fetchMessagesAPI = createAsyncThunk(
       return {
         conversationId: payload.conversationId,
         messages: [] as ChatMessage[],
-        nextCursor: null as string | null,
+        nextCursor: null as number | null,
       };
     }
 
     const res = await chatService.getMessagesAPI({
       conversationId: payload.conversationId,
-      cursor: cursor ?? undefined,
+      cursor: typeof cursor === "number" ? cursor : undefined,
       limit: 30,
     });
 
     return {
       conversationId: payload.conversationId,
       messages: (res?.messages ?? []) as ChatMessage[],
-      nextCursor: (res?.nextCursor ?? null) as string | null,
+      nextCursor: (res?.nextCursor ?? null) as number | null,
     };
   },
 );
@@ -214,7 +214,7 @@ const chatSlice = createSlice({
 
       const current = state.messagesByConversation[message.conversationId] ?? {
         items: [],
-        nextCursor: null,
+        nextCursor: undefined,
         hasMore: true,
       };
 
@@ -302,14 +302,14 @@ const chatSlice = createSlice({
       const { conversationId, messages, nextCursor } = action.payload;
       const current = state.messagesByConversation[conversationId] ?? {
         items: [],
-        nextCursor: null,
+        nextCursor: undefined,
         hasMore: true,
       };
 
       state.messagesByConversation[conversationId] = {
         items: mergeUniqueMessages(messages, current.items),
         nextCursor,
-        hasMore: !!nextCursor,
+        hasMore: nextCursor !== null,
       };
     });
 
