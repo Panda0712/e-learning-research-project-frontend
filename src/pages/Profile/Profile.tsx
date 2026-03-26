@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { authService } from "../../apis/auth";
+import { profileService } from "../../apis/profile";
 import AvatarUploader from "../../components/profile/AvatarUploader";
 import PersonalInfoCard from "../../components/profile/PersonalInfoCard";
 import SecuritySettingCard from "../../components/profile/SecuritySettingCard";
@@ -15,19 +15,7 @@ import ProfileMyCourses from "./ProfileMyCourses";
 import PersonalIcon from "/icons/avatar.png";
 import BookIcon from "/icons/book.png";
 import TeacherIcon from "/icons/teacher.png";
-
-const profile = {
-  id: "1",
-  firstName: "Pham",
-  lastName: "Tuan",
-  email: "tuanpn.it@gmail.com",
-  phone: "0369332842",
-  role: "student",
-  avatarUrl: "",
-  birthDay: 7,
-  birthMonth: 12,
-  birthYear: 2004,
-};
+import { formatUpdatedAt } from "../../utils/helpers";
 
 const Profile = () => {
   const currentUser = useAppSelector(selectCurrentUser);
@@ -39,8 +27,18 @@ const Profile = () => {
   const isCourses = location.pathname === "/profile/my-courses";
   const isLecturers = location.pathname === "/profile/lecturers";
 
+  const displayName = [currentUser?.firstName, currentUser?.lastName]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+  const displayPhone = currentUser?.phoneNumber || "No Contact";
+  const updatedLabel = formatUpdatedAt(currentUser?.updatedAt);
+
   const updateAvatar = async (file: File) => {
-    await authService.uploadUserAvatarAPI({ file });
+    const formData = new FormData();
+    formData.append("images", file);
+
+    await profileService.uploadAvatarAPI(formData);
   };
 
   const saveProfile = async (data: any) => {
@@ -54,6 +52,8 @@ const Profile = () => {
       });
   };
 
+  if (!currentUser) return null;
+
   return (
     <div className="bg-[#f5f6fa] py-6">
       <div
@@ -64,18 +64,18 @@ const Profile = () => {
         <aside className="bg-white rounded-lg p-6 max-h-151.25 mt-5">
           <div className="flex flex-col items-center">
             <AvatarUploader
-              avatarUrl={currentUser?.avatar?.fileUrl || profile?.avatarUrl}
+              avatarUrl={currentUser?.avatar?.fileUrl ?? null}
               onUpload={updateAvatar}
               size={105}
             />
             <h4 className="mt-3 text-lg text-[#3a3f6a] font-bold">
-              {profile?.lastName}
+              {displayName || "Unknown User"}
             </h4>
             <h5 className="mt-1 text-[14px] text-[#5A607F] font-normal">
-              No Contact
+              {displayPhone}
             </h5>
             <p className="text-[12px] text-[#5A607F] font-normal">
-              Last updated 12-11-2025
+              {updatedLabel}
             </p>
           </div>
 
@@ -175,10 +175,7 @@ const Profile = () => {
         <main>
           {isPersonal && (
             <>
-              <PersonalInfoCard
-                profile={currentUser ?? profile}
-                onSave={saveProfile}
-              />
+              <PersonalInfoCard profile={currentUser} onSave={saveProfile} />
               <SecuritySettingCard />
             </>
           )}

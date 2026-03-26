@@ -6,7 +6,10 @@ import LecturerCard from "../../components/cards/LecturerCard";
 import LecturerCardSkeleton from "../../components/skeleton/LecturerCardSkeleton";
 import Pagination from "../../components/ui/Pagination";
 import { usePagination } from "../../hooks/usePagination";
-import { selectCurrentUser } from "../../redux/activeUser/activeUserSlice";
+import {
+  selectAuthResolved,
+  selectCurrentUser,
+} from "../../redux/activeUser/activeUserSlice";
 import { useAppSelector } from "../../redux/hooks";
 import type {
   ProfileLecturerDetailAPIData,
@@ -46,6 +49,8 @@ const ProfileLecturers = () => {
   const page = Number(query.get("page")) || 1;
 
   const currentUser = useAppSelector(selectCurrentUser);
+  const authResolved = useAppSelector(selectAuthResolved);
+
   const { currentPage, setCurrentPage, totalPages, currentData } =
     usePagination({
       data: lecturers.length
@@ -70,18 +75,30 @@ const ProfileLecturers = () => {
     setIsLoading(false);
   };
 
+  const handleReset = () => {
+    setLecturers([]);
+    setTotalLecturers(0);
+    setIsLoading(false);
+    return;
+  };
+
   useEffect(() => {
+    if (!authResolved) return;
+
+    if (!currentUser) {
+      handleReset();
+      return;
+    }
+
     setIsLoading(true);
     profileService
-      .getLecturersByStudentIdAPI({
-        studentId: currentUser?.id,
-        searchPath: location.search,
-      })
+      .getMyLecturersAPI(location.search)
       .then(handleAfterGetLecturers)
       .catch((error) => {
         toast.error(error?.message || "Cannot get lecturers!");
-      });
-  }, [currentUser?.id, location.search]);
+      })
+      .finally(() => setIsLoading(false));
+  }, [authResolved, currentUser, location.search]);
 
   return (
     <div className="bg-white p-6 rounded-lg">
