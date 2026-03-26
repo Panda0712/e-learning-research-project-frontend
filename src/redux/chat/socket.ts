@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { io, Socket } from "socket.io-client";
 import { API_ROOT } from "../../utils/constants";
@@ -8,9 +9,28 @@ import {
 } from "./chatSlice";
 
 let socket: Socket | null = null;
+let subscribers = 0;
+let joinedConversationIds = new Set<number>();
+
+export const syncConversationRooms = (store: any) => {
+  if (!socket) return;
+
+  const conversations = store.getState()?.chat?.conversations ?? [];
+  conversations.forEach((conversation: { id: number }) => {
+    if (!joinedConversationIds.has(conversation.id)) {
+      socket?.emit("join-conversation", conversation.id);
+      joinedConversationIds.add(conversation.id);
+    }
+  });
+};
 
 export const connectChatSocket = (store: any, accessToken?: string) => {
-  if (socket) return socket;
+  subscribers += 1;
+
+  if (socket) {
+    syncConversationRooms(store);
+    return socket;
+  }
 
   socket = io(API_ROOT, {
     withCredentials: true,
@@ -19,10 +39,8 @@ export const connectChatSocket = (store: any, accessToken?: string) => {
   });
 
   socket.on("connect", () => {
-    const conversations = store.getState()?.chat?.conversations ?? [];
-    conversations.forEach((conversation: { id: number }) => {
-      socket?.emit("join-conversation", conversation.id);
-    });
+    joinedConversationIds.clear();
+    syncConversationRooms(store);
   });
 
   socket.on("new-message", (payload) => {
@@ -31,8 +49,12 @@ export const connectChatSocket = (store: any, accessToken?: string) => {
 
   socket.on("new-conversation", (payload) => {
     store.dispatch(receiveSocketConversation(payload));
-    if (payload?.conversation?.id) {
+    if (
+      payload?.conversation?.id &&
+      !joinedConversationIds.has(payload.conversation.id)
+    ) {
       socket?.emit("join-conversation", payload.conversation.id);
+      joinedConversationIds.add(payload.conversation.id);
     }
   });
 
@@ -44,9 +66,14 @@ export const connectChatSocket = (store: any, accessToken?: string) => {
 };
 
 export const disconnectChatSocket = () => {
+  subscribers = Math.max(0, subscribers - 1);
+
+  if (subscribers > 0) return;
   if (!socket) return;
+
   socket.disconnect();
   socket = null;
+  joinedConversationIds.clear();
 };
 
 export const getChatSocket = () => socket;
