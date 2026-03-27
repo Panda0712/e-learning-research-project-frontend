@@ -49,6 +49,8 @@ const Messages = () => {
 
   const activeConversationId = chatState?.activeConversationId ?? null;
   const loadingConversations = chatState?.loadingConversations ?? false;
+  const conversationsError = chatState?.conversationsError ?? null;
+  const messagesError = chatState?.messagesError ?? null;
 
   const lecturerConversations = useMemo(() => {
     const conversations = chatState?.conversations ?? [];
@@ -176,6 +178,9 @@ const Messages = () => {
           className="overflow-y-auto"
           style={{ maxHeight: "calc(100% - 80px)" }}
         >
+          {conversationsError && (
+            <div className="p-4 text-sm text-red-600">{conversationsError}</div>
+          )}
           {loadingConversations ? (
             <div className="p-4 text-sm text-gray-500">
               Loading conversations...
@@ -249,7 +254,11 @@ const Messages = () => {
               Choose 1 student to start chatting.
             </p>
           ) : (
-            <InfiniteScroll
+            <>
+              {messagesError && (
+                <p className="mb-3 text-sm text-red-600">{messagesError}</p>
+              )}
+              <InfiniteScroll
               dataLength={currentMessages.length}
               next={fetchMoreMessages}
               hasMore={hasMore}
@@ -259,7 +268,7 @@ const Messages = () => {
                 <p className="text-center text-xs text-gray-500">Loading...</p>
               }
               style={{ display: "flex", flexDirection: "column-reverse" }}
-            >
+              >
               {[
                 ...(currentMessages.length
                   ? currentMessages
@@ -287,7 +296,8 @@ const Messages = () => {
                     </div>
                   );
                 })}
-            </InfiniteScroll>
+              </InfiniteScroll>
+            </>
           )}
         </div>
 

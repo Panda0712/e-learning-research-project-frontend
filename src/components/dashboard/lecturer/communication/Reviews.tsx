@@ -1,69 +1,27 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import type { LecturerReviewItem } from "../../../../types/communication.type";
 
-interface Review {
-  id: number;
-  rating: number;
-  courseName: string;
-  userName: string;
-  userAvatar: string;
-  postedDate: string;
-  comment: string;
-  hasComment: boolean;
-  isAnswered: boolean;
+interface ReviewsProps {
+  reviews: LecturerReviewItem[];
+  loading: boolean;
+  error: string | null;
+  onRetry: () => void | Promise<void>;
 }
 
-const mockReviews: Review[] = [
-  {
-    id: 1,
-    rating: 4,
-    courseName: "Beginners Guide to Design",
-    userName: "Chris Walter",
-    userAvatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop",
-    postedDate: "3 days ago",
-    comment: "I was initially apprehensive, having no prior design experience. But the instructor, John Doe, did an amazing job of breaki...",
-    hasComment: true,
-    isAnswered: false,
-  },
-  {
-    id: 2,
-    rating: 4,
-    courseName: "Beginners Guide to Design",
-    userName: "Chris Walter",
-    userAvatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop",
-    postedDate: "3 days ago",
-    comment: "I was initially apprehensive, having no prior design experience. But the instructor, John Doe, did an amazing job of breaki...",
-    hasComment: true,
-    isAnswered: false,
-  },
-  {
-    id: 3,
-    rating: 4,
-    courseName: "Beginners Guide to Design",
-    userName: "Chris Walter",
-    userAvatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop",
-    postedDate: "3 days ago",
-    comment: "I was initially apprehensive, having no prior design experience. But the instructor, John Doe, did an amazing job of breaki...",
-    hasComment: true,
-    isAnswered: false,
-  },
-  {
-    id: 4,
-    rating: 4,
-    courseName: "Beginners Guide to Design",
-    userName: "Chris Walter",
-    userAvatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop",
-    postedDate: "3 days ago",
-    comment: "I was initially apprehensive, having no prior design experience. But the instructor, John Doe, did an amazing job of breaki...",
-    hasComment: true,
-    isAnswered: false,
-  },
-];
-
-const Reviews = () => {
-  const [reviews] = useState<Review[]>(mockReviews);
+const Reviews = ({ reviews, loading, error, onRetry }: ReviewsProps) => {
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [replyText, setReplyText] = useState("");
+  const [onlyCommented, setOnlyCommented] = useState(false);
+  const [onlyNotAnswered, setOnlyNotAnswered] = useState(false);
+
+  const visibleReviews = useMemo(() => {
+    return reviews.filter((review) => {
+      if (onlyCommented && !review.hasComment) return false;
+      if (onlyNotAnswered && review.isAnswered) return false;
+      return true;
+    });
+  }, [reviews, onlyCommented, onlyNotAnswered]);
 
   const renderStars = (rating: number) => {
     return (
@@ -97,11 +55,21 @@ const Reviews = () => {
       {/* Filters */}
       <div className="mb-6 flex flex-wrap items-center gap-4">
         <label className="flex items-center gap-2 font-poppins text-sm text-[#475569]">
-          <input type="checkbox" className="h-4 w-4 rounded border-gray-300 bg-white" />
+          <input
+            type="checkbox"
+            checked={onlyCommented}
+            onChange={(event) => setOnlyCommented(event.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 bg-white"
+          />
           Has a Comment
         </label>
         <label className="flex items-center gap-2 font-poppins text-sm text-[#475569]">
-          <input type="checkbox" className="h-4 w-4 rounded border-gray-300 bg-white" />
+          <input
+            type="checkbox"
+            checked={onlyNotAnswered}
+            onChange={(event) => setOnlyNotAnswered(event.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 bg-white"
+          />
           Not Answered
         </label>
         
@@ -131,7 +99,34 @@ const Reviews = () => {
 
       {/* Reviews List */}
       <div className="space-y-4">
-        {reviews.map((review) => (
+        {loading && (
+          <div className="rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-500">
+            Loading reviews...
+          </div>
+        )}
+
+        {!loading && error && (
+          <div className="rounded-xl border border-red-100 bg-red-50 p-6 text-sm text-red-700">
+            <p>{error}</p>
+            <button
+              type="button"
+              onClick={onRetry}
+              className="mt-3 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-red-700"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {!loading && !error && visibleReviews.length === 0 && (
+          <div className="rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-500">
+            No review data available.
+          </div>
+        )}
+
+        {!loading &&
+          !error &&
+          visibleReviews.map((review) => (
           <div key={review.id} className="rounded-xl border border-gray-200 bg-white p-6">
             <div className="mb-4 flex items-start justify-between">
               <div className="flex-1">
@@ -143,8 +138,8 @@ const Reviews = () => {
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 overflow-hidden rounded-full bg-gray-200">
                     <img
-                      src={review.userAvatar}
-                      alt={review.userName}
+                      src={review.studentAvatar}
+                      alt={review.studentName}
                       className="h-full w-full object-cover"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
@@ -152,8 +147,8 @@ const Reviews = () => {
                     />
                   </div>
                   <div>
-                    <p className="font-poppins text-sm font-medium text-[#000000]">{review.userName}</p>
-                    <p className="font-poppins text-xs text-[#475569]">{review.postedDate}</p>
+                    <p className="font-poppins text-sm font-medium text-[#000000]">{review.studentName}</p>
+                    <p className="font-poppins text-xs text-[#475569]">{new Date(review.postedDate).toLocaleString()}</p>
                   </div>
                 </div>
               </div>
@@ -180,7 +175,9 @@ const Reviews = () => {
               </div>
             </div>
 
-            <p className="mb-4 font-poppins text-sm text-[#475569]">{review.comment}</p>
+            <p className="mb-4 font-poppins text-sm text-[#475569]">
+              {review.comment || "No comment content."}
+            </p>
 
             {replyingTo === review.id ? (
               <div className="mt-4">

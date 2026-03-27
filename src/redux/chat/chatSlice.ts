@@ -19,6 +19,8 @@ type ChatState = {
   activeConversationId: number | null;
   loadingConversations: boolean;
   loadingMessages: boolean;
+  conversationsError: string | null;
+  messagesError: string | null;
 };
 
 const initialState: ChatState = {
@@ -27,6 +29,8 @@ const initialState: ChatState = {
   activeConversationId: null,
   loadingConversations: false,
   loadingMessages: false,
+  conversationsError: null,
+  messagesError: null,
 };
 
 export const fetchConversationsAPI = createAsyncThunk(
@@ -40,7 +44,7 @@ export const fetchMessagesAPI = createAsyncThunk(
   "chat/fetchMessagesAPI",
   async (payload: { conversationId: number }, { getState }) => {
     const state = getState() as any;
-    const bucket = state.chat.messageByConversation[payload.conversationId];
+    const bucket = state.chat.messagesByConversation[payload.conversationId];
     const cursor = bucket?.nextCursor;
     if (bucket && cursor === null) {
       return {
@@ -168,6 +172,7 @@ const chatSlice = createSlice({
   extraReducers: (builder) => {
     builder.addCase(fetchConversationsAPI.pending, (state) => {
       state.loadingConversations = true;
+      state.conversationsError = null;
     });
     builder.addCase(fetchConversationsAPI.fulfilled, (state, action) => {
       state.loadingConversations = false;
@@ -175,9 +180,11 @@ const chatSlice = createSlice({
     });
     builder.addCase(fetchConversationsAPI.rejected, (state) => {
       state.loadingConversations = false;
+      state.conversationsError = "Failed to load conversations.";
     });
     builder.addCase(fetchMessagesAPI.pending, (state) => {
       state.loadingMessages = true;
+      state.messagesError = null;
     });
     builder.addCase(fetchMessagesAPI.fulfilled, (state, action) => {
       state.loadingMessages = false;
@@ -195,6 +202,7 @@ const chatSlice = createSlice({
     });
     builder.addCase(fetchMessagesAPI.rejected, (state) => {
       state.loadingMessages = false;
+      state.messagesError = "Failed to load messages.";
     });
     builder.addCase(createConversationAPI.fulfilled, (state, action) => {
       const conversation = action.payload?.conversation;
