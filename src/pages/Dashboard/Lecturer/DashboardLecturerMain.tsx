@@ -137,19 +137,19 @@ const DashboardLecturerMain = () => {
   const lecturerStatisticDataMapped = useMemo(
     () => ({
       totalStudents:
-        overview?.card.totalStudents ?? lecturerStatisticData.totalStudents,
+        overview?.cards.totalStudents ?? lecturerStatisticData.totalStudents,
       coursesActive:
-        overview?.card.coursesActive ?? lecturerStatisticData.coursesActive,
+        overview?.cards.coursesActive ?? lecturerStatisticData.coursesActive,
       totalEarning:
-        overview?.card.totalEarnings ?? lecturerStatisticData.totalEarning,
+        overview?.cards.totalEarnings ?? lecturerStatisticData.totalEarning,
       assignmentsGraded:
-        overview?.card.assignmentsGraded ??
+        overview?.cards.assignmentsGraded ??
         lecturerStatisticData.assignmentsGraded,
       completedCourses:
-        overview?.card.completedCourses ??
+        overview?.cards.completedCourses ??
         lecturerStatisticData.completedCourses,
       newEnrollments:
-        overview?.card.newEnrollments ?? lecturerStatisticData.newEnrollments,
+        overview?.cards.newEnrollments ?? lecturerStatisticData.newEnrollments,
     }),
     [overview],
   );
@@ -157,12 +157,14 @@ const DashboardLecturerMain = () => {
   const engagementData = useMemo(() => {
     if (!selectedYear) return [];
 
+    const labels = yearChart?.labels ?? [];
     const apiData = yearChart?.datasets.engagement ?? [];
-    const hasApiData = apiData.length > 0 && apiData.some((v) => v > 0);
 
-    if (!hasApiData) return engagementByYear[selectedYear] ?? [];
+    const hasApiShape = labels.length > 0 && apiData.length === labels.length;
 
-    return (yearChart?.labels ?? []).map((label, idx) => ({
+    if (!hasApiShape) return engagementByYear[selectedYear] ?? [];
+
+    return labels.map((label, idx) => ({
       month: label,
       value: apiData[idx] ?? 0,
     }));
@@ -180,7 +182,7 @@ const DashboardLecturerMain = () => {
   }, [overview]);
 
   const recentActivitiesData = useMemo(() => {
-    const apiData = overview?.recentActivities ?? [];
+    const apiData = overview?.recentActivity ?? [];
     if (apiData.length === 0) return undefined;
 
     return apiData.map((item, idx) => ({
@@ -192,11 +194,13 @@ const DashboardLecturerMain = () => {
   }, [overview]);
 
   const externalRevenueData = useMemo(() => {
+    const labels = monthRevenueChart?.labels ?? [];
     const apiData = monthRevenueChart?.datasets.revenue ?? [];
-    const hasApiData = apiData.length > 0 && apiData.some((v) => v > 0);
-    if (!hasApiData) return undefined;
 
-    return (monthRevenueChart?.labels ?? []).map((label, idx) => ({
+    const hasApiShape = labels.length > 0 && apiData.length === labels.length;
+    if (!hasApiShape) return undefined;
+
+    return labels.map((label, idx) => ({
       day: Number(label.split("/")[0]) || idx + 1,
       value: apiData[idx] ?? 0,
     }));

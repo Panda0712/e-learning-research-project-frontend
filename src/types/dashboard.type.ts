@@ -38,7 +38,7 @@ export interface AdminOverviewResponse {
 }
 
 export interface LecturerOverviewResponse {
-  card: {
+  cards: {
     totalStudents: number;
     coursesActive: number;
     totalEarnings: number;
@@ -46,7 +46,7 @@ export interface LecturerOverviewResponse {
     completedCourses: number;
     newEnrollments: number;
   };
-  recentActivities: Array<{
+  recentActivity: Array<{
     type: string;
     avatar?: string | null;
     title: string;
@@ -64,7 +64,7 @@ export interface DashboardChartsResponse {
   groupBy: "day" | "month";
   labels: string[];
   datasets: {
-    signup?: number[];
+    signups?: number[];
     revenue: number[];
     engagement?: number[];
   };
