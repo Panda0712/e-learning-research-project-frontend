@@ -62,12 +62,40 @@ const mapReviews = (reviews: ReviewAPIData[]): Review[] =>
     content: r.content || "",
   }));
 
+const mapLearningCourse = (
+  api: CourseAPIData,
+  categories: CourseCategoryAPIData[],
+  fallback?: Course,
+): Course => {
+  const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c.name]));
+  const price = api.price ?? fallback?.price ?? 0;
+
+  return {
+    id: api.id,
+    title: api.name ?? fallback?.title ?? "Untitled course",
+    category:
+      api.category?.name ??
+      categoryMap[api.categoryId ?? -1] ??
+      fallback?.category ??
+      "Uncategorized",
+    author: api.lecturerName ?? fallback?.author ?? "Unknown instructor",
+    lessons: api.totalLessons ?? fallback?.lessons ?? 0,
+    hours: api.duration ?? fallback?.hours ?? "",
+    students: api.totalStudents ?? fallback?.students ?? 0,
+    price,
+    isFree: price === 0,
+    image: api.thumbnail?.fileUrl ?? fallback?.image ?? "/example-course1.png",
+    instructorInfo: fallback?.instructorInfo,
+  };
+};
+
 const CourseLearning = () => {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
 
   const [course, setCourse] = useState<Course | null>(null);
+  const [activeTab, setActiveTab] = useState<TabType>("Description");
   const [sections, setSections] = useState<LearningSection[]>([]);
   const [currentLesson, setCurrentLesson] = useState<LearningLesson | null>(
     null,
@@ -129,30 +157,18 @@ const CourseLearning = () => {
       setCurrentLesson(mappedSections?.[0]?.items?.[0] || null);
 
       const fallback = MOCK_COURSES.find((c) => c.id === courseId);
-      if (fallback) {
-        const categoryMap = Object.fromEntries(
-          (categories as CourseCategoryAPIData[]).map((c) => [c.id, c.name]),
-        );
-        const api = apiCourse as CourseAPIData;
-        setCourse({
-          ...fallback,
-          id: api.id,
-          title: api.name ?? fallback.title,
-          category:
-            api.category?.name ??
-            categoryMap[api.categoryId ?? -1] ??
-            fallback.category,
-          author: api.lecturerName ?? fallback.author,
-          lessons: api.totalLessons ?? fallback.lessons,
-          hours: api.duration ?? fallback.hours,
-          students: api.totalStudents ?? fallback.students,
-          price: api.price ?? fallback.price,
-          isFree: (api.price ?? fallback.price) === 0,
-          image: api.thumbnail?.fileUrl ?? fallback.image,
-        });
-      }
+      setCourse(
+        mapLearningCourse(
+          apiCourse as CourseAPIData,
+          categories as CourseCategoryAPIData[],
+          fallback,
+        ),
+      );
     })().catch(() => {
       toast.error("Cannot load learning data.");
+      setCourse(null);
+      setSections([]);
+      setCurrentLesson(null);
     });
   }, [id]);
 
@@ -213,7 +229,15 @@ const CourseLearning = () => {
     navigate({ search: next.toString() });
   };
 
-  const displayCourse = course || MOCK_COURSES[0];
+  if (!course) {
+    return (
+      <div className="flex items-center justify-center">
+        <h2>Course not found!</h2>
+      </div>
+    );
+  }
+
+  const displayCourse = course;
 
   return (
     <div className="min-h-screen bg-white pb-20 font-poppins">
@@ -237,30 +261,38 @@ const CourseLearning = () => {
 
             <LearningTabs
               tabs={LEARNING_TABS}
-              activeTab="Description"
-              onTabChange={() => {}}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
             />
 
             <div className="min-h-50">
-              {currentLesson && (
+              {activeTab === "Description" && currentLesson && (
+                <Description description={currentLesson.description} />
+              )}
+
+              {activeTab === "Lectures Notes" && currentLesson && (
+                <LectureNotes note={currentLesson.note} />
+              )}
+
+              {activeTab === "Attach File" && (
+                <AttachFiles files={attachFiles} />
+              )}
+
+              {activeTab === "Comments" && (
                 <>
-                  <Description description={currentLesson.description} />
-                  <LectureNotes note={currentLesson.note} />
+                  <InstructorCard instructor={displayCourse.instructorInfo} />
+                  <CommentList reviews={currentData} />
+                  <Pagination
+                    type="secondary"
+                    currentPage={page || currentPage}
+                    totalPages={totalPages}
+                    onChange={handleCommentPageChange}
+                  />
+                  <div className="mt-8">
+                    <CommentForm />
+                  </div>
                 </>
               )}
-              <AttachFiles files={attachFiles} />
-
-              <InstructorCard instructor={displayCourse.instructorInfo} />
-              <CommentList reviews={currentData} />
-              <Pagination
-                type="secondary"
-                currentPage={page || currentPage}
-                totalPages={totalPages}
-                onChange={handleCommentPageChange}
-              />
-              <div className="mt-8">
-                <CommentForm />
-              </div>
             </div>
           </div>
 

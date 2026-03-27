@@ -72,51 +72,55 @@ const mapCourseDetail = (
   curriculum: Section[],
   faqs: CourseFaqAPIData[],
   reviews: ReviewAPIData[],
-  fallback: Course,
+  fallback: Course | undefined,
 ): Course => {
   const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c.name]));
-  const price = api.price ?? fallback.price;
   const mappedReviews = mapReviews(reviews);
+  const price = api.price ?? fallback?.price ?? 0;
+
   const rating =
     mappedReviews.length > 0
       ? mappedReviews.reduce((sum, r) => sum + r.rating, 0) /
         mappedReviews.length
-      : fallback.rating || 0;
+      : (fallback?.rating ?? 0);
 
   return {
     id: api.id,
-    title: api.name ?? fallback.title,
+    title: api.name ?? fallback?.title ?? "Untitled course",
     category:
       api.category?.name ??
       categoryMap[api.categoryId ?? -1] ??
-      fallback.category,
+      fallback?.category ??
+      "Uncategorized",
     author:
       api.lecturerName ??
       [api.lecturer?.firstName, api.lecturer?.lastName]
         .filter(Boolean)
         .join(" ") ??
-      fallback.author,
-    lessons: api.totalLessons ?? fallback.lessons,
-    hours: api.duration ?? fallback.hours,
-    students: api.totalStudents ?? fallback.students,
+      fallback?.author ??
+      "Unknown instructor",
+    lessons: api.totalLessons ?? fallback?.lessons ?? 0,
+    hours: api.duration ?? fallback?.hours ?? "",
+    students: api.totalStudents ?? fallback?.students ?? 0,
     price,
     isFree: price === 0,
-    image: api.thumbnail?.fileUrl ?? fallback.image,
-    description: api.overview ?? fallback.description,
-    whatYouWillLearn: fallback.whatYouWillLearn,
+    image: api.thumbnail?.fileUrl ?? fallback?.image ?? "/example-course1.png",
+    description: api.overview ?? fallback?.description ?? "",
+    whatYouWillLearn: fallback?.whatYouWillLearn ?? [],
     curriculum,
     faqs: mapFaqs(faqs),
     reviews: mappedReviews,
     rating,
-    ratingCount: mappedReviews.length || fallback.ratingCount,
-    instructorInfo: fallback.instructorInfo,
-    lectureNotes: fallback.lectureNotes,
+    ratingCount: mappedReviews.length || fallback?.ratingCount || 0,
+    instructorInfo: fallback?.instructorInfo,
+    lectureNotes: fallback?.lectureNotes,
   };
 };
 
 const CourseDetail = () => {
   const { id } = useParams();
   const [course, setCourse] = useState<Course | null>(null);
+  const [activeTab, setActiveTab] = useState<TabType>("Overview");
 
   const fallbackCourse = useMemo(
     () => MOCK_COURSES.find((c) => c.id.toString() === id),
@@ -146,21 +150,22 @@ const CourseDetail = () => {
       );
 
       const curriculum = mapCurriculum(modules, lessonsByModule);
+      const fallback = MOCK_COURSES.find((c) => c.id === courseId);
 
-      if (fallbackCourse) {
-        setCourse(
-          mapCourseDetail(
-            apiCourse as CourseAPIData,
-            categories as CourseCategoryAPIData[],
-            curriculum,
-            faqs as CourseFaqAPIData[],
-            reviews as ReviewAPIData[],
-            fallbackCourse,
-          ),
-        );
-      }
-    })().catch(() => {});
-  }, [id, fallbackCourse]);
+      setCourse(
+        mapCourseDetail(
+          apiCourse as CourseAPIData,
+          categories as CourseCategoryAPIData[],
+          curriculum,
+          faqs as CourseFaqAPIData[],
+          reviews as ReviewAPIData[],
+          fallback,
+        ),
+      );
+    })().catch(() => {
+      setCourse(null);
+    });
+  }, [id]);
 
   const displayCourse = course || fallbackCourse;
   if (!displayCourse) return <div>Course not found</div>;
@@ -177,28 +182,41 @@ const CourseDetail = () => {
                 <Button
                   key={tab}
                   content={tab}
-                  onClick={() => {}}
+                  onClick={() => setActiveTab(tab)}
                   additionalClass={`
-                    !flex-1 !w-full !rounded-none !text-sm !font-bold !px-6 !py-4 
-                    !border-r !border-gray-100 last:!border-r-0 !transition-all
-                  `}
+        !flex-1 !w-full !rounded-none !text-sm !font-bold !px-6 !py-4
+        !border-r !border-gray-100 last:!border-r-0 !transition-all
+        ${activeTab === tab ? "!bg-orange-50 !text-orange-500" : ""}
+      `}
                 />
               ))}
             </div>
 
             <div className="min-h-75 mb-10">
-              <Overview
-                description={displayCourse.description}
-                learnItems={displayCourse.whatYouWillLearn}
-              />
-              <Curriculum sections={displayCourse.curriculum} />
-              <Instructor data={displayCourse.instructorInfo} />
-              <FAQs data={displayCourse.faqs} />
-              <Reviews
-                reviews={displayCourse.reviews}
-                rating={displayCourse.rating}
-                ratingCount={displayCourse.ratingCount}
-              />
+              {activeTab === "Overview" && (
+                <Overview
+                  description={displayCourse.description}
+                  learnItems={displayCourse.whatYouWillLearn}
+                />
+              )}
+
+              {activeTab === "Curriculum" && (
+                <Curriculum sections={displayCourse.curriculum} />
+              )}
+
+              {activeTab === "Instructor" && (
+                <Instructor data={displayCourse.instructorInfo} />
+              )}
+
+              {activeTab === "FAQs" && <FAQs data={displayCourse.faqs} />}
+
+              {activeTab === "Reviews" && (
+                <Reviews
+                  reviews={displayCourse.reviews}
+                  rating={displayCourse.rating}
+                  ratingCount={displayCourse.ratingCount}
+                />
+              )}
             </div>
 
             <CommentForm />
