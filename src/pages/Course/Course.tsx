@@ -152,7 +152,6 @@ const CoursePage = () => {
       categoryId: filters.categoryId ? String(filters.categoryId) : "",
       level: filters.level || "",
       price: filters.price || "",
-      rating: filters.rating ? String(filters.rating) : "",
     });
   };
 
