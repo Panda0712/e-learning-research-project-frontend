@@ -1,24 +1,34 @@
+import { getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { courseService } from "../../apis/course";
 import CourseHeader from "../../components/course/CourseHeader";
 import CourseList from "../../components/course/CourseList";
 import Sidebar, {
   type CourseFilters,
 } from "../../components/course/CourseSidebar";
 import Pagination from "../../components/ui/Pagination";
-import { color, DEFAULT_ITEMS_PER_PAGE } from "../../utils/constants";
-import { MOCK_COURSES } from "../../utils/mockData";
 import type {
   Course,
   CourseAPIData,
   CourseCategoryAPIData,
-  CourseListAPIResponse,
 } from "../../types/course.type";
-import { useLocation, useNavigate } from "react-router-dom";
-import { courseService } from "../../apis/course";
-import { toast } from "react-toastify";
-import { usePagination } from "../../hooks/usePagination";
+import { color, DEFAULT_ITEMS_PER_PAGE } from "../../utils/constants";
+import { MOCK_COURSES } from "../../utils/mockData";
 
 const ITEMS_PER_PAGE = DEFAULT_ITEMS_PER_PAGE;
+
+type CourseListResponse = {
+  courses: CourseAPIData[];
+  totalCourses: number;
+  pagination: {
+    page: number;
+    itemsPerPage: number;
+    total: number;
+    totalPages: number;
+  };
+};
 
 const normalizeQuery = (search: string) => {
   const params = new URLSearchParams(search);
@@ -37,6 +47,11 @@ const mapCourseList = (
   return apiCourses.map((c, idx) => {
     const fallback = MOCK_COURSES[idx % MOCK_COURSES.length];
     const price = c.price ?? fallback.price;
+    const fullName = [c.lecturer?.firstName, c.lecturer?.lastName]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+
     return {
       id: c.id,
       title: c.name ?? fallback.title,
@@ -44,12 +59,7 @@ const mapCourseList = (
         c.category?.name ??
         categoryMap[c.categoryId ?? -1] ??
         fallback.category,
-      author:
-        c.lecturerName ??
-        [c.lecturer?.firstName, c.lecturer?.lastName]
-          .filter(Boolean)
-          .join(" ") ??
-        fallback.author,
+      author: c.lecturerName || fullName || fallback.author,
       lessons: c.totalLessons ?? fallback.lessons,
       hours: c.duration ?? fallback.hours,
       students: c.totalStudents ?? fallback.students,
@@ -75,14 +85,22 @@ const CoursePage = () => {
     [location.search],
   );
   const page = Number(params.get("page")) || 1;
+  const itemsPerPage = Number(params.get("itemsPerPage")) || ITEMS_PER_PAGE;
+  const totalPages = Math.max(1, Math.ceil(totalCourses / itemsPerPage));
 
-  const listData = courses.length ? courses : MOCK_COURSES;
-  const { currentPage, setCurrentPage, currentData, totalPages } =
-    usePagination({
-      data: listData,
-      itemsPerPage: ITEMS_PER_PAGE,
-      totalData: totalCourses,
-    });
+  const table = useReactTable({
+    data: courses,
+    columns: [],
+    getCoreRowModel: getCoreRowModel(),
+    manualPagination: true,
+    pageCount: totalPages,
+    state: {
+      pagination: {
+        pageIndex: Math.max(0, page - 1),
+        pageSize: itemsPerPage,
+      },
+    },
+  });
 
   useEffect(() => {
     const normalized = normalizeQuery(location.search);
@@ -95,7 +113,9 @@ const CoursePage = () => {
     courseService
       .getCourseCategoriesAPI()
       .then(setCategories)
-      .catch(() => {});
+      .catch(() => {
+        toast.error("Failed to load course category!");
+      });
   }, []);
 
   useEffect(() => {
@@ -106,7 +126,7 @@ const CoursePage = () => {
     setIsLoading(true);
     courseService
       .getCoursesAPI({ searchPath: `?${params.toString()}` })
-      .then((res: CourseListAPIResponse) => {
+      .then((res: CourseListResponse) => {
         setCourses(mapCourseList(res.courses || [], categories));
         setTotalCourses(res.totalCourses || 0);
       })
@@ -116,17 +136,11 @@ const CoursePage = () => {
       .finally(() => setIsLoading(false));
   }, [params, categories]);
 
-  useEffect(() => {
-    setCurrentPage(page);
-  }, [page, setCurrentPage]);
-
-  const handlePageChange = (newPage: number) => {
-    if (newPage > 0 && newPage <= totalPages) {
-      const next = new URLSearchParams(params);
-      next.set("page", String(newPage));
-      setCurrentPage(newPage);
-      navigate({ search: next.toString() });
-    }
+  const handlePageChange = (nextPage: number) => {
+    if (nextPage < 1 || nextPage > table.getPageCount()) return;
+    const next = new URLSearchParams(params);
+    next.set("page", String(nextPage));
+    navigate({ search: next.toString() });
   };
 
   const updateSearch = (patch: Record<string, string>) => {
@@ -169,11 +183,11 @@ const CoursePage = () => {
       <div className="max-w-7xl mx-auto px-4 mt-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 xl:gap-10">
           <main className="lg:col-span-3">
-            <CourseList courses={currentData} isLoading={isLoading} />
+            <CourseList courses={courses} isLoading={isLoading} />
             {!isLoading && (
               <Pagination
-                currentPage={page || currentPage}
-                totalPages={totalPages}
+                currentPage={page}
+                totalPages={table.getPageCount()}
                 onChange={handlePageChange}
                 type="secondary"
               />

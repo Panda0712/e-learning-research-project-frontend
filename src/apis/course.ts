@@ -64,6 +64,20 @@ const getReviewsByCourseIdAPI = async ({
   return res.data;
 };
 
+const getReviewsByCourseIdAPIV2 = async ({
+  courseId,
+  params,
+}: {
+  courseId: number;
+  params?: { limit?: number; page?: number; itemsPerPage?: number };
+}) => {
+  const res = await authorizedAxiosInstance.get(
+    `${API_ROOT}/v1/reviews/by-course-v2/${courseId}`,
+    { params },
+  );
+  return res.data;
+};
+
 const getResourceByIdAPI = async (resourceId: number) => {
   const res = await authorizedAxiosInstance.get(
     `${API_ROOT}/v1/resources/${resourceId}`,
@@ -80,5 +94,6 @@ export const courseService = {
   getModulesByCourseIdAPI,
   getLessonsByModuleIdAPI,
   getReviewsByCourseIdAPI,
+  getReviewsByCourseIdAPIV2,
   getResourceByIdAPI,
 };
