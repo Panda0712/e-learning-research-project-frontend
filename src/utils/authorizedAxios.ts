@@ -39,11 +39,12 @@ authorizedAxiosInstance.interceptors.response.use(
   (error) => {
     interceptorLoadingElements(false);
 
+    if (error.response?.status === 401) {
+      axiosReduxStore.dispatch(logoutUserAPI(false));
+    }
+
     const originalRequests = error.config;
-    if (
-      (error.response?.status === 401 || error.response?.status === 410) &&
-      !originalRequests._retry
-    ) {
+    if (error.response?.status === 410 && !originalRequests._retry) {
       originalRequests._retry = true;
 
       if (!refreshTokenPromise) {

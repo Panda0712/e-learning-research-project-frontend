@@ -2,8 +2,8 @@ import { ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
+  logoutUserAPI,
   selectCurrentUser,
-  setCurrentUser,
 } from "../../redux/activeUser/activeUserSlice";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { menuList } from "../../utils/constants";
@@ -25,7 +25,6 @@ const Navbar = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
-  // 🔥 Click outside to close
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -151,9 +150,8 @@ const Navbar = () => {
               {isUserDropdownOpen && (
                 <div className="absolute top-full right-0 bg-white shadow-lg rounded-lg py-2 w-48 z-50">
                   <button
-                    onClick={() => {
-                      localStorage.removeItem("user");
-                      dispatch(setCurrentUser(null));
+                    onClick={async () => {
+                      await dispatch(logoutUserAPI(true));
                       navigate("/auth/login");
                     }}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"

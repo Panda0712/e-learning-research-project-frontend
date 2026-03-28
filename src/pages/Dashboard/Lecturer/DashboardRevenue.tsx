@@ -1,7 +1,9 @@
 import { ArrowUpDown, Search } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import Pagination from "../../../components/ui/Pagination";
 
+import { AxiosError } from "axios";
 import { dashboardService } from "../../../apis/dashboard";
 import RevenueChart from "../../../components/dashboard/lecturer/revenue/RevenueChart";
 import RevenueStats from "../../../components/dashboard/lecturer/revenue/RevenueStats";
@@ -65,7 +67,11 @@ const DashboardRevenue = () => {
         }));
         setRevenueChartData(transformedData);
       } catch (error) {
-        console.error("Failed to fetch chart data", error);
+        if (error instanceof AxiosError) {
+          console.error("Failed to fetch chart data", error);
+          const errorMessage = error.response?.data?.message || error.message || "Failed to fetch chart data";
+          toast.error(errorMessage);
+        }
       }
     };
 
