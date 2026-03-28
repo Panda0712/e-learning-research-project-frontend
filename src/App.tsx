@@ -6,11 +6,13 @@ import {
   Routes,
 } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
+import RbacRoute from "./components/core/RbacRoute";
 import CourseDetailChapter from "./components/dashboard/admin/courses/course-detail-chapter/CourseDetailChapter";
 import AdminCourseDetail from "./components/dashboard/admin/courses/course-detail/AdminCourseDetail";
 import DashboardCreateEditCurriculum from "./components/dashboard/lecturer/create-course/curriculum/DashboardCreateEditCurriculum";
 import Footer from "./components/ui/Footer";
 import Navbar from "./components/ui/Navbar";
+import { permissions } from "./configs/rbacConfig";
 import AccessDenied from "./pages/AccessDenied/AccessDenied";
 import ForgotPasswordPage from "./pages/Auth/ForgotPasswordPage";
 import LoginPage from "./pages/Auth/LoginPage";
@@ -51,8 +53,6 @@ import { selectCurrentUser } from "./redux/activeUser/activeUserSlice";
 import { useAppSelector } from "./redux/hooks";
 import type { UserProfile } from "./types/user.type";
 import { ACCOUNT_ROLES } from "./utils/constants";
-import RbacRoute from "./components/core/RbacRoute";
-import { permissions } from "./configs/rbacConfig";
 
 const ProtectedRoutes = ({ user }: { user: UserProfile | null }) => {
   if (!user) return <Navigate to="/auth/login" replace={true} />;
@@ -87,6 +87,9 @@ const UnauthorizedRoutes = ({ user }: { user: UserProfile | null }) => {
 const App = () => {
   const currentUser = useAppSelector(selectCurrentUser);
 
+  // console.log("Current User:", currentUser);
+  // console.log("User Role:", currentUser?.role);
+
   return (
     <BrowserRouter>
       <ToastContainer
@@ -105,7 +108,6 @@ const App = () => {
           <Route path="/dashboard" element={<DashboardLayout />}>
             {/* Dashboard lecturer */}
             <Route element={<LecturerRoutes user={currentUser} />}>
-            
               <Route
                 element={
                   <RbacRoute

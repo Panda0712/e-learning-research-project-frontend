@@ -1,19 +1,46 @@
 import { ChevronDown, Search } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { assessmentService } from "../../../apis/assessment.ts";
 import AssessmentDetail from "../../../components/dashboard/lecturer/assessment/AssessmentDetail";
 import AssessmentTable from "../../../components/dashboard/lecturer/assessment/AssessmentTable";
 import Button from "../../../components/ui/Button";
 import Pagination from "../../../components/ui/Pagination";
-import type { AssessmentItem } from "../../../types/assessment.type";
-import { MOCK_DATA_ASSESSMENT } from "../../../utils/mockDataAssessment";
+import { selectCurrentUser } from "../../../redux/activeUser/activeUserSlice";
+import { useAppSelector } from "../../../redux/hooks";
+import type { Assessment } from "../../../types/assessment.type";
 
 const DashboardAssessment = () => {
-  const [data] = useState<AssessmentItem[]>(MOCK_DATA_ASSESSMENT);
+  const [data, setData] = useState<Assessment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
   const [selectedAssessment, setSelectedAssessment] =
-    useState<AssessmentItem | null>(null);
+    useState<Assessment | null>(null);
+  const currentUser = useAppSelector(selectCurrentUser);
+
+  useEffect(() => {
+    const fetchAssessments = async () => {
+      if (!currentUser) return;
+      try {
+        setLoading(true);
+        // console.log("Requesting assessments for lecturerId:", currentUser.id);
+        const response = await assessmentService.getAssessmentsByLecturerIdAPI(
+          currentUser.id,
+        );
+        console.log("Fetched assessments response:", response);
+        setData(response);
+        setLoading(false);
+      } catch (error) {
+        console.error("Failed to fetch assessments:", error);
+        setError("Failed to fetch assessments");
+        setLoading(false);
+      }
+    };
+
+    fetchAssessments();
+  }, [currentUser]);
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -24,13 +51,21 @@ const DashboardAssessment = () => {
     setCurrentPage(page);
   };
 
-  const handleOpenDetail = (item: AssessmentItem) => {
+  const handleOpenDetail = (item: Assessment) => {
     setSelectedAssessment(item);
   };
 
   const handleCloseDetail = () => {
     setSelectedAssessment(null);
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
 
   return (
     <div className="w-full relative">
