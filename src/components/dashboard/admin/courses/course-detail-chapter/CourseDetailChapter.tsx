@@ -1,7 +1,10 @@
+import { AxiosError } from "axios";
 import { ChevronLeft } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { MOCK_COURSES } from "../../../../../utils/mockDataCourseAdmin";
+import { toast } from "react-toastify";
+import { adminCourseService } from "../../../../../apis/adminCourse";
+import type { CurriculumItem } from "../../../../../utils/mockDataCourseAdmin";
 import ChapterDetailTab from "./ChapterDetailTab";
 import ChapterResourcesTab from "./ChapterResourcesTab";
 
@@ -11,17 +14,123 @@ const CourseDetailChapter = () => {
   const [activeTab, setActiveTab] = useState<"Details" | "Resources">(
     "Details",
   );
+  const [chapterData, setChapterData] = useState<CurriculumItem | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const course = MOCK_COURSES.find((c) => c.id === Number(courseId));
+  const getLessonType = (lesson: any): CurriculumItem["type"] => {
+    const fileType = String(
+      lesson?.lessonFile?.fileType || lesson?.lessonVideo?.fileType || "",
+    ).toLowerCase();
 
-  const chapterData = course?.curriculum?.find(
-    (item) => item.id === Number(chapterId),
-  );
+    if ((lesson?.quizzes || []).length > 0) return "Quiz";
+    if (lesson?.lessonVideo?.fileUrl && lesson?.lessonFile?.fileUrl)
+      return "PPT+Video";
+    if (fileType.includes("pdf")) return "PDF";
+    if (fileType.includes("ppt")) return "PPT";
+    return "Video";
+  };
+
+  const getFileNameFromUrl = (url: string) => {
+    if (!url) return "Uploaded file";
+    const cleaned = url.split("?")[0];
+    const parts = cleaned.split("/");
+    return parts[parts.length - 1] || "Uploaded file";
+  };
+
+  useEffect(() => {
+    const fetchLesson = async () => {
+      if (!courseId || !chapterId) return;
+
+      try {
+        setIsLoading(true);
+
+        const result = await adminCourseService.getAdminLessonDetailAPI(
+          Number(courseId),
+          Number(chapterId),
+        );
+
+        const courseStatus = String(result?.course?.status || "").toLowerCase();
+        const lesson = result?.lesson;
+        const lessonVideoUrl = lesson?.lessonVideo?.fileUrl || "";
+        const lessonFileUrl = lesson?.lessonFile?.fileUrl || "";
+
+        const mapped: CurriculumItem = {
+          id: Number(lesson?.id),
+          chapter: result.moduleIndex + 1,
+          status: courseStatus === "published" ? "Published" : "Draft",
+          title: lesson?.title || "Untitled lesson",
+          type: getLessonType(lesson),
+          date: lesson?.createdAt
+            ? new Date(lesson.createdAt).toLocaleDateString()
+            : "",
+          subtitle: result?.module?.title || "",
+          description:
+            lesson?.description ||
+            lesson?.note ||
+            result?.module?.description ||
+            "",
+          contentType: lesson?.lessonVideo?.fileUrl
+            ? "Video lesson"
+            : lesson?.lessonFile?.fileUrl
+              ? "Document lesson"
+              : "Lesson",
+          videoPreview: lessonVideoUrl
+            ? {
+                thumbnail: result?.course?.thumbnail?.fileUrl || "",
+                title: getFileNameFromUrl(lessonVideoUrl),
+                duration: lesson?.duration || "N/A",
+                uploadTime: "FILE UPLOADED",
+                url: lessonVideoUrl,
+              }
+            : undefined,
+          attachedFiles: lessonFileUrl
+            ? [
+                {
+                  id: Number(lesson?.lessonFileId || 0),
+                  name: getFileNameFromUrl(lessonFileUrl),
+                  type:
+                    String(lesson?.lessonFile?.fileType || "").split("/")[1] ||
+                    "file",
+                  url: lessonFileUrl,
+                },
+              ]
+            : [],
+          quizzes: [],
+        };
+
+        setChapterData(mapped);
+      } catch (error) {
+        if (error instanceof AxiosError) {
+          toast.error(
+            error.response?.data?.message ||
+              error.message ||
+              "Failed to load lesson detail",
+          );
+        } else if (error instanceof Error) {
+          toast.error(error.message || "Failed to load lesson detail");
+        }
+
+        setChapterData(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchLesson();
+  }, [courseId, chapterId]);
+
+  if (isLoading) {
+    return (
+      <div className="p-8 text-center text-gray-500">
+        Loading lesson detail...
+      </div>
+    );
+  }
 
   if (!chapterData) {
     return (
       <div className="p-8 text-center text-gray-500">
-        Chapter data not found.
+        Lesson data not found.
       </div>
     );
   }

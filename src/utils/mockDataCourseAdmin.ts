@@ -23,6 +23,7 @@ export interface VideoPreview {
   title: string;
   duration: string;
   uploadTime: string;
+  url?: string;
 }
 
 // --- 2. MAIN INTERFACES (Kiểu dữ liệu chính) ---

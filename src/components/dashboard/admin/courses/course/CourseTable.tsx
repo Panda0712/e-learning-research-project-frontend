@@ -1,9 +1,12 @@
+import { AxiosError } from "axios";
 import { Eye, Lock, MoreHorizontal, SquareCheck, X } from "lucide-react"; // 1. Import Ban
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { adminCourseService } from "../../../../../apis/adminCourse";
 
-import Button from "../../../../ui/Button";
 import type { Course } from "../../../../../utils/mockDataCourseAdmin";
+import Button from "../../../../ui/Button";
 import ActionMenu from "../ActiveMenu";
 import ApproveModal from "../ApproveModal";
 import RejectModal from "../RejectModal";
@@ -11,9 +14,15 @@ import StatusBadge from "./StatusBadge";
 
 interface CourseTableProps {
   data: Course[];
+  isLoading?: boolean;
+  onRefresh?: () => Promise<void> | void;
 }
 
-const CourseTable: React.FC<CourseTableProps> = ({ data }) => {
+const CourseTable: React.FC<CourseTableProps> = ({
+  data,
+  isLoading = false,
+  onRefresh,
+}) => {
   const navigate = useNavigate();
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
@@ -47,22 +56,61 @@ const CourseTable: React.FC<CourseTableProps> = ({ data }) => {
   };
 
   // 2. Thêm hàm Disable
-  const handleDisable = (course: Course) => {
-    console.log("Disabling course:", course.title);
-    setOpenMenuId(null);
-    // Có thể mở Modal confirm disable nếu cần
+  const handleDisable = async (course: Course) => {
+    try {
+      setOpenMenuId(null);
+      await adminCourseService.disableCourseAPI(course.id);
+      toast.success("Course disabled successfully");
+      await onRefresh?.();
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        toast.error(
+          error.response?.data?.message ||
+            error.message ||
+            "Failed to disable course",
+        );
+      }
+    }
   };
 
-  const handleConfirmApprove = () => {
-    if (selectedCourse) console.log("Approved:", selectedCourse.title);
-    setIsApproveModalOpen(false);
-    setSelectedCourse(null);
+  const handleConfirmApprove = async () => {
+    if (!selectedCourse) return;
+
+    try {
+      await adminCourseService.approveCourseAPI(selectedCourse.id);
+      toast.success("Course approved successfully");
+      setIsApproveModalOpen(false);
+      setSelectedCourse(null);
+      await onRefresh?.();
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        toast.error(
+          error.response?.data?.message ||
+            error.message ||
+            "Failed to approve course",
+        );
+      }
+    }
   };
 
-  const handleConfirmReject = (reason: string) => {
-    if (selectedCourse) console.log("Rejected:", selectedCourse.title, reason);
-    setIsRejectModalOpen(false);
-    setSelectedCourse(null);
+  const handleConfirmReject = async (_reason: string) => {
+    if (!selectedCourse) return;
+
+    try {
+      await adminCourseService.rejectCourseAPI(selectedCourse.id);
+      toast.success("Course rejected successfully");
+      setIsRejectModalOpen(false);
+      setSelectedCourse(null);
+      await onRefresh?.();
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        toast.error(
+          error.response?.data?.message ||
+            error.message ||
+            "Failed to reject course",
+        );
+      }
+    }
   };
 
   return (
@@ -93,7 +141,13 @@ const CourseTable: React.FC<CourseTableProps> = ({ data }) => {
         </thead>
 
         <tbody className="divide-y divide-gray-100">
-          {data.length > 0 ? (
+          {isLoading ? (
+            <tr>
+              <td colSpan={7} className="text-center py-8 text-gray-500 italic">
+                Loading courses...
+              </td>
+            </tr>
+          ) : data.length > 0 ? (
             data.map((course) => (
               <tr
                 key={course.id}
