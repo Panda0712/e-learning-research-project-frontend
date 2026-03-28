@@ -1,9 +1,9 @@
 import React from "react";
-import type { AssessmentItem } from "../../../../types/assessment.type";
+import type { Assessment } from "../../../../types/assessment.type";
 
 interface AssessmentTableProps {
-  data: AssessmentItem[];
-  onRowClick: (item: AssessmentItem) => void;
+  data: Assessment[];
+  onRowClick: (item: Assessment) => void;
 }
 
 const AssessmentTable: React.FC<AssessmentTableProps> = ({
@@ -47,14 +47,14 @@ const AssessmentTable: React.FC<AssessmentTableProps> = ({
               <td className="px-6 py-4 font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
                 {item.title}
               </td>
-              <td className="px-6 py-4 text-gray-600">{item.course}</td>
+              <td className="px-6 py-4 text-gray-600">{item.courseName}</td>
               <td className="px-6 py-4 text-gray-600 font-medium">
-                {item.submissions}
+                {item.submissionsText}
               </td>
               <td className="px-6 py-4 text-gray-600">
-                {item.avgScore ? (
+                {item.averageScore ? (
                   <span className="font-semibold text-gray-700">
-                    {item.avgScore}
+                    {item.averageScore}
                   </span>
                 ) : (
                   <span className="text-gray-400 text-xs italic">N/A</span>

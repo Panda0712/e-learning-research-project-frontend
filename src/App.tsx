@@ -136,6 +136,9 @@ const App = () => {
     dispatch(fetchCurrentUserAPI()).catch(() => {});
   }, [dispatch]);
 
+  // console.log("Current User:", currentUser);
+  // console.log("User Role:", currentUser?.role);
+
   return (
     <BrowserRouter>
       <ToastContainer

@@ -9,20 +9,11 @@ import {
   YAxis,
 } from "recharts";
 
-const data = [
-  { name: "Mar", current: 2000, previous: 2200 },
-  { name: "Apr", current: 5000, previous: 4000 },
-  { name: "May", current: 2000, previous: 3000 },
-  { name: "Jun", current: 6000, previous: 5500 },
-  { name: "Jul", current: 7000, previous: 6000 },
-  { name: "Aug", current: 4000, previous: 3000 },
-  { name: "Sep", current: 8000, previous: 7500 },
-  { name: "Oct", current: 5000, previous: 4000 },
-  { name: "Nov", current: 8500, previous: 6000 },
-  { name: "Dec", current: 6000, previous: 3000 },
-];
+interface RevenueChartProps {
+  data: { name: string; revenue: number }[];
+}
 
-const RevenueChart = () => {
+const RevenueChart = ({ data }: RevenueChartProps) => {
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-8">
       <div className="flex items-center justify-between mb-6">
@@ -34,11 +25,7 @@ const RevenueChart = () => {
           <div className="hidden md:flex gap-2">
             <span className="flex items-center text-xs text-gray-500">
               <span className="w-2 h-2 rounded-full bg-blue-600 mr-1"></span>{" "}
-              Chosen Period
-            </span>
-            <span className="flex items-center text-xs text-gray-500">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 mr-1"></span>{" "}
-              Last Period
+              Revenue
             </span>
           </div>
         </div>
@@ -77,18 +64,11 @@ const RevenueChart = () => {
             />
             <Line
               type="monotone"
-              dataKey="current"
+              dataKey="revenue"
               stroke="#2563EB"
               strokeWidth={2}
               dot={false}
               activeDot={{ r: 6 }}
-            />
-            <Line
-              type="monotone"
-              dataKey="previous"
-              stroke="#22D3EE"
-              strokeWidth={2}
-              dot={false}
             />
           </LineChart>
         </ResponsiveContainer>

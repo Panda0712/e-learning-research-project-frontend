@@ -1,12 +1,3 @@
-export interface AssessmentItem {
-  id: number;
-  title: string;
-  course: string;
-  submissions: string;
-  avgScore: string | null;
-  status: "Open" | "Closed";
-}
-
 export interface StudentSubmission {
   id: number;
   studentName: string;
@@ -19,3 +10,30 @@ export interface RevenueStatsProps {
   onWithdrawClick: () => void;
   availableBalance: number;
 }
+
+export interface Assessment {
+  id: number;
+  title: string;
+  courseName?: string;
+  courseId: number;
+  totalSubmissions: number;
+  averageScore: number | null;
+  submissionsText?: string;
+  status: "published" | "draft" | "Open" | "Closed";
+  dueDate: string;
+  lessonId?: number;
+  type?: "Essay" | "Multiple Choice";
+}
+
+export interface NewAssessment {
+  courseId: number;
+  lessonId: number;
+  title: string;
+  type: "Essay" | "Multiple Choice";
+  dueDate: string;
+  status: "published" | "draft";
+  totalSubmissions: number;
+  averageScore: number;
+}
+
+export type UpdateAssessmentPayload = Partial<Assessment>;

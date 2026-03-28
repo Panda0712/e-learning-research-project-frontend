@@ -1,7 +1,10 @@
 import { ArrowUpDown, Search } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import Pagination from "../../../components/ui/Pagination";
 
+import { AxiosError } from "axios";
+import { dashboardService } from "../../../apis/dashboard";
 import RevenueChart from "../../../components/dashboard/lecturer/revenue/RevenueChart";
 import RevenueStats from "../../../components/dashboard/lecturer/revenue/RevenueStats";
 import WithdrawModal from "../../../components/dashboard/lecturer/revenue/WithdrawModal";
@@ -52,6 +55,29 @@ const DashboardRevenue = () => {
 
   const currentBalance = 103.52;
 
+  const [revenueChartData, setRevenueChartData] = useState<{ name: string; revenue: number }[]>([]);
+
+  useEffect(() => {
+    const fetchChartData = async () => {
+      try {
+        const response = await dashboardService.getLecturerChartsAPI({ period: "this_year" });
+        const transformedData = response.labels.map((label, index) => ({
+          name: label,
+          revenue: response.datasets.revenue[index],
+        }));
+        setRevenueChartData(transformedData);
+      } catch (error) {
+        if (error instanceof AxiosError) {
+          console.error("Failed to fetch chart data", error);
+          const errorMessage = error.response?.data?.message || error.message || "Failed to fetch chart data";
+          toast.error(errorMessage);
+        }
+      }
+    };
+
+    fetchChartData();
+  }, []);
+
   return (
     <div className="w-full relative">
       {" "}
@@ -62,7 +88,7 @@ const DashboardRevenue = () => {
         onWithdrawClick={() => setIsWithdrawModalOpen(true)}
         availableBalance={currentBalance}
       />
-      <RevenueChart />
+      <RevenueChart data={revenueChartData} />
       <div className="mb-6">
         <h2 className="text-xl font-bold text-gray-800 mb-4">Transactions</h2>
 
