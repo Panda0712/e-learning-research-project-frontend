@@ -1,25 +1,42 @@
+import { AxiosError } from "axios";
 import { Check, ChevronDown, X } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
-import {
-  MOCK_ACCOUNTS,
-  PRESET_AMOUNTS,
-  type Account,
-} from "../../../../utils/mockDataAccounts";
+import { toast } from "react-toastify";
+import { payoutAccountService } from "../../../../apis/payoutAccount";
+import { payoutAdminService } from "../../../../apis/payoutAdmin";
+import { PRESET_AMOUNTS } from "../../../../utils/mockDataAccounts";
+
+interface PayoutAccount {
+  id: number;
+  cardType?: string | null;
+  cardNumber?: string | null;
+  cardHolderName?: string | null;
+  isDefault?: boolean | null;
+}
 
 interface WithdrawModalProps {
   isOpen: boolean;
   onClose: () => void;
+  lecturerId?: number;
   availableBalance: number;
+  onWithdrawSuccess?: (amount: number) => void | Promise<void>;
 }
 
 const WithdrawModal: React.FC<WithdrawModalProps> = ({
   isOpen,
   onClose,
+  lecturerId,
   availableBalance,
+  onWithdrawSuccess,
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+  const [selectedAccount, setSelectedAccount] = useState<PayoutAccount | null>(
+    null,
+  );
+  const [accounts, setAccounts] = useState<PayoutAccount[]>([]);
   const [amountStr, setAmountStr] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAccountsLoading, setIsAccountsLoading] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -30,6 +47,36 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
       setIsDropdownOpen(false);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      if (!isOpen || !lecturerId) return;
+      try {
+        setIsAccountsLoading(true);
+        const response = await payoutAccountService.getAccountsAPI(lecturerId);
+        const list = Array.isArray(response?.data) ? response.data : [];
+        setAccounts(list);
+
+        const defaultAccount =
+          list.find((account: PayoutAccount) => account.isDefault) ||
+          list[0] ||
+          null;
+        setSelectedAccount(defaultAccount);
+      } catch (error) {
+        if (error instanceof AxiosError) {
+          const errorMessage =
+            error.response?.data?.message ||
+            error.message ||
+            "Failed to load payout accounts";
+          toast.error(errorMessage);
+        }
+      } finally {
+        setIsAccountsLoading(false);
+      }
+    };
+
+    fetchAccounts();
+  }, [isOpen, lecturerId]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -56,12 +103,43 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
   };
 
   const isFormValid =
-    selectedAccount !== null && amountStr !== "" && Number(amountStr) > 0;
+    selectedAccount !== null &&
+    amountStr !== "" &&
+    Number(amountStr) > 0 &&
+    Number(amountStr) <= availableBalance;
 
-  const handleWithdrawSubmit = () => {
-    if (isFormValid) {
-      alert(`Withdraw option: ${amountStr} to ${selectedAccount?.cardNumber}`);
+  const handleWithdrawSubmit = async () => {
+    if (!isFormValid || !selectedAccount || !lecturerId) return;
+
+    const amount = Number(amountStr);
+    if (amount > availableBalance) {
+      toast.error("Amount exceeds available balance");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await payoutAdminService.createPayoutAPI({
+        lecturerId,
+        payoutAccountId: selectedAccount.id,
+        amount,
+        currency: "USD",
+        payoutMethod: selectedAccount.cardType || "bank_transfer",
+      });
+
+      toast.success("Withdrawal request created successfully");
+      await onWithdrawSuccess?.(amount);
       onClose();
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to create withdrawal request";
+        toast.error(errorMessage);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -107,11 +185,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
                 }`}
               >
                 {selectedAccount
-                  ? `${
-                      selectedAccount.bankName
-                        ? selectedAccount.bankName + " "
-                        : ""
-                    }${selectedAccount.cardNumber}`
+                  ? `${selectedAccount.cardType || "Account"} ${selectedAccount.cardNumber || ""}`
                   : "Choose account/ card"}
               </span>
               <ChevronDown size={20} className="text-gray-400" />
@@ -125,7 +199,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
                 <div className="px-4 py-2 text-sm font-bold text-gray-900">
                   Choose account:
                 </div>
-                {MOCK_ACCOUNTS.map((acc) => (
+                {accounts.map((acc) => (
                   <div
                     key={acc.id}
                     onClick={() => {
@@ -142,14 +216,24 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
                           : "text-gray-600"
                       }`}
                     >
-                      {acc.bankName ? `${acc.bankName} ` : ""}
-                      {acc.cardNumber}
+                      {acc.cardType ? `${acc.cardType} ` : "Account "}
+                      {acc.cardNumber || "N/A"}
                     </span>
                     {selectedAccount?.id === acc.id && (
                       <Check size={20} className="text-blue-700" />
                     )}
                   </div>
                 ))}
+                {!isAccountsLoading && accounts.length === 0 && (
+                  <div className="px-4 py-3 text-sm text-gray-500">
+                    No payout account found.
+                  </div>
+                )}
+                {isAccountsLoading && (
+                  <div className="px-4 py-3 text-sm text-gray-500">
+                    Loading accounts...
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -195,17 +279,17 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
           </div>
 
           <button
-            disabled={!isFormValid}
+            disabled={!isFormValid || isSubmitting}
             onClick={handleWithdrawSubmit}
             className={`w-full h-14 rounded-xl font-bold text-lg transition-all duration-200
                 ${
-                  isFormValid
+                  isFormValid && !isSubmitting
                     ? "bg-[#3730a3] text-white hover:bg-[#2e2887] shadow-md cursor-pointer" // Enabled state (Purple)
                     : "bg-gray-100 text-gray-300 cursor-not-allowed" // Disabled state (Gray)
                 }
             `}
           >
-            Withdraw
+            {isSubmitting ? "Submitting..." : "Withdraw"}
           </button>
         </div>
       </div>
