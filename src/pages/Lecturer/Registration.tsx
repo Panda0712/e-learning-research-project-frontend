@@ -1,6 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import { lecturerService } from "../../apis/lecturer";
+import { useAppSelector } from "../../redux/hooks";
+import { selectCurrentUser } from "../../redux/activeUser/activeUserSlice";
 
 const Registration = () => {
+  const currentUser = useAppSelector(selectCurrentUser);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -14,6 +19,19 @@ const Registration = () => {
     bioExperience: "",
     agreeToTerms: false,
   });
+  const [lecturerFile, setLecturerFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      firstName: prev.firstName || currentUser.firstName || "",
+      lastName: prev.lastName || currentUser.lastName || "",
+      phone: prev.phone || currentUser.phoneNumber || "",
+    }));
+  }, [currentUser]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -33,9 +51,59 @@ const Registration = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
+
+    if (!lecturerFile) {
+      toast.error("Please upload your lecturer profile file.");
+      return;
+    }
+
+    if (!formData.agreeToTerms) {
+      toast.error("Please agree to all terms before submitting.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      const uploadedFile = await lecturerService.uploadLecturerFileAPI(
+        lecturerFile,
+      );
+
+      const payload = {
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        dateOfBirth: new Date(formData.birthDate).getTime(),
+        lecturerFile: {
+          publicId: uploadedFile.public_id,
+          fileUrl: uploadedFile.secure_url,
+          fileSize: lecturerFile.size,
+          fileType: lecturerFile.type,
+        },
+        phoneNumber: formData.phone.trim(),
+        gender: formData.gender as "male" | "female" | "other",
+        nationality: formData.nationality,
+        professionalTitle: formData.professionalTitle.trim(),
+        beginStudies: new Date(formData.begunStudies).getTime(),
+        highestDegree: formData.highestDegree as
+          | "bachelor"
+          | "master"
+          | "doctoral"
+          | "professor"
+          | "phd"
+          | "associate_professor"
+          | "emeritus_professor",
+        bio: formData.bioExperience.trim(),
+      };
+
+      await lecturerService.registerLecturerProfileAPI(payload);
+      toast.success("Lecturer registration submitted successfully.");
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to submit lecturer registration.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleCancel = () => {
@@ -52,6 +120,7 @@ const Registration = () => {
       bioExperience: "",
       agreeToTerms: false,
     });
+    setLecturerFile(null);
   };
 
   return (
@@ -172,7 +241,7 @@ const Registration = () => {
                            text-[#333931] font-poppins focus:outline-none focus:ring-2 focus:ring-[#704FE6]"
                   required
                 >
-                  <option value="">Viet Nam</option>
+                  <option value="">Select nationality</option>
                   <option value="vietnam">Vietnam</option>
                   <option value="usa">United States</option>
                   <option value="uk">United Kingdom</option>
@@ -218,7 +287,7 @@ const Registration = () => {
                   Begun Studies <span className="text-red-500">*</span>
                 </label>
                 <input
-                  type="text"
+                  type="date"
                   name="begunStudies"
                   value={formData.begunStudies}
                   onChange={handleChange}
@@ -242,10 +311,13 @@ const Registration = () => {
                   required
                 >
                   <option value="">Select an option</option>
-                  <option value="bachelor">Bachelor's Degree</option>
-                  <option value="master">Master's Degree</option>
+                  <option value="bachelor">Bachelor</option>
+                  <option value="master">Master</option>
+                  <option value="doctoral">Doctoral</option>
+                  <option value="professor">Professor</option>
                   <option value="phd">PhD</option>
-                  <option value="other">Other</option>
+                  <option value="associate_professor">Associate Professor</option>
+                  <option value="emeritus_professor">Emeritus Professor</option>
                 </select>
               </div>
 
@@ -260,12 +332,16 @@ const Registration = () => {
                     className="hidden"
                     id="fileUpload"
                     accept=".pdf,.doc,.docx"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      setLecturerFile(file);
+                    }}
                   />
                   <label
                     htmlFor="fileUpload"
                     className="cursor-pointer text-[14px] text-[#737A86] font-poppins"
                   >
-                    No File Chosen
+                    {lecturerFile ? lecturerFile.name : "No File Chosen"}
                   </label>
                 </div>
               </div>
@@ -307,10 +383,11 @@ const Registration = () => {
               <div className="flex items-center gap-4">
                 <button
                   type="submit"
+                  disabled={submitting}
                   className="px-8 py-3 bg-[#704FE6] text-white text-[15px] font-medium 
-                           rounded-full hover:bg-[#5F3DD4] transition-colors flex items-center gap-2"
+                           rounded-full hover:bg-[#5F3DD4] transition-colors flex items-center gap-2 disabled:opacity-60"
                 >
-                  Submit Now
+                  {submitting ? "Submitting..." : "Submit Now"}
                   <span className="text-lg">→</span>
                 </button>
                 <button
