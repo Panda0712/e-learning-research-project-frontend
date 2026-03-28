@@ -29,6 +29,22 @@ authorizedAxiosInstance.interceptors.request.use(
 
 let refreshTokenPromise: Promise<string> | null = null;
 
+const normalizeErrorMessage = (raw: any) => {
+  if (typeof raw === "string") return raw;
+  if (Array.isArray(raw)) {
+    return raw
+      .map((item) =>
+        typeof item === "string" ? item : item?.message || JSON.stringify(item),
+      )
+      .join("; ");
+  }
+  if (raw && typeof raw === "object") {
+    if (typeof raw.message === "string") return raw.message;
+    return JSON.stringify(raw);
+  }
+  return "Something went wrong";
+};
+
 authorizedAxiosInstance.interceptors.response.use(
   (response) => {
     interceptorLoadingElements(false);
@@ -73,7 +89,7 @@ authorizedAxiosInstance.interceptors.response.use(
     }
 
     if (error.response?.status !== 410) {
-      toast.error(errorMessage);
+      toast.error(normalizeErrorMessage(errorMessage));
     }
 
     return Promise.reject(error);

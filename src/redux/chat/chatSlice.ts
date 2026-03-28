@@ -57,7 +57,7 @@ export type ChatMessage = {
 
 type MessageBucket = {
   items: ChatMessage[];
-  nextCursor: number | null | undefined;
+  nextCursor: string | null | undefined;
   hasMore: boolean;
 };
 
@@ -67,6 +67,8 @@ type ChatState = {
   activeConversationId: number | null;
   loadingConversations: boolean;
   loadingMessages: boolean;
+  conversationsError: string | null;
+  messagesError: string | null;
 };
 
 const initialState: ChatState = {
@@ -75,6 +77,8 @@ const initialState: ChatState = {
   activeConversationId: null,
   loadingConversations: false,
   loadingMessages: false,
+  conversationsError: null,
+  messagesError: null,
 };
 
 const upsertConversation = (
@@ -127,20 +131,20 @@ export const fetchMessagesAPI = createAsyncThunk(
       return {
         conversationId: payload.conversationId,
         messages: [] as ChatMessage[],
-        nextCursor: null as number | null,
+        nextCursor: null as string | null,
       };
     }
 
     const res = await chatService.getMessagesAPI({
       conversationId: payload.conversationId,
-      cursor: typeof cursor === "number" ? cursor : undefined,
+      cursor: typeof cursor === "string" ? cursor : undefined,
       limit: 30,
     });
 
     return {
       conversationId: payload.conversationId,
       messages: (res?.messages ?? []) as ChatMessage[],
-      nextCursor: (res?.nextCursor ?? null) as number | null,
+      nextCursor: (res?.nextCursor ?? null) as string | null,
     };
   },
 );
@@ -279,25 +283,31 @@ const chatSlice = createSlice({
   extraReducers: (builder) => {
     builder.addCase(fetchConversationsAPI.pending, (state) => {
       state.loadingConversations = true;
+      state.conversationsError = null;
     });
 
     builder.addCase(fetchConversationsAPI.fulfilled, (state, action) => {
       state.loadingConversations = false;
+      state.conversationsError = null;
       state.conversations = sortConversations(
         action.payload?.conversations ?? [],
       );
     });
 
-    builder.addCase(fetchConversationsAPI.rejected, (state) => {
+    builder.addCase(fetchConversationsAPI.rejected, (state, action) => {
       state.loadingConversations = false;
+      state.conversationsError =
+        action.error?.message || "Failed to load conversations.";
     });
 
     builder.addCase(fetchMessagesAPI.pending, (state) => {
       state.loadingMessages = true;
+      state.messagesError = null;
     });
 
     builder.addCase(fetchMessagesAPI.fulfilled, (state, action) => {
       state.loadingMessages = false;
+      state.messagesError = null;
 
       const { conversationId, messages, nextCursor } = action.payload;
       const current = state.messagesByConversation[conversationId] ?? {
@@ -313,8 +323,9 @@ const chatSlice = createSlice({
       };
     });
 
-    builder.addCase(fetchMessagesAPI.rejected, (state) => {
+    builder.addCase(fetchMessagesAPI.rejected, (state, action) => {
       state.loadingMessages = false;
+      state.messagesError = action.error?.message || "Failed to load messages.";
     });
 
     builder.addCase(createConversationAPI.fulfilled, (state, action) => {
