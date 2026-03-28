@@ -89,8 +89,12 @@ const LearningSidebar = ({
                   return (
                     <div
                       key={lesson.id}
-                      onClick={() => onSelectLesson?.(lesson)}
+                      onClick={() => {
+                        if (isLocked) return;
+                        onSelectLesson?.(lesson);
+                      }}
                       className={`flex items-start gap-3 p-4 border-b border-gray-50 cursor-pointer transition-colors group
+                            ${isLocked ? "cursor-not-allowed" : ""} 
                             ${isActive ? "bg-orange-50" : "hover:bg-gray-50"}`}
                     >
                       <div className="mt-0.5 shrink-0">

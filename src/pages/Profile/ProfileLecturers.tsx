@@ -65,7 +65,7 @@ const ProfileLecturers = () => {
       const params = new URLSearchParams(location.search);
       params.set("page", newPage.toString());
       setCurrentPage(newPage);
-      navigate(`${params.toString()}`);
+      navigate(`?${params.toString()}`);
     }
   };
 

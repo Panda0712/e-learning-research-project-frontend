@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import { courseService } from "../../apis/course";
+import { lecturerLessonService } from "../../apis/lecturer/lesson";
+import { lecturerModuleService } from "../../apis/lecturer/module";
 import CommentForm from "../../components/comment/CommentForm";
 import CourseDetailHeader from "../../components/course/details/CourseDetailHeader";
 import CourseSidebar from "../../components/course/details/CourseSideBar";
@@ -77,6 +80,10 @@ const mapCourseDetail = (
   const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c.name]));
   const mappedReviews = mapReviews(reviews);
   const price = api.price ?? fallback?.price ?? 0;
+  const fullName = [api.lecturer?.firstName, api.lecturer?.lastName]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
 
   const rating =
     mappedReviews.length > 0
@@ -93,12 +100,7 @@ const mapCourseDetail = (
       fallback?.category ??
       "Uncategorized",
     author:
-      api.lecturerName ??
-      [api.lecturer?.firstName, api.lecturer?.lastName]
-        .filter(Boolean)
-        .join(" ") ??
-      fallback?.author ??
-      "Unknown instructor",
+      api.lecturerName ?? fullName ?? fallback?.author ?? "Unknown instructor",
     lessons: api.totalLessons ?? fallback?.lessons ?? 0,
     hours: api.duration ?? fallback?.hours ?? "",
     students: api.totalStudents ?? fallback?.students ?? 0,
@@ -133,24 +135,40 @@ const CourseDetail = () => {
     const courseId = Number(id);
 
     (async () => {
-      const [apiCourse, faqs, reviews, categories] = await Promise.all([
-        courseService.getCourseByIdAPI(courseId),
-        courseService.getCourseFaqsByCourseIdAPI(courseId),
-        courseService.getReviewsByCourseIdAPI({
-          courseId,
-          params: { limit: 50 },
-        }),
-        courseService.getCourseCategoriesAPI(),
-      ]);
+      const [courseRes, faqsRes, reviewsRes, categoriesRes] =
+        await Promise.allSettled([
+          courseService.getCourseByIdAPI(courseId),
+          courseService.getCourseFaqsByCourseIdAPI(courseId),
+          courseService.getReviewsByCourseIdAPI({
+            courseId,
+            params: { limit: 50 },
+          }),
+          courseService.getCourseCategoriesAPI(),
+        ]);
 
       const modules: ModuleAPIData[] =
-        await courseService.getModulesByCourseIdAPI(courseId);
+        await lecturerModuleService.getPublicModulesByCourseIdAPI(courseId);
       const lessonsByModule: LessonAPIData[][] = await Promise.all(
-        modules.map((m) => courseService.getLessonsByModuleIdAPI(m.id)),
+        modules.map((m) =>
+          lecturerLessonService.getPublicLessonsByModuleIdAPI(m.id),
+        ),
       );
 
       const curriculum = mapCurriculum(modules, lessonsByModule);
       const fallback = MOCK_COURSES.find((c) => c.id === courseId);
+
+      const apiCourse =
+        courseRes.status === "fulfilled" ? courseRes.value : null;
+      if (!apiCourse) {
+        toast.error("Failed to load course details data!");
+        return;
+      }
+
+      const faqs = faqsRes.status === "fulfilled" ? faqsRes.value : [];
+      const reviews =
+        reviewsRes.status === "fulfilled" ? (reviewsRes.value.data ?? []) : [];
+      const categories =
+        categoriesRes.status === "fulfilled" ? categoriesRes.value : [];
 
       setCourse(
         mapCourseDetail(

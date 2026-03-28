@@ -16,6 +16,22 @@ const createQuestionAPI = async (payload: {
   return res.data;
 };
 
+const getQuestionsByIdAPI = async (id: number) => {
+  const res = await authorizedAxiosInstance.get(
+    `${API_ROOT}/v1/questions/by-id/${id}`,
+  );
+  return res.data;
+};
+
+const getQuestionsByQuizAPI = async (quizId: number) => {
+  const res = await authorizedAxiosInstance.get(
+    `${API_ROOT}/v1/questions/by-quiz/${quizId}`,
+  );
+  return res.data;
+};
+
 export const lecturerQuestionService = {
   createQuestionAPI,
+  getQuestionsByIdAPI,
+  getQuestionsByQuizAPI,
 };

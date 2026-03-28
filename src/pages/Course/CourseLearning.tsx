@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { courseService } from "../../apis/course";
+import { lecturerLessonService } from "../../apis/lecturer/lesson";
+import { lecturerModuleService } from "../../apis/lecturer/module";
 import CommentForm from "../../components/comment/CommentForm";
 import CommentList from "../../components/comment/CommentListCourse";
 import AttachFiles from "../../components/course/learning/AttachFiles";
@@ -25,6 +27,7 @@ import type {
   Review,
   ReviewAPIData,
 } from "../../types/course.type";
+import { DEFAULT_ITEMS_PER_PAGE } from "../../utils/constants";
 import { MOCK_COURSES } from "../../utils/mockData";
 
 const LEARNING_TABS: TabType[] = [
@@ -132,9 +135,11 @@ const CourseLearning = () => {
       ]);
 
       const modules: ModuleAPIData[] =
-        await courseService.getModulesByCourseIdAPI(courseId);
+        await lecturerModuleService.getLearningModulesByCourseIdAPI(courseId);
       const lessonsByModule: LessonAPIData[][] = await Promise.all(
-        modules.map((m) => courseService.getLessonsByModuleIdAPI(m.id)),
+        modules.map((m) =>
+          lecturerLessonService.getLearningLessonsByModuleIdAPI(m.id),
+        ),
       );
 
       const mappedSections: LearningSection[] = modules.map((m, idx) => ({
@@ -176,14 +181,17 @@ const CourseLearning = () => {
     if (!id) return;
     const courseId = Number(id);
     courseService
-      .getReviewsByCourseIdAPI({ courseId, params: { limit: 50 } })
-      .then((res: ReviewAPIData[]) => {
-        const mapped = mapReviews(res || []);
+      .getReviewsByCourseIdAPI({
+        courseId,
+        params: { limit: 50, page, itemsPerPage: DEFAULT_ITEMS_PER_PAGE },
+      })
+      .then((res) => {
+        const mapped = mapReviews(res.data || []);
         setReviews(mapped);
-        setTotalReviews(mapped.length);
+        setTotalReviews(res.pagination.total);
       })
       .catch(() => {});
-  }, [id, location.search]);
+  }, [id, location.search, page]);
 
   useEffect(() => {
     setCurrentPage(page);
