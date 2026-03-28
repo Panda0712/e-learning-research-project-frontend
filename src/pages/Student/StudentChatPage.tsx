@@ -4,6 +4,7 @@ import Picker from "@emoji-mart/react";
 import { Search, Send, Smile } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { toast } from "react-toastify";
 import { profileService } from "../../apis/profile";
 import { selectCurrentUser } from "../../redux/activeUser/activeUserSlice";
 import {
@@ -14,11 +15,17 @@ import {
   sendDirectMessageAPI,
   setActiveConversation,
 } from "../../redux/chat/chatSlice";
+import {
+  connectChatSocket,
+  disconnectChatSocket,
+  syncConversationRooms,
+} from "../../redux/chat/socket";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { store } from "../../redux/store";
 
 const STUDENT_CHAT_DEFAULTS = {
   page: 1,
-  itemsPerPage: 50,
+  limit: 50,
 };
 
 const StudentChatPage = () => {
@@ -42,7 +49,20 @@ const StudentChatPage = () => {
     : [];
 
   useEffect(() => {
-    dispatch(fetchConversationsAPI());
+    connectChatSocket(store);
+
+    return () => {
+      disconnectChatSocket();
+    };
+  }, []);
+
+  useEffect(() => {
+    dispatch(fetchConversationsAPI())
+      .unwrap()
+      .then(() => {
+        syncConversationRooms(store);
+      })
+      .catch(() => {});
   }, [dispatch]);
 
   useEffect(() => {
@@ -51,17 +71,17 @@ const StudentChatPage = () => {
 
     const query = new URLSearchParams({
       page: String(STUDENT_CHAT_DEFAULTS.page),
-      itemsPerPage: String(STUDENT_CHAT_DEFAULTS.itemsPerPage),
+      limit: String(STUDENT_CHAT_DEFAULTS.limit),
       q: "",
     });
 
     profileService
-      .getLecturersByStudentIdAPI({
-        studentId,
-        searchPath: `?${query.toString()}`,
-      })
+      .getMyLecturersAPI(`?${query.toString()}`)
       .then((res) => {
         setLecturers(res?.lecturers ?? []);
+      })
+      .catch((error: any) => {
+        toast.error(error?.message || "Cannot get lecturers!");
       });
   }, [currentUser?.id]);
 
@@ -94,17 +114,17 @@ const StudentChatPage = () => {
     const content = text.trim();
     if (!content) return;
 
-    if (activeConversationId) {
-      await dispatch(
-        sendDirectMessageAPI({ conversationId: activeConversationId, content }),
-      );
-    } else {
-      const lecturer = filteredLecturers[0];
-      if (!lecturer?.id) return;
-      await dispatch(
-        sendDirectMessageAPI({ recipientId: lecturer.id, content }),
-      );
+    if (!activeConversationId) {
+      toast.error("Please choose a lecturer first.");
+      return;
     }
+
+    await dispatch(
+      sendDirectMessageAPI({
+        conversationId: activeConversationId,
+        content,
+      }),
+    );
 
     setText("");
   };
@@ -217,15 +237,21 @@ const StudentChatPage = () => {
                 <Smile size={18} />
               </button>
               <input
+                disabled={!activeConversationId}
                 className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none"
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && onSend()}
-                placeholder="Type a message..."
+                placeholder={
+                  activeConversationId
+                    ? "Type a message..."
+                    : "Choose a lecturer first..."
+                }
               />
               <button
                 type="button"
                 onClick={onSend}
+                disabled={!activeConversationId}
                 className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white"
               >
                 <Send size={16} />

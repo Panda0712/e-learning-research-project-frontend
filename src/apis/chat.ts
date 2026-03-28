@@ -18,16 +18,19 @@ const createConversationAPI = async (recipientId: number) => {
 
 const getMessagesAPI = async (params: {
   conversationId: number;
-  cursor?: string | null;
+  cursor?: number | null;
   limit?: number;
 }) => {
-  const query = new URLSearchParams();
-  query.set("limit", String(params.limit ?? PAGE_LIMIT));
-  if (params.cursor) query.set("cursor", params.cursor);
-
   const res = await authorizedAxiosInstance.get(
-    `${API_ROOT}/v1/conversations/${params.conversationId}/messages${query.toString()}`,
+    `${API_ROOT}/v1/conversations/${params.conversationId}/messages`,
+    {
+      params: {
+        limit: params.limit ?? PAGE_LIMIT,
+        ...(params.cursor ? { cursor: params.cursor } : {}),
+      },
+    },
   );
+
   return res.data;
 };
 

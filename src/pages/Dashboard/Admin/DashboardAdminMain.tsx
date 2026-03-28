@@ -135,6 +135,7 @@ const mapDateFilterToPeriod = (filter: DateFilter): DashboardPeriod => {
   if (filter === "all") return "all_time";
   if (filter === "last-month") return "last_month";
   if (filter === "this-month") return "this_month";
+  if (filter === "custom") return "this_year";
   return "this_year";
 };
 
@@ -234,24 +235,28 @@ const DashboardAdminMain = () => {
   );
 
   const signUpBarData = useMemo(() => {
-    const apiData = chart?.datasets.signup ?? [];
-    const hasApiData = apiData.length > 0 && apiData.some((v) => v > 0);
+    const labels = chart?.labels ?? [];
+    const apiData = chart?.datasets.signups ?? [];
 
-    if (!hasApiData) return engagementByYear[2025];
+    const hasApiShape = labels.length > 0 && apiData.length === labels.length;
 
-    return (chart?.labels ?? []).map((label, idx) => ({
+    if (!hasApiShape) return engagementByYear[2025];
+
+    return labels.map((label, idx) => ({
       month: label,
       value: apiData[idx] ?? 0,
     }));
   }, [chart]);
 
   const revenueLineData = useMemo(() => {
+    const labels = chart?.labels ?? [];
     const apiData = chart?.datasets.revenue ?? [];
-    const hasApiData = apiData.length > 0 && apiData.some((v) => v > 0);
 
-    if (!hasApiData) return revenueByMonth[month] ?? [];
+    const hasApiShape = labels.length > 0 && apiData.length === labels.length;
 
-    return (chart?.labels ?? []).map((label, idx) => ({
+    if (!hasApiShape) return revenueByMonth[month] ?? [];
+
+    return labels.map((label, idx) => ({
       day: toRevenueDay(label, idx),
       value: apiData[idx] ?? 0,
     }));
@@ -354,7 +359,8 @@ const DashboardAdminMain = () => {
                   <p
                     className="text-[14px] text-[#3B82F6] font-normal"
                     onClick={() => {
-                      setDateFilter("custom");
+                      setDateFilter("this-year");
+                      setOpenFilter(false);
                     }}
                   >
                     Custom Range

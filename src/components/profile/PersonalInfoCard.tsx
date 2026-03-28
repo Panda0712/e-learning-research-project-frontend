@@ -1,15 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import type { UserProfile } from "../../types/user.type";
+import { buildDateOfBirthV2 } from "../../utils/helpers";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
 
 const schema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().optional(),
-  email: z.email("Invalid email").min(1, "Email is required"),
   phoneNumber: z.string().optional(),
   birthDay: z
     .number("Must be a number")
@@ -34,6 +34,25 @@ type Props = {
 };
 
 const PersonalInfoCard = ({ profile, onSave }: Props) => {
+  const normalizedDateOfBirth = useMemo(() => {
+    const raw = profile?.dateOfBirth;
+    if (!raw) return null;
+
+    const date = raw instanceof Date ? raw : new Date(raw);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }, [profile?.dateOfBirth]);
+
+  const initialBirth = useMemo(
+    () => ({
+      birthDay: normalizedDateOfBirth?.getDate() ?? undefined,
+      birthMonth: normalizedDateOfBirth
+        ? normalizedDateOfBirth.getMonth() + 1
+        : undefined,
+      birthYear: normalizedDateOfBirth?.getFullYear() ?? undefined,
+    }),
+    [normalizedDateOfBirth],
+  );
+
   const {
     register,
     handleSubmit,
@@ -44,13 +63,8 @@ const PersonalInfoCard = ({ profile, onSave }: Props) => {
     defaultValues: {
       firstName: profile?.firstName ?? "",
       lastName: profile?.lastName ?? undefined,
-      email: profile?.email ?? "",
       phoneNumber: profile?.phoneNumber ?? undefined,
-      birthDay: profile?.dateOfBirth?.getDate() ?? null,
-      birthMonth: profile?.dateOfBirth
-        ? profile?.dateOfBirth?.getMonth() + 1
-        : null,
-      birthYear: profile?.dateOfBirth?.getFullYear() ?? null,
+      ...initialBirth,
     },
   });
 
@@ -58,18 +72,24 @@ const PersonalInfoCard = ({ profile, onSave }: Props) => {
     reset({
       firstName: profile?.firstName ?? "",
       lastName: profile?.lastName ?? undefined,
-      email: profile?.email ?? "",
       phoneNumber: profile?.phoneNumber ?? undefined,
-      birthDay: profile?.dateOfBirth?.getDate() ?? undefined,
-      birthMonth: profile?.dateOfBirth
-        ? profile?.dateOfBirth?.getMonth() + 1
-        : null,
-      birthYear: profile?.dateOfBirth?.getFullYear() ?? undefined,
+      ...initialBirth,
     });
-  }, [profile, reset]);
+  }, [profile, reset, initialBirth]);
 
   const onSubmit = async (values: FormValues) => {
-    if (onSave) await onSave(values);
+    const payload = {
+      firstName: values.firstName,
+      lastName: values.lastName,
+      phoneNumber: values.phoneNumber,
+      dateOfBirth: buildDateOfBirthV2(
+        values.birthDay,
+        values.birthMonth,
+        values.birthYear,
+      ),
+    };
+
+    if (onSave) await onSave(payload);
   };
 
   return (
@@ -113,10 +133,12 @@ const PersonalInfoCard = ({ profile, onSave }: Props) => {
           <Input
             variant="outline"
             type="text"
-            {...register("email")}
+            value={profile?.email ?? ""}
+            disabled
+            // {...register("email")}
             className="mt-1 w-full border rounded px-3 py-2"
           />
-          <p className="text-xs text-red-500 mt-1">{errors.email?.message}</p>
+          {/* <p className="text-xs text-red-500 mt-1">{errors.email?.message}</p> */}
         </div>
 
         <div>

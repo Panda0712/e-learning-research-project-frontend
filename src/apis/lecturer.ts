@@ -10,7 +10,6 @@ const getMyStudentsAPI = async (lecturerId: number) => {
   return res.data;
 };
 
-
 export const lecturerService = {
   getMyStudentsAPI,
 };

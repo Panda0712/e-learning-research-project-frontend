@@ -14,7 +14,6 @@ export const injectStore = (mainStore: any) => {
 const authorizedAxiosInstance = axios.create();
 
 authorizedAxiosInstance.defaults.timeout = 1000 * 60 * 10;
-
 authorizedAxiosInstance.defaults.withCredentials = true;
 
 authorizedAxiosInstance.interceptors.request.use(
@@ -39,11 +38,14 @@ authorizedAxiosInstance.interceptors.response.use(
   (error) => {
     interceptorLoadingElements(false);
 
-    if (error.response?.status === 401) {
+    const originalRequests = error.config;
+    const requestUrl = String(originalRequests?.url || "");
+    const isLogoutRequest = requestUrl.includes("/v1/users/logout");
+
+    if (error.response?.status === 401 && !isLogoutRequest) {
       axiosReduxStore.dispatch(logoutUserAPI(false));
     }
 
-    const originalRequests = error.config;
     if (error.response?.status === 410 && !originalRequests._retry) {
       originalRequests._retry = true;
 

@@ -4,21 +4,19 @@ import storage from "redux-persist/lib/storage";
 import { userReducer } from "./activeUser/activeUserSlice";
 import { chatReducer } from "./chat/chatSlice";
 
-const rootPersistConfig = {
-  key: "root",
-  storage: storage,
-  whitelist: ["user"],
+const userPersistConfig = {
+  key: "user",
+  storage,
+  whitelist: ["currentUser"],
 };
 
 const reducers = combineReducers({
-  user: userReducer,
+  user: persistReducer(userPersistConfig, userReducer),
   chat: chatReducer,
 });
 
-const persistedReducers = persistReducer(rootPersistConfig, reducers);
-
 export const store = configureStore({
-  reducer: persistedReducers,
+  reducer: reducers,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({ serializableCheck: false }),
 });

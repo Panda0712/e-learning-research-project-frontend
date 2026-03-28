@@ -6,7 +6,10 @@ import CourseCard from "../../components/cards/CourseCard";
 import CourseCardSkeleton from "../../components/skeleton/CourseCardSkeleton";
 import Pagination from "../../components/ui/Pagination";
 import { usePagination } from "../../hooks/usePagination";
-import { selectCurrentUser } from "../../redux/activeUser/activeUserSlice";
+import {
+  selectAuthResolved,
+  selectCurrentUser,
+} from "../../redux/activeUser/activeUserSlice";
 import { useAppSelector } from "../../redux/hooks";
 import type {
   ProfileCourseDetailAPIData,
@@ -50,6 +53,8 @@ const ProfileMyCourses = () => {
   const page = Number(query.get("page")) || 1;
 
   const currentUser = useAppSelector(selectCurrentUser);
+  const authResolved = useAppSelector(selectAuthResolved);
+
   const { currentPage, setCurrentPage, currentData, totalPages } =
     usePagination({
       data: courses.length ? handleMapCoursesData(courses) : mockCourses,
@@ -72,18 +77,30 @@ const ProfileMyCourses = () => {
     setIsLoading(false);
   };
 
+  const handleReset = () => {
+    setCourses([]);
+    setTotalCourses(0);
+    setIsLoading(false);
+    return;
+  };
+
   useEffect(() => {
+    if (!authResolved) return;
+
+    if (!currentUser) {
+      handleReset();
+      return;
+    }
+
     setIsLoading(true);
     profileService
-      .getCoursesByStudentIdAPI({
-        studentId: currentUser?.id,
-        searchPath: location.search,
-      })
+      .getMyCoursesAPI(location.search)
       .then(handleAfterGetCourses)
       .catch((error) => {
         toast.error(error?.message || "Cannot get courses!");
-      });
-  }, [currentUser?.id, location.search]);
+      })
+      .finally(() => setIsLoading(false));
+  }, [authResolved, currentUser, location.search]);
 
   return (
     <div className="bg-white p-6 rounded-lg">

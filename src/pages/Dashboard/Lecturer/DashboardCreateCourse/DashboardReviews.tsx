@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useState } from "react";
+import { lecturerCourseInsightsService } from "../../../../apis/lecturer/courseInsights";
 import DashboardReviewsSection from "../../../../components/dashboard/lecturer/create-course/reviews/DashboardReviewsSection";
 import DashboardStatisticThumb from "../../../../components/dashboard/lecturer/create-course/reviews/DashboardStatisticThumb";
 
@@ -19,92 +22,51 @@ interface RatingData {
   commentedAt: Date;
 }
 
-const mockReviewsData: ReviewsData = {
-  totalReview: 1000,
-  oneStarReviews: 100,
-  twoStartReviews: 100,
-  threeStartReviews: 100,
-  fourStarReviews: 100,
-  fiveStarReviews: 100,
+const emptyStats: ReviewsData = {
+  totalReview: 0,
+  oneStarReviews: 0,
+  twoStartReviews: 0,
+  threeStartReviews: 0,
+  fourStarReviews: 0,
+  fiveStarReviews: 0,
 };
 
-const mockRatingData: RatingData[] = [
-  {
-    id: 1,
-    name: "Chris Walter",
-    avatar: "/avatar1.png",
-    content:
-      "I was initially apprehensive, having no prior design experience. But the instructor, John Doe, did an amazing job of breaking down complex concepts into easily digestible modules. The video lectures were engaging, and the real-world examples really helped solidify my understanding.",
-    rating: 4,
-    commentedAt: new Date(),
-  },
-  {
-    id: 2,
-    name: "Chris Walter",
-    avatar: "/avatar1.png",
-    content:
-      "I was initially apprehensive, having no prior design experience. But the instructor, John Doe, did an amazing job of breaking down complex concepts into easily digestible modules. The video lectures were engaging, and the real-world examples really helped solidify my understanding.",
-    rating: 4,
-    commentedAt: new Date(),
-  },
-  {
-    id: 3,
-    name: "Chris Walter",
-    avatar: "/avatar1.png",
-
-    content:
-      "I was initially apprehensive, having no prior design experience. But the instructor, John Doe, did an amazing job of breaking down complex concepts into easily digestible modules. The video lectures were engaging, and the real-world examples really helped solidify my understanding.",
-    rating: 4,
-    commentedAt: new Date(),
-  },
-  {
-    id: 4,
-    name: "Chris Walter",
-    avatar: "/avatar1.png",
-
-    content:
-      "I was initially apprehensive, having no prior design experience. But the instructor, John Doe, did an amazing job of breaking down complex concepts into easily digestible modules. The video lectures were engaging, and the real-world examples really helped solidify my understanding.",
-    rating: 4,
-    commentedAt: new Date(),
-  },
-  {
-    id: 5,
-    name: "Chris Walter",
-    avatar: "/avatar1.png",
-
-    content:
-      "I was initially apprehensive, having no prior design experience. But the instructor, John Doe, did an amazing job of breaking down complex concepts into easily digestible modules. The video lectures were engaging, and the real-world examples really helped solidify my understanding.",
-    rating: 4,
-    commentedAt: new Date(),
-  },
-  {
-    id: 6,
-    name: "Chris Walter",
-    avatar: "/avatar1.png",
-
-    content:
-      "I was initially apprehensive, having no prior design experience. But the instructor, John Doe, did an amazing job of breaking down complex concepts into easily digestible modules. The video lectures were engaging, and the real-world examples really helped solidify my understanding.",
-    rating: 4,
-    commentedAt: new Date(),
-  },
-  {
-    id: 7,
-    name: "Chris Walter",
-    avatar: "/avatar1.png",
-
-    content:
-      "I was initially apprehensive, having no prior design experience. But the instructor, John Doe, did an amazing job of breaking down complex concepts into easily digestible modules. The video lectures were engaging, and the real-world examples really helped solidify my understanding.",
-    rating: 4,
-    commentedAt: new Date(),
-  },
-];
-
 const DashboardReviews = () => {
+  const [stats, setStats] = useState<ReviewsData>(emptyStats);
+  const [rows, setRows] = useState<RatingData[]>([]);
+
+  useEffect(() => {
+    lecturerCourseInsightsService
+      .getReviewsByCourseAPI({ page: 1, limit: 100 })
+      .then((res) => {
+        const summary = res?.statistics || {};
+        setStats({
+          totalReview: Number(summary.totalReviews || 0),
+          oneStarReviews: Number(summary.oneStar || 0),
+          twoStartReviews: Number(summary.twoStar || 0),
+          threeStartReviews: Number(summary.threeStar || 0),
+          fourStarReviews: Number(summary.fourStar || 0),
+          fiveStarReviews: Number(summary.fiveStar || 0),
+        });
+
+        const mapped = (res?.data || []).map((item: any) => ({
+          id: Number(item.id),
+          name: String(item.studentName || item.student?.firstName || ""),
+          avatar: String(item.studentAvatar || "/avatar1.png"),
+          content: String(item.content || ""),
+          rating: Number(item.rating || 0),
+          commentedAt: new Date(item.createdAt || Date.now()),
+        })) as RatingData[];
+
+        setRows(mapped);
+      });
+  }, []);
+
   return (
     <>
-      <DashboardStatisticThumb data={mockReviewsData} />
+      <DashboardStatisticThumb data={stats} />
       <div className="h-1"></div>
-      <DashboardReviewsSection data={mockRatingData} />
+      <DashboardReviewsSection data={rows} />
     </>
   );
 };
