@@ -8,43 +8,38 @@ import {
   Trash,
   X,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  adminVoucherService,
+  type VoucherCategoryItem,
+  type VoucherDiscountUnit,
+  type VoucherItem,
+} from "../../../apis/adminVoucher";
+import { DEFAULT_ITEMS_PER_PAGE } from "../../../utils/constants";
+import { toast } from "react-toastify";
 
-interface Voucher {
-  id: number;
-  name: string;
-  discount: number;
-  code: string;
-  usageLimit: number;
-  usedCount: number;
-  minOrder: number;
-  expiryDate: string;
-}
+const toDateInput = (value?: string | null) => {
+  if (!value) return "";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toISOString().slice(0, 10);
+};
 
 const DashboardVoucher = () => {
-  const [vouchers, setVouchers] = useState<Voucher[]>(
-    Array.from({ length: 12 }, (_, i) => ({
-      id: i + 1,
-      name: i % 2 === 0 ? "Noel Discount" : "Summer Sale",
-      discount: i % 2 === 0 ? 30 : 15,
-      code: i % 2 === 0 ? `NOEL${i}` : `SUMMER${i}`,
-      usageLimit: 100,
-      usedCount: i * 2,
-      minOrder: 50,
-      expiryDate: "2025-06-15",
-    })),
-  );
-
+  const [vouchers, setVouchers] = useState<VoucherItem[]>([]);
+  const [voucherCategories, setVoucherCategories] = useState<
+    VoucherCategoryItem[]
+  >([]);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [totalPages, setTotalPages] = useState(0);
+  const itemsPerPage = DEFAULT_ITEMS_PER_PAGE;
 
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = vouchers.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(vouchers.length / itemsPerPage);
-
-  const goToNext = () =>
+  const goToNext = () => {
+    if (totalPages <= 1) return;
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
   const goToPrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
 
   const [showModal, setShowModal] = useState(false);
@@ -57,12 +52,60 @@ const DashboardVoucher = () => {
   const [formData, setFormData] = useState({
     name: "",
     discount: "",
+    discountUnit: "percent" as VoucherDiscountUnit,
     code: "",
     usageLimit: "",
-    minOrder: "",
-    expiryDate: "",
+    minOrderValue: "",
+    description: "",
+    status: "active" as "active" | "scheduled" | "expired",
+    maxValue: "",
+    categoryId: "",
+    startingDate: "",
+    startingTime: "",
+    endingDate: "",
+    endingTime: "",
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  const selectedCategoryLabel = useMemo(() => {
+    const id = Number(formData.categoryId);
+    if (!id) return "";
+    return voucherCategories.find((c) => c.id === id)?.name || "";
+  }, [formData.categoryId, voucherCategories]);
+
+  const fetchVoucherCategories = async () => {
+    try {
+      const categories = await adminVoucherService.getVoucherCategoriesAPI();
+      setVoucherCategories(categories);
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to fetch voucher categories.");
+    }
+  };
+
+  const fetchVouchers = async (page: number) => {
+    try {
+      setLoading(true);
+      const response = await adminVoucherService.getVouchersAPI({
+        page,
+        itemsPerPage,
+      });
+
+      setVouchers(response.data || []);
+      setTotalPages(response.pagination?.totalPages || 0);
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to fetch vouchers.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchVoucherCategories();
+  }, []);
+
+  useEffect(() => {
+    fetchVouchers(currentPage);
+  }, [currentPage]);
 
   const toggleMenu = (id: number) => {
     if (openMenuId === id) setOpenMenuId(null);
@@ -79,24 +122,34 @@ const DashboardVoucher = () => {
     const newErrors: { [key: string]: string } = {};
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const discount = Number(formData.discount);
+    const usageLimit = Number(formData.usageLimit);
+    const minOrderValue = Number(formData.minOrderValue);
+    const maxValue = Number(formData.maxValue);
 
     if (!formData.name.trim()) newErrors.name = "Required";
-    if (
-      !formData.discount ||
-      Number(formData.discount) <= 0 ||
-      Number(formData.discount) > 100
-    )
+    if (!formData.discount || discount <= 0) newErrors.discount = "> 0";
+    if (formData.discountUnit === "percent" && discount > 100)
       newErrors.discount = "1-100%";
     if (!formData.code.trim()) newErrors.code = "Required";
-    if (!formData.usageLimit || Number(formData.usageLimit) <= 0)
+    if (!formData.usageLimit || usageLimit <= 0)
       newErrors.usageLimit = "> 0";
-    if (!formData.minOrder || Number(formData.minOrder) < 0)
-      newErrors.minOrder = ">= 0";
+    if (!formData.minOrderValue || minOrderValue < 0)
+      newErrors.minOrderValue = ">= 0";
+    if (!formData.maxValue || maxValue < 0) newErrors.maxValue = ">= 0";
 
-    if (!formData.expiryDate) {
-      newErrors.expiryDate = "Required";
-    } else if (new Date(formData.expiryDate) < today) {
-      newErrors.expiryDate = "Future date required";
+    if (!formData.endingDate) {
+      newErrors.endingDate = "Required";
+    } else if (new Date(formData.endingDate) < today) {
+      newErrors.endingDate = "Future date required";
+    }
+
+    if (formData.startingDate && formData.endingDate) {
+      const start = new Date(formData.startingDate);
+      const end = new Date(formData.endingDate);
+      if (start > end) {
+        newErrors.startingDate = "Start date must be before end date";
+      }
     }
 
     setErrors(newErrors);
@@ -108,65 +161,86 @@ const DashboardVoucher = () => {
     setFormData({
       name: "",
       discount: "",
+      discountUnit: "percent",
       code: "",
       usageLimit: "",
-      minOrder: "",
-      expiryDate: "",
+      minOrderValue: "",
+      description: "",
+      status: "active",
+      maxValue: "",
+      categoryId: "",
+      startingDate: "",
+      startingTime: "",
+      endingDate: "",
+      endingTime: "",
     });
     setErrors({});
     setShowModal(true);
   };
 
-  const handleEditClick = (item: Voucher) => {
+  const handleEditClick = (item: VoucherItem) => {
     setIsEditing(true);
     setCurrentVoucherId(item.id);
     setFormData({
       name: item.name,
-      discount: item.discount.toString(),
+      discount: String(item.discount ?? ""),
+      discountUnit: (item.discountUnit || "percent") as VoucherDiscountUnit,
       code: item.code,
-      usageLimit: item.usageLimit.toString(),
-      minOrder: item.minOrder.toString(),
-      expiryDate: item.expiryDate,
+      usageLimit: String(item.usageLimit ?? ""),
+      minOrderValue: String(item.minOrderValue ?? ""),
+      description: item.description || "",
+      status: (item.status || "active") as "active" | "scheduled" | "expired",
+      maxValue: String(item.maxValue ?? ""),
+      categoryId: String(item.categoryId || ""),
+      startingDate: toDateInput(item.startingDate),
+      startingTime: item.startingTime || "",
+      endingDate: toDateInput(item.endingDate),
+      endingTime: item.endingTime || "",
     });
     setErrors({});
     setShowModal(true);
     setOpenMenuId(null);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    if (isEditing && currentVoucherId !== null) {
-      setVouchers((prev) =>
-        prev.map((v) =>
-          v.id === currentVoucherId
-            ? {
-                ...v,
-                name: formData.name,
-                discount: Number(formData.discount),
-                code: formData.code,
-                usageLimit: Number(formData.usageLimit),
-                minOrder: Number(formData.minOrder),
-                expiryDate: formData.expiryDate,
-              }
-            : v,
-        ),
-      );
-    } else {
-      const newVoucher: Voucher = {
-        id: Date.now(),
-        name: formData.name,
+    try {
+      setSubmitting(true);
+
+      const payload = {
+        name: formData.name.trim(),
         discount: Number(formData.discount),
-        code: formData.code,
+        discountUnit: formData.discountUnit,
+        code: formData.code.trim(),
         usageLimit: Number(formData.usageLimit),
-        usedCount: 0,
-        minOrder: Number(formData.minOrder),
-        expiryDate: formData.expiryDate,
+        minOrderValue: Number(formData.minOrderValue),
+        description: formData.description.trim(),
+        status: formData.status,
+        maxValue: Number(formData.maxValue),
+        ...(formData.categoryId ? { categoryId: Number(formData.categoryId) } : {}),
+        ...(formData.startingDate ? { startingDate: formData.startingDate } : {}),
+        ...(formData.startingTime ? { startingTime: formData.startingTime } : {}),
+        ...(formData.endingDate ? { endingDate: formData.endingDate } : {}),
+        ...(formData.endingTime ? { endingTime: formData.endingTime } : {}),
       };
-      setVouchers([newVoucher, ...vouchers]);
-      setCurrentPage(1);
+
+      if (isEditing && currentVoucherId !== null) {
+        await adminVoucherService.updateVoucherAPI(currentVoucherId, payload);
+        toast.success("Updated voucher successfully.");
+      } else {
+        await adminVoucherService.createVoucherAPI(payload);
+        toast.success("Created voucher successfully.");
+        setCurrentPage(1);
+      }
+
+      setShowModal(false);
+      await fetchVouchers(isEditing ? currentPage : 1);
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to save voucher.");
+    } finally {
+      setSubmitting(false);
     }
-    setShowModal(false);
   };
 
   const handleDeleteClick = (id: number) => {
@@ -175,16 +249,28 @@ const DashboardVoucher = () => {
     setOpenMenuId(null);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (voucherToDelete !== null) {
-      setVouchers((prev) => prev.filter((v) => v.id !== voucherToDelete));
-      setShowDeleteModal(false);
-      setVoucherToDelete(null);
-      if (currentItems.length === 1 && currentPage > 1) {
-        setCurrentPage((prev) => prev - 1);
+      try {
+        await adminVoucherService.deleteVoucherAPI(voucherToDelete);
+        toast.success("Deleted voucher successfully.");
+
+        setShowDeleteModal(false);
+        setVoucherToDelete(null);
+        const shouldMovePrev = vouchers.length === 1 && currentPage > 1;
+        if (shouldMovePrev) {
+          setCurrentPage((prev) => prev - 1);
+          return;
+        }
+
+        await fetchVouchers(currentPage);
+      } catch (error: any) {
+        toast.error(error?.message || "Failed to delete voucher.");
       }
     }
   };
+
+  const currentItems = vouchers;
 
   return (
     <div
@@ -205,7 +291,7 @@ const DashboardVoucher = () => {
 
       {/* TABLE */}
       <div
-        className="bg-white rounded-xl shadow-sm overflow-hidden 
+        className="bg-white rounded-xl shadow-sm overflow-visible 
       border border-gray-100 mb-6"
       >
         <table className="w-full text-left border-collapse">
@@ -214,27 +300,30 @@ const DashboardVoucher = () => {
               <th className="p-4 text-sm font-semibold text-gray-600 pl-6">
                 Voucher Name
               </th>
-              <th className="p-4 text-sm font-semibold text-gray-600">
-                Discount (%)
-              </th>
+              <th className="p-4 text-sm font-semibold text-gray-600">Discount</th>
+              <th className="p-4 text-sm font-semibold text-gray-600">Category</th>
               <th className="p-4 text-sm font-semibold text-gray-600">Code</th>
               <th className="p-4 text-sm font-semibold text-gray-600 text-center">
                 Limit
               </th>
-              <th className="p-4 text-sm font-semibold text-gray-600 text-center">
-                Used
-              </th>
               <th className="p-4 text-sm font-semibold text-gray-600">
                 Min Order
               </th>
-              <th className="p-4 text-sm font-semibold text-gray-600">
-                Expiry
-              </th>
+              <th className="p-4 text-sm font-semibold text-gray-600">Max Value</th>
+              <th className="p-4 text-sm font-semibold text-gray-600">Amount</th>
+              <th className="p-4 text-sm font-semibold text-gray-600">Status</th>
               <th className="p-4 text-sm font-semibold text-gray-600"></th>
             </tr>
           </thead>
           <tbody>
-            {currentItems.map((item) => (
+            {loading ? (
+              <tr>
+                <td colSpan={10} className="p-8 text-center text-gray-500">
+                  Loading vouchers...
+                </td>
+              </tr>
+            ) : null}
+            {currentItems.map((item, index) => (
               <tr
                 key={item.id}
                 className="border-b border-gray-50 hover:bg-gray-50"
@@ -242,20 +331,31 @@ const DashboardVoucher = () => {
                 <td className="p-4 pl-6 text-sm font-medium text-gray-800">
                   {item.name}
                 </td>
-                <td className="p-4 text-sm text-gray-600">{item.discount}%</td>
+                <td className="p-4 text-sm text-gray-600">
+                  {item.discount ?? 0}
+                  {item.discountUnit === "percent" ? "%" : ""}
+                </td>
+                <td className="p-4 text-sm text-gray-600">
+                  {item.category?.name || "-"}
+                </td>
                 <td className="p-4 text-sm font-bold text-gray-700">
                   {item.code}
                 </td>
                 <td className="p-4 text-sm text-gray-600 text-center">
-                  {item.usageLimit}
-                </td>
-                <td className="p-4 text-sm text-gray-600 text-center">
-                  {item.usedCount}
+                  {item.usageLimit ?? 0}
                 </td>
                 <td className="p-4 text-sm text-gray-800 font-medium">
-                  ${item.minOrder}
+                  ${item.minOrderValue ?? 0}
                 </td>
-                <td className="p-4 text-sm text-gray-600">{item.expiryDate}</td>
+                <td className="p-4 text-sm text-gray-800 font-medium">
+                  ${item.maxValue ?? 0}
+                </td>
+                <td className="p-4 text-sm text-gray-800 font-medium">
+                  ${item.amount ?? 0}
+                </td>
+                <td className="p-4 text-sm text-gray-600">
+                  {(item.status || "active").toUpperCase()}
+                </td>
 
                 <td className="p-4 relative">
                   <button
@@ -269,8 +369,10 @@ const DashboardVoucher = () => {
                   </button>
                   {openMenuId === item.id && (
                     <div
-                      className="absolute right-8 top-10 w-32 bg-white rounded-lg 
-                    shadow-xl border border-gray-100 z-10 overflow-hidden animate-fade-in"
+                      className={`absolute right-8 w-32 bg-white rounded-lg 
+                    shadow-xl border border-gray-100 z-20 overflow-hidden animate-fade-in ${
+                      index >= currentItems.length - 2 ? "bottom-10" : "top-10"
+                    }`}
                     >
                       <button
                         onClick={(e) => {
@@ -297,9 +399,9 @@ const DashboardVoucher = () => {
                 </td>
               </tr>
             ))}
-            {vouchers.length === 0 && (
+            {!loading && vouchers.length === 0 && (
               <tr>
-                <td colSpan={8} className="p-8 text-center text-gray-500">
+                <td colSpan={10} className="p-8 text-center text-gray-500">
                   No vouchers found.
                 </td>
               </tr>
@@ -344,7 +446,7 @@ const DashboardVoucher = () => {
 
             <button
               onClick={goToNext}
-              disabled={currentPage === totalPages}
+              disabled={totalPages <= 1 || currentPage >= totalPages}
               className="relative inline-flex items-center rounded-r-md px-3 py-2 
               text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 
               focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -360,7 +462,7 @@ const DashboardVoucher = () => {
           className="fixed inset-0 z-50 flex items-center justify-center 
         bg-black/20 backdrop-blur-[1px]"
         >
-          <div className="bg-white rounded-xl w-112.5 shadow-2xl animate-scale-up p-6 relative">
+          <div className="bg-white rounded-xl w-full max-w-4xl shadow-2xl animate-scale-up p-6 relative mx-4 max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setShowModal(false)}
               className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
@@ -370,7 +472,7 @@ const DashboardVoucher = () => {
             <h2 className="text-xl font-bold text-gray-900 mb-6">
               {isEditing ? "Edit Voucher" : "Add New Voucher"}
             </h2>
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-sm text-gray-500">Voucher Name</label>
                 <input
@@ -390,15 +492,30 @@ const DashboardVoucher = () => {
               </div>
               <div className="space-y-1">
                 <label className="text-sm text-gray-500">Discount (%)</label>
-                <input
-                  type="number"
-                  name="discount"
-                  value={formData.discount}
-                  onChange={handleInputChange}
-                  className={`w-full border rounded-lg p-3 text-sm focus:outline-none 
-                    focus:border-blue-500 ${errors.discount ? "border-red-500" : "border-gray-200"}`}
-                  placeholder="0"
-                />
+                <div className="grid grid-cols-3 gap-2">
+                  <input
+                    type="number"
+                    name="discount"
+                    value={formData.discount}
+                    onChange={handleInputChange}
+                    className={`col-span-2 w-full border rounded-lg p-3 text-sm focus:outline-none 
+                      focus:border-blue-500 ${errors.discount ? "border-red-500" : "border-gray-200"}`}
+                    placeholder="0"
+                  />
+                  <select
+                    value={formData.discountUnit}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        discountUnit: e.target.value as VoucherDiscountUnit,
+                      })
+                    }
+                    className="w-full border rounded-lg p-3 text-sm border-gray-200"
+                  >
+                    <option value="percent">%</option>
+                    <option value="amount">Amount</option>
+                  </select>
+                </div>
                 {errors.discount && (
                   <p className="text-red-500 text-xs flex items-center gap-1">
                     <AlertCircle size={12} /> {errors.discount}
@@ -423,6 +540,27 @@ const DashboardVoucher = () => {
                 )}
               </div>
               <div className="space-y-1">
+                <label className="text-sm text-gray-500">Voucher Category</label>
+                <select
+                  value={formData.categoryId}
+                  onChange={(e) =>
+                    setFormData({ ...formData, categoryId: e.target.value })
+                  }
+                  className="w-full border rounded-lg p-3 text-sm border-gray-200"
+                >
+                  <option value="">Select category</option>
+                  {voucherCategories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+                {selectedCategoryLabel ? (
+                  <p className="text-xs text-gray-500">Selected: {selectedCategoryLabel}</p>
+                ) : null}
+              </div>
+
+              <div className="space-y-1">
                 <label className="text-sm text-gray-500">Usage Limit</label>
                 <input
                   type="number"
@@ -441,47 +579,143 @@ const DashboardVoucher = () => {
               </div>
               <div className="space-y-1">
                 <label className="text-sm text-gray-500">
-                  Min. Order Value
+                  Min Order Value
                 </label>
                 <input
                   type="number"
-                  name="minOrder"
-                  value={formData.minOrder}
+                  name="minOrderValue"
+                  value={formData.minOrderValue}
                   onChange={handleInputChange}
                   className={`w-full border rounded-lg p-3 text-sm focus:outline-none 
-                    focus:border-blue-500 ${errors.minOrder ? "border-red-500" : "border-gray-200"}`}
+                    focus:border-blue-500 ${errors.minOrderValue ? "border-red-500" : "border-gray-200"}`}
                   placeholder="0"
                 />
-                {errors.minOrder && (
+                {errors.minOrderValue && (
                   <p className="text-red-500 text-xs flex items-center gap-1">
-                    <AlertCircle size={12} /> {errors.minOrder}
+                    <AlertCircle size={12} /> {errors.minOrderValue}
                   </p>
                 )}
               </div>
+
+              <div className="space-y-1">
+                <label className="text-sm text-gray-500">Max Value</label>
+                <input
+                  type="number"
+                  name="maxValue"
+                  value={formData.maxValue}
+                  onChange={handleInputChange}
+                  className={`w-full border rounded-lg p-3 text-sm focus:outline-none 
+                    focus:border-blue-500 ${errors.maxValue ? "border-red-500" : "border-gray-200"}`}
+                  placeholder="0"
+                />
+                {errors.maxValue && (
+                  <p className="text-red-500 text-xs flex items-center gap-1">
+                    <AlertCircle size={12} /> {errors.maxValue}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-sm text-gray-500">Description</label>
+                <input
+                  type="text"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  className="w-full border rounded-lg p-3 text-sm border-gray-200"
+                  placeholder="Voucher description"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-sm text-gray-500">Status</label>
+                <select
+                  value={formData.status}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      status: e.target.value as "active" | "scheduled" | "expired",
+                    })
+                  }
+                  className="w-full border rounded-lg p-3 text-sm border-gray-200"
+                >
+                  <option value="active">Active</option>
+                  <option value="scheduled">Scheduled</option>
+                  <option value="expired">Expired</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-sm text-gray-500">Start Date</label>
+                <input
+                  type="date"
+                  name="startingDate"
+                  value={formData.startingDate}
+                  onChange={handleInputChange}
+                  className={`w-full border rounded-lg p-3 text-sm focus:outline-none 
+                    focus:border-blue-500 text-gray-500 ${
+                      errors.startingDate ? "border-red-500" : "border-gray-200"
+                    }`}
+                />
+                {errors.startingDate && (
+                  <p className="text-red-500 text-xs flex items-center gap-1">
+                    <AlertCircle size={12} /> {errors.startingDate}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-sm text-gray-500">Start Time</label>
+                <input
+                  type="time"
+                  name="startingTime"
+                  value={formData.startingTime}
+                  onChange={handleInputChange}
+                  className="w-full border rounded-lg p-3 text-sm border-gray-200"
+                />
+              </div>
+
               <div className="space-y-1">
                 <label className="text-sm text-gray-500">Expiry Date</label>
                 <input
                   type="date"
-                  name="expiryDate"
-                  value={formData.expiryDate}
+                  name="endingDate"
+                  value={formData.endingDate}
                   onChange={handleInputChange}
                   className={`w-full border rounded-lg p-3 text-sm focus:outline-none 
                     focus:border-blue-500 text-gray-500 ${
-                      errors.expiryDate ? "border-red-500" : "border-gray-200"
+                      errors.endingDate ? "border-red-500" : "border-gray-200"
                     }`}
                 />
-                {errors.expiryDate && (
+                {errors.endingDate && (
                   <p className="text-red-500 text-xs flex items-center gap-1">
-                    <AlertCircle size={12} /> {errors.expiryDate}
+                    <AlertCircle size={12} /> {errors.endingDate}
                   </p>
                 )}
               </div>
+
+              <div className="space-y-1">
+                <label className="text-sm text-gray-500">Expiry Time</label>
+                <input
+                  type="time"
+                  name="endingTime"
+                  value={formData.endingTime}
+                  onChange={handleInputChange}
+                  className="w-full border rounded-lg p-3 text-sm border-gray-200"
+                />
+              </div>
+
               <button
                 onClick={handleSubmit}
-                className="w-full bg-[#3B82F6] hover:bg-blue-600 text-white 
+                disabled={submitting}
+                className="w-full md:col-span-2 bg-[#3B82F6] hover:bg-blue-600 text-white 
                 font-bold py-3 rounded-lg mt-4 shadow-blue-200 shadow-md transition-all"
               >
-                {isEditing ? "Update Voucher" : "Add Voucher"}
+                {submitting
+                  ? "Saving..."
+                  : isEditing
+                    ? "Update Voucher"
+                    : "Add Voucher"}
               </button>
             </div>
           </div>

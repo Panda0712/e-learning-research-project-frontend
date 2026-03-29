@@ -22,6 +22,32 @@ type NotificationListResponse = {
   };
 };
 
+const SETTINGS_STORAGE_KEY = 'lecturer_notification_settings';
+
+const defaultSettings = {
+  enrollment: true,
+  comment: true,
+  assignment: true,
+  email: true,
+  doNotDisturb: false,
+};
+
+const readLocalSettings = () => {
+  try {
+    const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    if (!raw) return defaultSettings;
+    return { ...defaultSettings, ...JSON.parse(raw) };
+  } catch {
+    return defaultSettings;
+  }
+};
+
+const writeLocalSettings = (data: Record<string, boolean>) => {
+  const next = { ...readLocalSettings(), ...data };
+  localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(next));
+  return next;
+};
+
 const getNotificationSettingsAPI = async () => {
   const response = await authorizedAxiosInstance.get(
     `${API_ROOT}/v1/users/notification-settings`,

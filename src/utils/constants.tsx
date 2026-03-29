@@ -14,6 +14,7 @@ import {
   FileText,
   LayoutDashboard,
   Receipt,
+  Tag,
   TicketPercent,
   User,
   Wallet,
@@ -93,6 +94,11 @@ export const menuDashboard2 = [
     label: "Voucher",
     path: "/dashboard/admin/vouchers",
     icon: <TicketPercent size={22} />,
+  },
+  {
+    label: "Voucher Category",
+    path: "/dashboard/admin/voucher-categories",
+    icon: <Tag size={22} />,
   },
 ];
 
@@ -205,9 +211,9 @@ export const PASSWORD_RULE_MESSAGE =
   "Password has to be at least 1 character, 1 number and 8 characters min.";
 export const PASSWORD_CONFIRMATION_MESSAGE = "Confirm password not match!";
 
-let apiRoot = "http://localhost:3000";
+let apiRoot = "http://localhost:8017";
 if (import.meta.env.VITE_BUILD_MODE === "dev") {
-  apiRoot = "http://localhost:3000";
+  apiRoot = "http://localhost:8017";
 }
 if (import.meta.env.VITE_BUILD_MODE === "production") {
   apiRoot = "https://meo-station-backend.onrender.com";
