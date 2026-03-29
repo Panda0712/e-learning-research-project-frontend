@@ -14,6 +14,22 @@ import {
 } from "../../../../redux/chat/chatSlice";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 
+const MOCK_LECTURER_MESSAGES = [
+  {
+    id: -1,
+    senderId: -1,
+    content: "Bạn chưa có cuộc trò chuyện nào.",
+    createdAt: new Date().toISOString(),
+    conversationId: -1,
+    sender: {
+      id: -1,
+      firstName: "System",
+      lastName: "",
+      avatarUrl: null,
+    },
+  },
+];
+
 const getDisplayName = (user?: {
   firstName?: string | null;
   lastName?: string | null;
@@ -33,9 +49,6 @@ const Messages = () => {
 
   const activeConversationId = chatState?.activeConversationId ?? null;
   const loadingConversations = chatState?.loadingConversations ?? false;
-  const loadingMessages = chatState?.loadingMessages ?? false;
-  const conversationsError = chatState?.conversationsError ?? "";
-  const messagesError = chatState?.messagesError ?? "";
 
   const lecturerConversations = useMemo(() => {
     const conversations = chatState?.conversations ?? [];
@@ -167,10 +180,6 @@ const Messages = () => {
             <div className="p-4 text-sm text-gray-500">
               Loading conversations...
             </div>
-          ) : conversationsError ? (
-            <div className="p-4 text-sm text-red-600">
-              {conversationsError}
-            </div>
           ) : filteredConversations.length === 0 ? (
             <div className="p-4 text-sm text-gray-500">
               No student has contacted you yet!
@@ -239,10 +248,6 @@ const Messages = () => {
             <p className="text-sm text-gray-500">
               Choose 1 student to start chatting.
             </p>
-          ) : loadingMessages && currentMessages.length === 0 ? (
-            <p className="text-sm text-gray-500">Loading messages...</p>
-          ) : messagesError && currentMessages.length === 0 ? (
-            <p className="text-sm text-red-600">{messagesError}</p>
           ) : (
             <InfiniteScroll
               dataLength={currentMessages.length}
@@ -255,12 +260,11 @@ const Messages = () => {
               }
               style={{ display: "flex", flexDirection: "column-reverse" }}
             >
-              {currentMessages.length === 0 && (
-                <p className="text-center text-xs text-gray-500">
-                  No messages yet.
-                </p>
-              )}
-              {[...currentMessages]
+              {[
+                ...(currentMessages.length
+                  ? currentMessages
+                  : MOCK_LECTURER_MESSAGES),
+              ]
                 .reverse()
                 .map((message) => {
                   const isOwn =
