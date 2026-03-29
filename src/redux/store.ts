@@ -2,6 +2,7 @@ import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import { persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import { userReducer } from "./activeUser/activeUserSlice";
+import { adminUserReducer } from "./adminUser/adminUserSlice";
 import { chatReducer } from "./chat/chatSlice";
 
 const userPersistConfig = {
@@ -13,6 +14,7 @@ const userPersistConfig = {
 const reducers = combineReducers({
   user: persistReducer(userPersistConfig, userReducer),
   chat: chatReducer,
+  adminUser: adminUserReducer,
 });
 
 export const store = configureStore({
