@@ -4,6 +4,16 @@ import { lecturerService } from "../../apis/lecturer";
 import { useAppSelector } from "../../redux/hooks";
 import { selectCurrentUser } from "../../redux/activeUser/activeUserSlice";
 
+const PHONE_RULE = /^(0|\+84)(3[2-9]|5[6|8|9]|7[0|6-9]|8[1-5]|9[0-9])[0-9]{7}$/;
+
+const getErrorMessage = (error: any) => {
+  return (
+    error?.response?.data?.message ||
+    error?.message ||
+    "Failed to submit lecturer registration."
+  );
+};
+
 const Registration = () => {
   const currentUser = useAppSelector(selectCurrentUser);
   const [formData, setFormData] = useState({
@@ -54,6 +64,11 @@ const Registration = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!currentUser) {
+      toast.error("Please login before submitting lecturer registration.");
+      return;
+    }
+
     if (!lecturerFile) {
       toast.error("Please upload your lecturer profile file.");
       return;
@@ -64,6 +79,19 @@ const Registration = () => {
       return;
     }
 
+    const normalizedPhone = formData.phone.trim().replace(/[\s.-]/g, "");
+    if (!PHONE_RULE.test(normalizedPhone)) {
+      toast.error("Invalid phone number! Please use VN format (0xxxxxxxxx or +84xxxxxxxxx).");
+      return;
+    }
+
+    const dateOfBirth = new Date(formData.birthDate).getTime();
+    const beginStudies = new Date(formData.begunStudies).getTime();
+    if (!Number.isFinite(dateOfBirth) || !Number.isFinite(beginStudies)) {
+      toast.error("Birth Date and Begun Studies must be valid dates.");
+      return;
+    }
+
     try {
       setSubmitting(true);
 
@@ -71,21 +99,28 @@ const Registration = () => {
         lecturerFile,
       );
 
+      const uploadedPublicId = uploadedFile?.public_id || uploadedFile?.publicId;
+      const uploadedSecureUrl = uploadedFile?.secure_url || uploadedFile?.fileUrl;
+
+      if (!uploadedPublicId || !uploadedSecureUrl) {
+        throw new Error("Upload file response is missing publicId/fileUrl.");
+      }
+
       const payload = {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
-        dateOfBirth: new Date(formData.birthDate).getTime(),
+        dateOfBirth,
         lecturerFile: {
-          publicId: uploadedFile.public_id,
-          fileUrl: uploadedFile.secure_url,
+          publicId: uploadedPublicId,
+          fileUrl: uploadedSecureUrl,
           fileSize: lecturerFile.size,
           fileType: lecturerFile.type,
         },
-        phoneNumber: formData.phone.trim(),
+        phoneNumber: normalizedPhone,
         gender: formData.gender as "male" | "female" | "other",
-        nationality: formData.nationality,
+        nationality: formData.nationality.trim(),
         professionalTitle: formData.professionalTitle.trim(),
-        beginStudies: new Date(formData.begunStudies).getTime(),
+        beginStudies,
         highestDegree: formData.highestDegree as
           | "bachelor"
           | "master"
@@ -100,7 +135,7 @@ const Registration = () => {
       await lecturerService.registerLecturerProfileAPI(payload);
       toast.success("Lecturer registration submitted successfully.");
     } catch (error: any) {
-      toast.error(error?.message || "Failed to submit lecturer registration.");
+      toast.error(getErrorMessage(error));
     } finally {
       setSubmitting(false);
     }
