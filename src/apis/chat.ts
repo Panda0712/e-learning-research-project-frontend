@@ -18,7 +18,7 @@ const createConversationAPI = async (recipientId: number) => {
 
 const getMessagesAPI = async (params: {
   conversationId: number;
-  cursor?: string | null;
+  cursor?: number | null;
   limit?: number;
 }) => {
   const res = await authorizedAxiosInstance.get(
