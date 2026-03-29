@@ -10,12 +10,17 @@ import { columns } from "./DashboardCurriculumColumns";
 
 interface TableProps {
   data: CurriculumData[];
+  actions: {
+    onEdit: (id: number) => void;
+    onDelete: (id: number) => void;
+    onDetail: (id: number) => void;
+  };
 }
 
-const DashboardCurriculumTable = ({ data }: TableProps) => {
+const DashboardCurriculumTable = ({ data, actions }: TableProps) => {
   const table = useReactTable({
     data,
-    columns,
+    columns: columns(actions),
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     initialState: {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronLeft, Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -7,37 +8,35 @@ import {
   useFieldArray,
   useForm,
 } from "react-hook-form";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { lecturerCourseService } from "../../../../../apis/lecturer/course";
 import { lecturerLessonService } from "../../../../../apis/lecturer/lesson";
 import { lecturerModuleService } from "../../../../../apis/lecturer/module";
 import { lecturerQuestionService } from "../../../../../apis/lecturer/question";
 import { lecturerQuizService } from "../../../../../apis/lecturer/quiz";
-import Button from "../../../../ui/Button";
-import Input from "../../../../ui/Input";
-import { Field } from "../../../../ui/InputBox";
 import {
   curriculumSchema,
   type CurriculumFormValues,
 } from "../../../../../schemas/curriculum.schema";
+import Button from "../../../../ui/Button";
+import Input from "../../../../ui/Input";
+import { Field } from "../../../../ui/InputBox";
 import CurriculumFileUploader from "./CurriculumFileUploader";
 import CurriculumModalQuizUpload from "./CurriculumModalQuizUpload";
 import CurriculumVideoUploaderV2 from "./CurriculumVideoUploaderV2";
 
 const DashboardCreateEditCurriculum = () => {
+  const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
   const [openQuizModal, setOpenQuizModal] = useState(false);
   const [activeQuizLessonIndex, setActiveQuizLessonIndex] = useState<
     number | null
   >(null);
-  const [submitAction, setSubmitAction] = useState<"delete" | "save" | "publish">(
-    "save",
-  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tab, setTab] = useState<"Details" | "Resources">("Details");
-  const [searchParams] = useSearchParams();
-
-  const navigate = useNavigate();
 
   const methods = useForm<CurriculumFormValues>({
     resolver: zodResolver(curriculumSchema),
@@ -63,6 +62,7 @@ const DashboardCreateEditCurriculum = () => {
     register,
     control,
     handleSubmit,
+    reset,
     formState: { errors },
   } = methods;
 
@@ -107,10 +107,15 @@ const DashboardCreateEditCurriculum = () => {
     setActiveQuizLessonIndex(null);
   }, []);
 
-  const onSubmit = async (data: CurriculumFormValues) => {
-    if (submitAction === "delete") {
+  const onSubmit = async (
+    data: CurriculumFormValues,
+    action: "delete" | "save" | "publish",
+  ) => {
+    if (action === "delete") {
       localStorage.removeItem("curriculumTitle");
       localStorage.removeItem("cc");
+      localStorage.removeItem("lecturerCurriculumReady");
+      reset();
       navigate("/dashboard/lecturer/my-courses/create-course/curriculum");
       return;
     }
@@ -119,13 +124,25 @@ const DashboardCreateEditCurriculum = () => {
     const courseIdFromContext = contextRaw
       ? Number((JSON.parse(contextRaw) as { courseId?: number }).courseId)
       : NaN;
-    const courseIdFromStorage = Number(localStorage.getItem("lecturerCreatedCourseId"));
-    const courseId = Number.isInteger(courseIdFromContext) && courseIdFromContext > 0
-      ? courseIdFromContext
-      : courseIdFromStorage;
+    const courseIdFromStorage = Number(
+      localStorage.getItem("lecturerCreatedCourseId"),
+    );
+    const courseId =
+      Number.isInteger(courseIdFromContext) && courseIdFromContext > 0
+        ? courseIdFromContext
+        : courseIdFromStorage;
 
     if (!Number.isInteger(courseId) || courseId <= 0) {
       toast.error("Course ID is missing. Please save course detail first.");
+      navigate("/dashboard/lecturer/my-courses/create-course/detail");
+      return;
+    }
+
+    if (
+      action === "publish" &&
+      localStorage.getItem("lecturerDetailReady") !== "1"
+    ) {
+      toast.error("Please complete course details before publishing.");
       navigate("/dashboard/lecturer/my-courses/create-course/detail");
       return;
     }
@@ -135,7 +152,8 @@ const DashboardCreateEditCurriculum = () => {
       const createdModule = await lecturerModuleService.createModuleAPI({
         courseId,
         title: data.title.trim(),
-        description: `${data.subtitle.trim()} ${data.description.trim()}`.trim(),
+        description:
+          `${data.subtitle.trim()} ${data.description.trim()}`.trim(),
         duration: `${data.lessons.length} lessons`,
         totalLessons: data.lessons.length,
       });
@@ -149,10 +167,10 @@ const DashboardCreateEditCurriculum = () => {
         const lessonVideo = await lecturerLessonService.uploadLessonVideoAPI(
           lesson.lessonVideo,
         );
-        const lessonFile =
-          lesson.lessonFile && lesson.lessonFile.size > 0
-            ? await lecturerLessonService.uploadLessonFileAPI(lesson.lessonFile)
-            : undefined;
+
+        const lessonFile = await lecturerLessonService.uploadLessonFileAPI(
+          lesson.lessonFile,
+        );
 
         const createdLesson = await lecturerLessonService.createLessonAPI({
           moduleId,
@@ -188,7 +206,9 @@ const DashboardCreateEditCurriculum = () => {
               quizId,
               question: question.question.trim(),
               type: question.type,
-              options: question.options.map((item) => item.trim()).filter(Boolean),
+              options: question.options
+                .map((item) => item.trim())
+                .filter(Boolean),
               correctAnswer: String(correctAnswer || "").trim(),
               point: Number(question.points),
             });
@@ -196,33 +216,68 @@ const DashboardCreateEditCurriculum = () => {
         }
       }
 
-      if (submitAction === "publish") {
+      if (action === "publish") {
         await lecturerCourseService.updateCourseAPI(courseId, {
           status: "published",
         });
       } else {
         await lecturerCourseService.updateCourseAPI(courseId, {
-          status: "pending",
+          status: "draft",
         });
       }
 
-      toast.success("Curriculum saved successfully.");
-      localStorage.removeItem("curriculumTitle");
-      localStorage.removeItem("cc");
+      localStorage.setItem("lecturerCurriculumReady", "1");
+      toast.success(
+        action === "publish"
+          ? "Curriculum published successfully."
+          : "Curriculum saved successfully.",
+      );
+
       navigate("/dashboard/lecturer/my-courses/create-course/curriculum");
+    } catch (error: any) {
+      toast.error(error?.message || "Cannot save curriculum.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const submitWithAction = (action: "delete" | "save" | "publish") =>
+    handleSubmit((data) => onSubmit(data, action))();
+
   useEffect(() => {
-    if (!curriculumTitle || !cc)
+    if (id) {
+      const contextRaw = localStorage.getItem("lecturerCreateCourseContext");
+      const courseId = contextRaw
+        ? Number((JSON.parse(contextRaw) as { courseId?: number }).courseId)
+        : NaN;
+
+      if (Number.isInteger(courseId) && courseId > 0) {
+        lecturerModuleService
+          .getPublicModulesByCourseIdAPI(courseId)
+          .then((modules: any[]) => {
+            const found = modules.find((m) => Number(m.id) === Number(id));
+            if (!found) return;
+            reset((prev) => ({
+              ...prev,
+              title: found.title || "",
+              subtitle: "",
+              description: found.description || "",
+            }));
+          })
+          .catch(() => {});
+      }
+    }
+  }, [id, reset]);
+
+  useEffect(() => {
+    if (!curriculumTitle || !cc) {
       navigate("/dashboard/lecturer/my-courses/create-course/curriculum");
+    }
   }, [curriculumTitle, cc, navigate]);
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onSubmit)} className="p-5 bg-[#f5f6fa]">
+      <form className="p-5 bg-[#f5f6fa]">
         <div className="flex items-center justify-between gap-5">
           <div className="flex items-center gap-3">
             <ChevronLeft
@@ -240,19 +295,19 @@ const DashboardCreateEditCurriculum = () => {
               type="delete"
               content="Delete"
               disabled={isSubmitting}
-              onClick={() => setSubmitAction("delete")}
+              onClick={() => submitWithAction("delete")}
             />
             <Button
               type="cancel-v2"
               content="Save & Change"
               disabled={isSubmitting}
-              onClick={() => setSubmitAction("save")}
+              onClick={() => submitWithAction("save")}
             />
             <Button
               type="publish"
               content="Publish"
               disabled={isSubmitting}
-              onClick={() => setSubmitAction("publish")}
+              onClick={() => submitWithAction("publish")}
             />
           </div>
         </div>

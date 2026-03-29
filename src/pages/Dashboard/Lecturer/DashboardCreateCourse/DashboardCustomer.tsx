@@ -10,8 +10,6 @@ import { lecturerCourseInsightsService } from "../../../../apis/lecturer/courseI
 import { columns } from "../../../../components/dashboard/lecturer/create-course/customer/DashboardCustomerColumns";
 import TableSkeleton from "../../../../components/skeleton/TableSkeleton";
 import PaginationV2 from "../../../../components/ui/PaginationV2";
-import { selectCurrentUser } from "../../../../redux/activeUser/activeUserSlice";
-import { useAppSelector } from "../../../../redux/hooks";
 
 export interface CustomerData {
   id: number;
@@ -24,8 +22,6 @@ export interface CustomerData {
 const DashboardCustomer = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [tableData, setTableData] = useState<CustomerData[]>([]);
-
-  const currentUser = useAppSelector(selectCurrentUser);
 
   const table = useReactTable({
     data: tableData,
@@ -41,24 +37,34 @@ const DashboardCustomer = () => {
   });
 
   useEffect(() => {
+    const context = JSON.parse(
+      localStorage.getItem("lecturerCreateCourseContext") || "{}",
+    );
+    const courseId = Number(context.courseId || 0);
+    if (!courseId) {
+      setIsLoading(false);
+      setTableData([]);
+      return;
+    }
+
     setIsLoading(true);
     lecturerCourseInsightsService
-      .getCustomersByCourseForLecturerAPI(currentUser?.id, {
+      .getCourseCustomersAPI(courseId, {
         page: 1,
-        limit: 100,
+        itemsPerPage: 100,
       })
       .then((res) => {
         const mapped = (res?.data || []).map((item: any) => ({
           id: Number(item.id),
           name: String(item.name || ""),
           country: String(item.country || "Unknown"),
-          joinedDate: new Date(item.joinedDate || item.createdAt || Date.now()),
+          joinedDate: new Date(item.joinedDate || Date.now()),
           progress: Number(item.progress || 0),
         })) as CustomerData[];
         setTableData(mapped);
       })
       .finally(() => setIsLoading(false));
-  }, [currentUser?.id]);
+  }, []);
 
   const rows = useMemo(() => table.getRowModel().rows, [table]);
 

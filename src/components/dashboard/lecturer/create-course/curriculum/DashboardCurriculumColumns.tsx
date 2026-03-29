@@ -9,7 +9,11 @@ import type {
 } from "../../../../../types/curriculum.type";
 import { formatDate } from "../../../../../utils/helpers";
 
-export const columns: ColumnDef<CurriculumData>[] = [
+export const columns = (actions: {
+  onEdit: (id: number) => void;
+  onDelete: (id: number) => void;
+  onDetail: (id: number) => void;
+}): ColumnDef<CurriculumData>[] => [
   {
     accessorKey: "id",
     header: () => (
@@ -83,11 +87,20 @@ export const columns: ColumnDef<CurriculumData>[] = [
     header: () => (
       <span className="font-poppins font-medium text-[15px]">Action</span>
     ),
-    cell: () => (
+    cell: ({ row }) => (
       <div className="flex justify-between items-center gap-3">
-        <PencilIcon className="w-5 h-5 cursor-pointer" />
-        <TrashIcon className="w-5 h-5 cursor-pointer" />
-        <ShareIcon className="w-5 h-5 cursor-pointer" />
+        <PencilIcon
+          className="w-5 h-5 cursor-pointer"
+          onClick={() => actions.onEdit(row.original.id)}
+        />
+        <TrashIcon
+          className="w-5 h-5 cursor-pointer"
+          onClick={() => actions.onDelete(row.original.id)}
+        />
+        <ShareIcon
+          className="w-5 h-5 cursor-pointer"
+          onClick={() => actions.onDetail(row.original.id)}
+        />
       </div>
     ),
   },

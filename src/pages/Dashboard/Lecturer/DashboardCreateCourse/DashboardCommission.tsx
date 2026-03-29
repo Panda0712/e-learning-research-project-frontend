@@ -7,8 +7,6 @@ import GraphIcon from "../../../../assets/graph.svg?react";
 import DashboardCommissionTable from "../../../../components/dashboard/lecturer/create-course/commission/DashboardCommissionTable";
 import TableSkeleton from "../../../../components/skeleton/TableSkeleton";
 import Input from "../../../../components/ui/Input";
-import { selectCurrentUser } from "../../../../redux/activeUser/activeUserSlice";
-import { useAppSelector } from "../../../../redux/hooks";
 
 type DateFilter = "all" | "last-month" | "this-month" | "this-year" | "custom";
 export type orderStatus = "received" | "pending";
@@ -50,16 +48,25 @@ const DashboardCommission = () => {
     { label: "This Year", value: "this-year" },
   ] as const;
 
-  const currentUser = useAppSelector(selectCurrentUser);
-
   useEffect(() => {
+    const context = JSON.parse(
+      localStorage.getItem("lecturerCreateCourseContext") || "{}",
+    );
+    const courseId = Number(context.courseId || 0);
+    if (!courseId) {
+      setRows([]);
+      setSummary(emptySummary);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     lecturerCourseInsightsService
-      .getCommissionsByCourseForLecturerAPI(currentUser?.id, {
+      .getCourseCommissionsAPI(courseId, {
         page: 1,
-        limit: 100,
+        itemsPerPage: 100,
         q: search,
-        period: dateFilter,
+        period: dateFilter === "custom" ? "all" : dateFilter,
       })
       .then((res) => {
         const mapped = (res?.data || []).map((item: any) => ({
@@ -78,7 +85,7 @@ const DashboardCommission = () => {
         });
       })
       .finally(() => setIsLoading(false));
-  }, [dateFilter, search, currentUser?.id]);
+  }, [dateFilter, search]);
 
   const tableRows = useMemo(() => rows, [rows]);
 
