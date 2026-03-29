@@ -89,7 +89,7 @@ authorizedAxiosInstance.interceptors.response.use(
     }
 
     if (error.response?.status !== 410) {
-      toast.error(normalizeErrorMessage(errorMessage));
+      toast.error(errorMessage);
     }
 
     return Promise.reject(error);
