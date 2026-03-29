@@ -1,123 +1,136 @@
-import { useState } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useState } from "react";
 import CreateBlogModal from "../../../components/dashboard/admin/blog/CreateBlogModal.tsx";
+import Pagination from "../../../components/ui/Pagination";
+import { blogApi } from "../../../apis/blog";
+import type {
+  BlogCategoryItem,
+  BlogPostItem,
+  BlogPostsPagination,
+  UpsertBlogPostPayload,
+} from "../../../types/adminBlog.type";
+import { DEFAULT_ITEMS_PER_PAGE } from "../../../utils/constants";
+import { toast } from "react-toastify";
 
-interface Blog {
-  id: number;
-  thumbnail: string;
-  title: string;
-  author: string;
-  category: string;
-  price: number | null;
-  status: "Published" | "Draft";
-}
-
-const mockBlogs: Blog[] = [
-  {
-    id: 1,
-    thumbnail: "/ImgBlog/blog1.jpg",
-    title: "UI Design Basics",
-    author: "Nguyen Van A",
-    category: "Web dev",
-    price: 520,
-    status: "Published",
-  },
-  {
-    id: 2,
-    thumbnail: "/ImgBlog/blog2.jpg",
-    title: "Figma for Beginners",
-    author: "Nguyen Van A",
-    category: "Web dev",
-    price: 410,
-    status: "Published",
-  },
-  {
-    id: 3,
-    thumbnail: "/ImgBlog/blog3.jpg",
-    title: "Responsive Web Design",
-    author: "Nguyen Van A",
-    category: "Web dev",
-    price: 390,
-    status: "Published",
-  },
-  {
-    id: 4,
-    thumbnail: "/ImgBlog/blog4.jpg",
-    title: "Typography Fundamentals",
-    author: "Nguyen Van A",
-    category: "Web dev",
-    price: null,
-    status: "Draft",
-  },
-  {
-    id: 5,
-    thumbnail: "/ImgBlog/blog5.jpg",
-    title: "Advanced UX Research",
-    author: "Nguyen Van A",
-    category: "Web dev",
-    price: null,
-    status: "Draft",
-  },
-  {
-    id: 6,
-    thumbnail: "/ImgBlog/blog6.jpg",
-    title: "HTML & CSS for Designers",
-    author: "Nguyen Van A",
-    category: "Web dev",
-    price: 680,
-    status: "Published",
-  },
-  {
-    id: 7,
-    thumbnail: "/ImgBlog/blog7.jpg",
-    title: "Designing for Mobile Apps",
-    author: "Nguyen Van A",
-    category: "Web dev",
-    price: 310,
-    status: "Published",
-  },
-  {
-    id: 8,
-    thumbnail: "/ImgBlog/blog8.jpg",
-    title: "Accessibility in Design",
-    author: "Nguyen Van A",
-    category: "Web dev",
-    price: null,
-    status: "Draft",
-  },
-  {
-    id: 9,
-    thumbnail: "/ImgBlog/blog9.jpg",
-    title: "Microinteractions",
-    author: "Nguyen Van A",
-    category: "Web dev",
-    price: 93,
-    status: "Draft",
-  },
-  {
-    id: 10,
-    thumbnail: "/ImgBlog/blog10.jpg",
-    title: "Design Systems 101",
-    author: "Nguyen Van A",
-    category: "Web dev",
-    price: 232,
-    status: "Published",
-  },
-];
+const defaultPagination: BlogPostsPagination = {
+  page: 1,
+  itemsPerPage: DEFAULT_ITEMS_PER_PAGE,
+  total: 0,
+  totalPages: 0,
+};
 
 const DashboardBlog = () => {
-  const [blogs] = useState<Blog[]>(mockBlogs);
+  const [blogs, setBlogs] = useState<BlogPostItem[]>([]);
+  const [categories, setCategories] = useState<BlogCategoryItem[]>([]);
+  const [pagination, setPagination] = useState<BlogPostsPagination>(defaultPagination);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+  const [editingBlog, setEditingBlog] = useState<BlogPostItem | null>(null);
 
-  const handleEdit = (id: number) => {
-    console.log("Edit blog:", id);
+  const fetchCategories = async () => {
+    try {
+      const response = await blogApi.getAllBlogCategoriesAPI();
+      const normalized = Array.isArray(response) ? response : [];
+      setCategories(normalized);
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to fetch blog categories.");
+    }
+  };
+
+  const fetchBlogs = async (page: number) => {
+    try {
+      setIsLoading(true);
+      const response = await blogApi.getAdminBlogPostsAPI({
+        page,
+        itemsPerPage: DEFAULT_ITEMS_PER_PAGE,
+      });
+
+      setBlogs(response?.data ?? []);
+      setPagination(response?.pagination ?? defaultPagination);
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to fetch blog posts.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    fetchBlogs(currentPage);
+  }, [currentPage]);
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingBlog(null);
+    setModalMode("create");
+  };
+
+  const handleCreate = () => {
+    setModalMode("create");
+    setEditingBlog(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = async (id: number) => {
+    try {
+      const detail = await blogApi.getBlogDetailAPI(String(id));
+      setEditingBlog(detail);
+      setModalMode("edit");
+      setIsModalOpen(true);
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to fetch blog detail.");
+    }
     setOpenMenuId(null);
   };
 
-  const handleDelete = (id: number) => {
-    console.log("Delete blog:", id);
+  const handleDelete = async (id: number) => {
     setOpenMenuId(null);
+
+    const accepted = window.confirm("Are you sure you want to delete this blog post?");
+    if (!accepted) return;
+
+    try {
+      await blogApi.deleteBlogPostAPI(id);
+      toast.success("Deleted blog post successfully.");
+
+      const shouldMoveToPrev = blogs.length === 1 && currentPage > 1;
+      if (shouldMoveToPrev) {
+        setCurrentPage((prev) => Math.max(1, prev - 1));
+        return;
+      }
+
+      await fetchBlogs(currentPage);
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to delete blog post.");
+    }
+  };
+
+  const handleSubmitBlog = async (payload: UpsertBlogPostPayload) => {
+    try {
+      setIsSubmitting(true);
+
+      if (modalMode === "create") {
+        await blogApi.createBlogPostAPI(payload);
+        toast.success("Created blog post successfully.");
+      } else if (editingBlog?.id) {
+        await blogApi.updateBlogPostAPI(editingBlog.id, payload);
+        toast.success("Updated blog post successfully.");
+      }
+
+      closeModal();
+      await fetchBlogs(currentPage);
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to save blog post.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const toggleMenu = (id: number) => {
@@ -130,7 +143,7 @@ const DashboardBlog = () => {
       <div className="mb-8 flex items-center justify-between">
         <h1 className="font-inter text-4xl font-bold text-black">Blog</h1>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={handleCreate}
           className="flex items-center gap-2 rounded-lg bg-[#FFD900] px-6 py-3 font-poppins text-sm font-medium text-black transition hover:bg-[#e6c300]"
         >
           <span className="text-xl">+</span>
@@ -141,14 +154,22 @@ const DashboardBlog = () => {
       {/* Create Blog Modal */}
       <CreateBlogModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={closeModal}
+        onSubmit={handleSubmitBlog}
+        categories={categories}
+        mode={modalMode}
+        initialData={editingBlog}
+        submitting={isSubmitting}
       />
 
       {/* Table */}
-      <div className="overflow-hidden rounded-lg bg-white shadow">
+      <div className="rounded-lg bg-white shadow">
         <table className="w-full border-collapse">
           <thead className="bg-[#9D9D9D]">
             <tr>
+              <th className="border-r border-gray-200 px-4 py-4 text-left font-poppins text-sm font-medium text-black">
+                #
+              </th>
               <th className="border-r border-gray-200 px-6 py-4 text-left font-poppins text-sm font-medium text-black">
                 Thumbnail
               </th>
@@ -162,21 +183,34 @@ const DashboardBlog = () => {
                 Category
               </th>
               <th className="border-r border-gray-200 px-6 py-4 text-left font-poppins text-sm font-medium text-black">
-                Price
-              </th>
-              <th className="border-r border-gray-200 px-6 py-4 text-left font-poppins text-sm font-medium text-black">
                 Status
               </th>
               <th className="px-6 py-4"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {blogs.map((blog) => (
-              <tr key={blog.id} className="hover:bg-gray-50">
+            {isLoading ? (
+              <tr>
+                <td colSpan={7} className="px-6 py-10 text-center text-sm text-gray-500">
+                  Loading blog posts...
+                </td>
+              </tr>
+            ) : blogs.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="px-6 py-10 text-center text-sm text-gray-500">
+                  No blog posts found.
+                </td>
+              </tr>
+            ) : (
+              blogs.map((blog, index) => (
+                <tr key={blog.id} className="hover:bg-gray-50">
+                <td className="border-r border-gray-200 px-4 py-4 font-poppins text-sm text-black">
+                  {blog.stt ?? (currentPage - 1) * DEFAULT_ITEMS_PER_PAGE + index + 1}
+                </td>
                 <td className="border-r border-gray-200 px-6 py-4">
                   <div className="h-12 w-16 overflow-hidden rounded bg-[#0F172A]">
                     <img
-                      src={blog.thumbnail}
+                      src={blog.image}
                       alt={blog.title}
                       className="h-full w-full object-cover"
                       onError={(e) => {
@@ -195,21 +229,11 @@ const DashboardBlog = () => {
                 <td className="border-r border-gray-200 px-6 py-4 font-poppins text-sm text-black">
                   {blog.category}
                 </td>
-                <td className="border-r border-gray-200 px-6 py-4 font-poppins text-sm text-black">
-                  {blog.price !== null ? blog.price : "-"}
-                </td>
                 <td className="border-r border-gray-200 px-6 py-4">
-                  {blog.status === "Published" ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-3 py-1 font-poppins text-xs font-medium text-green-600">
-                      <span className="h-1.5 w-1.5 rounded-full bg-green-600"></span>
-                      Published
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-yellow-50 px-3 py-1 font-poppins text-xs font-medium text-yellow-600">
-                      <span className="h-1.5 w-1.5 rounded-full bg-yellow-600"></span>
-                      Draft
-                    </span>
-                  )}
+                  <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-3 py-1 font-poppins text-xs font-medium text-green-600">
+                    <span className="h-1.5 w-1.5 rounded-full bg-green-600"></span>
+                    Published
+                  </span>
                 </td>
                 <td className="relative px-6 py-4">
                   <button
@@ -219,7 +243,11 @@ const DashboardBlog = () => {
                     •••
                   </button>
                   {openMenuId === blog.id && (
-                    <div className="absolute right-8 top-12 z-10 w-32 overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+                    <div
+                      className={`absolute right-8 z-20 w-32 overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 ${
+                        index >= blogs.length - 2 ? "bottom-12" : "top-12"
+                      }`}
+                    >
                       <button
                         onClick={() => handleEdit(blog.id)}
                         className="flex w-full items-center gap-2 px-4 py-2 font-poppins text-sm text-black hover:bg-gray-100"
@@ -238,39 +266,21 @@ const DashboardBlog = () => {
                   )}
                 </td>
               </tr>
-            ))}
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
       {/* Pagination */}
-      <div className="mt-6 flex items-center justify-center gap-2">
-        <button
-          onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-          className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 bg-white font-poppins text-sm text-black hover:bg-gray-50"
-        >
-          &lt;
-        </button>
-        {[1, 2, 3].map((page) => (
-          <button
-            key={page}
-            onClick={() => setCurrentPage(page)}
-            className={`flex h-10 w-10 items-center justify-center rounded-lg font-poppins text-sm ${
-              currentPage === page
-                ? "bg-[#3B82F6] text-white"
-                : "border border-gray-300 bg-white text-black hover:bg-gray-50"
-            }`}
-          >
-            {page}
-          </button>
-        ))}
-        <button
-          onClick={() => setCurrentPage(Math.min(3, currentPage + 1))}
-          className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 bg-white font-poppins text-sm text-black hover:bg-gray-50"
-        >
-          &gt;
-        </button>
-      </div>
+      {pagination.totalPages > 1 ? (
+        <Pagination
+          type="dashboard"
+          currentPage={pagination.page || currentPage}
+          totalPages={pagination.totalPages}
+          onChange={setCurrentPage}
+        />
+      ) : null}
     </div>
   );
 };

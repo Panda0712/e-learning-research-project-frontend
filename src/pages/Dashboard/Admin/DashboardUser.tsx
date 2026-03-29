@@ -26,6 +26,13 @@ const formatFullName = (firstName?: string | null, lastName?: string | null) => 
   return normalized || "N/A";
 };
 
+const getInitials = (firstName?: string | null, lastName?: string | null) => {
+  const first = firstName?.trim()?.charAt(0) || "";
+  const last = lastName?.trim()?.charAt(0) || "";
+  const initials = `${first}${last}`.toUpperCase();
+  return initials || "U";
+};
+
 const formatRole = (role: string) => {
   if (role === "student") return "Student";
   if (role === "lecturer") return "Lecturer";
@@ -324,11 +331,14 @@ const DashboardUser = () => {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-[#E8E8F4] bg-white">
+      <div className="rounded-lg border border-[#E8E8F4] bg-white">
         <table className="w-full border-collapse">
           <thead>
             <tr className="border-b border-[#E8E8F4]">
               <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">#</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                Avatar
+              </th>
               <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
                 Full Name
               </th>
@@ -343,13 +353,13 @@ const DashboardUser = () => {
           <tbody>
             {listLoading ? (
               <tr>
-                <td colSpan={7} className="px-6 py-12 text-center text-sm text-slate-500">
+                <td colSpan={8} className="px-6 py-12 text-center text-sm text-slate-500">
                   Loading users...
                 </td>
               </tr>
             ) : users.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-6 py-12 text-center text-sm text-slate-500">
+                <td colSpan={8} className="px-6 py-12 text-center text-sm text-slate-500">
                   No users found.
                 </td>
               </tr>
@@ -358,6 +368,19 @@ const DashboardUser = () => {
                 <tr key={user.id} className="border-b border-[#E8E8F4] last:border-b-0">
                   <td className="px-6 py-4 text-sm text-slate-700">
                     {user.stt ?? (page - 1) * DEFAULT_ITEMS_PER_PAGE + index + 1}
+                  </td>
+                  <td className="px-6 py-4">
+                    {user.avatar?.fileUrl ? (
+                      <img
+                        src={user.avatar.fileUrl}
+                        alt={formatFullName(user.firstName, user.lastName)}
+                        className="h-10 w-10 rounded-full border border-slate-200 object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700">
+                        {getInitials(user.firstName, user.lastName)}
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4 text-sm font-medium text-slate-900">
                     {formatFullName(user.firstName, user.lastName)}
@@ -390,7 +413,11 @@ const DashboardUser = () => {
                     </button>
 
                     {openMenuUserId === user.id && (
-                      <div className="absolute right-6 top-14 z-20 w-44 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
+                      <div
+                        className={`absolute right-6 z-20 w-44 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg ${
+                          index >= users.length - 2 ? "bottom-14" : "top-14"
+                        }`}
+                      >
                         <button
                           type="button"
                           onClick={() => handleViewDetail(user.id)}
