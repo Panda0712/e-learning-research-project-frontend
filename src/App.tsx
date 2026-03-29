@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useRef } from "react";
 import {
   BrowserRouter,
   Navigate,
@@ -6,7 +7,8 @@ import {
   Route,
   Routes,
 } from "react-router-dom";
-import { ToastContainer } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
+import { io, Socket } from "socket.io-client";
 import RbacRoute from "./components/core/RbacRoute";
 import CourseDetailChapter from "./components/dashboard/admin/courses/course-detail-chapter/CourseDetailChapter";
 import AdminCourseDetail from "./components/dashboard/admin/courses/course-detail/AdminCourseDetail";
@@ -61,7 +63,7 @@ import {
 } from "./redux/activeUser/activeUserSlice";
 import { useAppDispatch, useAppSelector } from "./redux/hooks";
 import type { UserProfile } from "./types/user.type";
-import { ACCOUNT_ROLES } from "./utils/constants";
+import { ACCOUNT_ROLES, API_ROOT } from "./utils/constants";
 import { normalizeRole } from "./utils/helpers";
 
 const AuthBootstrap = () => <Loading caption="Checking your session..." />;
@@ -134,10 +136,49 @@ const App = () => {
   const dispatch = useAppDispatch();
   const currentUser = useAppSelector(selectCurrentUser);
   const authResolved = useAppSelector(selectAuthResolved);
+  const notificationSocketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
     dispatch(fetchCurrentUserAPI()).catch(() => {});
   }, [dispatch]);
+
+  useEffect(() => {
+    const userId = Number(currentUser?.id);
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+      if (notificationSocketRef.current) {
+        notificationSocketRef.current.disconnect();
+        notificationSocketRef.current = null;
+      }
+      return;
+    }
+
+    if (notificationSocketRef.current) return;
+
+    const socket = io(API_ROOT, {
+      withCredentials: true,
+      transports: ["websocket"],
+    });
+
+    socket.on("new-notification", (payload: any) => {
+      const title = payload?.title || "New notification";
+      const message = payload?.message || "You have a new notification.";
+
+      toast.info(`${title}: ${message}`);
+      window.dispatchEvent(
+        new CustomEvent("app:new-notification", { detail: payload }),
+      );
+    });
+
+    notificationSocketRef.current = socket;
+
+    return () => {
+      socket.disconnect();
+      if (notificationSocketRef.current === socket) {
+        notificationSocketRef.current = null;
+      }
+    };
+  }, [currentUser?.id]);
 
   // console.log("Current User:", currentUser);
   // console.log("User Role:", currentUser?.role);
