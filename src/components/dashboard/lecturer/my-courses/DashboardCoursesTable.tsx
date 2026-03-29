@@ -4,7 +4,7 @@ import TrashIcon from "../../../../assets/trash.svg?react";
 import StatusBadge from "../../../ui/StatusBadge";
 import { formatDate } from "../../../../utils/helpers";
 
-export type CourseStatus = "published" | "pending" | "draft";
+export type CourseStatus = "published" | "pending" | "draft" | "rejected";
 
 export interface Course {
   id: number;

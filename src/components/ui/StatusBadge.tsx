@@ -16,6 +16,7 @@ const STATUS_STYLE = {
   published: "bg-[#D7FFE7] text-[#087B2E]",
   pending: "bg-[#FFF8D2] text-[#FFD900]",
   draft: "bg-[#FFDEDE] text-[#FF0000]",
+  rejected: "bg-[#FFDEDE] text-[#FF0000]",
 };
 
 const ORDER_STYLE = {

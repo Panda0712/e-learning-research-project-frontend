@@ -1,38 +1,50 @@
 import {
   flexRender,
   getCoreRowModel,
-  getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { columns } from "./DashboardCoursesColumns";
 import PaginationV2 from "../../../ui/PaginationV2";
+import { columns, type MyCourseRow } from "./DashboardCoursesColumns";
 
 export type CourseStatus = "published" | "pending" | "draft";
 
-interface Course {
-  id: number;
-  title: string;
-  status: CourseStatus;
-  enrollments: number;
-  completionRate: number;
-  lastUpdated: Date;
-}
-
 interface TableProps {
-  data: Course[];
+  data: MyCourseRow[];
+  pageCount: number;
+  pageIndex: number;
+  onPageChange: (nextPageIndex: number) => void;
+  actions: {
+    onEdit: (id: number) => void;
+    onDelete: (id: number) => void;
+    onDetail: (id: number) => void;
+  };
 }
 
-const DashboardCoursesTableV2 = ({ data }: TableProps) => {
+const DashboardCoursesTableV2 = ({
+  data,
+  pageCount,
+  pageIndex,
+  onPageChange,
+  actions,
+}: TableProps) => {
   const table = useReactTable({
     data,
-    columns,
+    columns: columns(actions),
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    initialState: {
+    manualPagination: true,
+    pageCount,
+    state: {
       pagination: {
         pageSize: 10,
-        pageIndex: 0,
+        pageIndex,
       },
+    },
+    onPaginationChange: (updater) => {
+      const next =
+        typeof updater === "function"
+          ? updater({ pageIndex, pageSize: 10 })
+          : updater;
+      onPageChange(next.pageIndex);
     },
   });
 

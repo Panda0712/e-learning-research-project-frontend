@@ -120,7 +120,12 @@ const getCourseCustomersAPI = async (
 
 const getCourseCommissionsAPI = async (
   courseId: number,
-  params?: { page?: number; itemsPerPage?: number; period?: string },
+  params?: {
+    page?: number;
+    itemsPerPage?: number;
+    q?: string;
+    period?: "all" | "last-month" | "this-month" | "this-year";
+  },
 ) => {
   const res = await authorizedAxiosInstance.get(
     `${API_ROOT}/v1/dashboard/lecturer/courses/${courseId}/commissions`,
