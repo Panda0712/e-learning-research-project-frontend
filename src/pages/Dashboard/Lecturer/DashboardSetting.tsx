@@ -1,13 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { toast } from "react-toastify";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import SettingsMenu from "../../../components/dashboard/lecturer/setting/SettingMenu";
 import AccountSetting from "../../../components/dashboard/lecturer/setting/AccountSetting";
 import PayoutDetail from "../../../components/dashboard/lecturer/setting/PayoutDetail";
 import NotificationSetting from "../../../components/dashboard/lecturer/setting/NotificationSetting";
 import { profileService } from "../../../apis/profile";
+import { useAppDispatch } from "../../../redux/hooks";
+import { logoutUserAPI } from "../../../redux/activeUser/activeUserSlice";
 
 const DashboardSetting = () => {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("account");
   const [userProfile, setUserProfile] = useState<
     { name: string; avatar: string } | undefined
@@ -18,8 +23,8 @@ const DashboardSetting = () => {
       try {
         const data = await profileService.getUserFullProfileAPI();
         setUserProfile({
-          name: data.name,
-          avatar: data.avatar,
+          name: [data.firstName, data.lastName].filter(Boolean).join(" "),
+          avatar: data.avatar?.fileUrl || "",
         });
       } catch (error: any) {
         toast.error(error?.message || "Failed to load profile data!");
@@ -27,6 +32,17 @@ const DashboardSetting = () => {
     };
     fetchProfileForMenu();
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      await dispatch(logoutUserAPI(false) as any).unwrap();
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to logout!");
+    } finally {
+      localStorage.removeItem("persist:user");
+      navigate("/auth/login", { replace: true });
+    }
+  };
 
   return (
     <div>
@@ -37,6 +53,7 @@ const DashboardSetting = () => {
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           userProfile={userProfile}
+          onLogout={handleLogout}
         />
 
         <div className="w-full lg:w-3/4 bg-white rounded-xl shadow-sm p-8">

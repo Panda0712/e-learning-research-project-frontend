@@ -7,11 +7,10 @@ import { selectCurrentUser } from "../../../../redux/activeUser/activeUserSlice"
 import { toast } from "react-toastify";
 
 interface PayoutAccount {
-  _id?: string;
-  id?: string;
-  bankName: string;
-  accountNumber: string;
-  accountName: string;
+  id: string | number;
+  cardType?: string;
+  cardNumber?: string;
+  cardHolderName?: string;
   isDefault?: boolean;
 }
 
@@ -25,7 +24,7 @@ const PayoutDetail = () => {
   const [newAccount, setNewAccount] = useState({
     bankName: '',
     accountNumber: '',
-    accountName: ''
+    accountName: '',
   });
 
   const fetchAccounts = useCallback(async () => {
@@ -50,8 +49,10 @@ const PayoutDetail = () => {
     try {
       const payload = {
         lecturerId: currentUser?.id,
-        ...newAccount,
-        isDefault: accounts.length === 0 
+        cardType: newAccount.bankName,
+        cardNumber: newAccount.accountNumber,
+        cardHolderName: newAccount.accountName,
+        isDefault: accounts.length === 0,
       };
 
       await payoutAccountService.createAccountAPI(payload);
@@ -59,17 +60,17 @@ const PayoutDetail = () => {
       
       setNewAccount({ bankName: '', accountNumber: '', accountName: '' });
       setShowAddForm(false);
-      fetchAccounts(); 
+      fetchAccounts();
     } catch (error:any) {
       toast.error(error?.message || "Failed to create new account! Please try again later!");
     }
   };
 
   const handleSetDefault = async (accountId: string | number | undefined) => {
-    if (!accountId) return;
+    if (!accountId || !currentUser?.id) return;
     try {
-      await payoutAccountService.setDefaultAccountAPI(accountId);
-      fetchAccounts(); 
+      await payoutAccountService.setDefaultAccountAPI(accountId, currentUser.id);
+      fetchAccounts();
     } catch (error:any) {
       toast.error(error?.message || "Failed to updated default account data!");
     }
@@ -80,7 +81,7 @@ const PayoutDetail = () => {
     try {
       await payoutAccountService.deleteAccountAPI(accountId);
       toast.success("Deleted account successfully!");
-      fetchAccounts(); 
+      fetchAccounts();
     } catch (error:any) {
       toast.error(error?.message || "Failed to delete account!");
     }
@@ -102,14 +103,14 @@ const PayoutDetail = () => {
           </div>
         ) : (
           accounts.map((acc: PayoutAccount) => (
-            <div key={acc._id || acc.id} className="flex items-center justify-between p-5 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-300 transition-colors">
+            <div key={acc.id} className="flex items-center justify-between p-5 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-300 transition-colors">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center">
                   <CreditCard size={24} />
                 </div>
                 <div>
-                  <h4 className="font-bold text-gray-800">{acc.bankName}</h4>
-                  <p className="text-sm text-gray-500">Bank account: **** {acc.accountNumber?.slice(-4)} - {acc.accountName}</p>
+                  <h4 className="font-bold text-gray-800">{acc.cardType || "Bank account"}</h4>
+                  <p className="text-sm text-gray-500">Bank account: **** {acc.cardNumber?.slice(-4)} - {acc.cardHolderName}</p>
                 </div>
               </div>
               
@@ -120,14 +121,14 @@ const PayoutDetail = () => {
                   </span>
                 ) : (
                   <button 
-                    onClick={() => handleSetDefault(acc._id || acc.id)}
+                    onClick={() => handleSetDefault(acc.id)}
                     className="text-sm text-gray-500 hover:text-blue-600 font-medium px-3 py-1"
                   >
                     Make Default
                   </button>
                 )}
                 <button 
-                  onClick={() => handleDelete(acc._id || acc.id)}
+                  onClick={() => handleDelete(acc.id)}
                   className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                 >
                   <Trash2 size={18} />
