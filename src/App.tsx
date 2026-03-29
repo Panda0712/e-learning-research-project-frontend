@@ -11,6 +11,7 @@ import RbacRoute from "./components/core/RbacRoute";
 import CourseDetailChapter from "./components/dashboard/admin/courses/course-detail-chapter/CourseDetailChapter";
 import AdminCourseDetail from "./components/dashboard/admin/courses/course-detail/AdminCourseDetail";
 import DashboardCreateEditCurriculum from "./components/dashboard/lecturer/create-course/curriculum/DashboardCreateEditCurriculum";
+import Success from "./components/payment/Success";
 import Footer from "./components/ui/Footer";
 import Loading from "./components/ui/Loading";
 import Navbar from "./components/ui/Navbar";
@@ -51,6 +52,7 @@ import LecturerDetails from "./pages/Lecturer/LecturerDetails";
 import Registration from "./pages/Lecturer/Registration";
 import NotFoundPage from "./pages/NotFound/NotFound";
 import Payment from "./pages/Payment/Payment";
+import PaymentCancel from "./pages/Payment/PaymentCancel";
 import Profile from "./pages/Profile/Profile";
 import {
   fetchCurrentUserAPI,
@@ -379,6 +381,8 @@ const App = () => {
               }
             >
               <Route path="/payment/:id" element={<Payment />} />
+              <Route path="/payment/success" element={<Success />} />
+              <Route path="/payment/cancel" element={<PaymentCancel />} />
             </Route>
           </Route>
         </Route>
