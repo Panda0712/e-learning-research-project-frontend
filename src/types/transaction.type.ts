@@ -1,18 +1,20 @@
+export interface TransactionItem {
+  courseId: number;
+  courseTitle: string;
+  instructorName: string;
+  discountAmount: number;
+  discountCode: string | null;
+}
+
 export interface Transaction {
-    id: string;
-    studentName: string;
-    studentEmail: string;
-    courseTitle: string;
-    instructorName: string;
-    amount: number;
-    payoutMethod: string; 
-    date: string;
-    status: 'Successful' | 'Refunded' | 'Failed';
-    
-    // Chi tiết cho Modal (Popup)
-    bankRef?: string;
-    subtotal?: number;
-    discount?: number;
-    discountCode?: string;
-    paymentMethodDetail?: string; 
+  id: number;
+  userId: number;
+  userEmail: string;
+  userFullName: string;
+  amount: number;
+  paymentMethod: string;
+  status: string;
+  gatewayReference: string;
+  createdAt: string;
+  items: TransactionItem[];
 }

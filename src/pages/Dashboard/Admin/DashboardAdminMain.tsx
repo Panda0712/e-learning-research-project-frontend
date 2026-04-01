@@ -28,109 +28,6 @@ interface MonthlyEngagement {
   value: number;
 }
 
-const revenueByMonth: Record<string, RevenuePoint[]> = {
-  January: [
-    { day: 1, value: 90000 },
-    { day: 5, value: 110000 },
-    { day: 10, value: 80000 },
-    { day: 15, value: 95000 },
-    { day: 20, value: 70000 },
-    { day: 25, value: 85000 },
-    { day: 31, value: 100000 },
-  ],
-  February: [
-    { day: 1, value: 75000 },
-    { day: 7, value: 82000 },
-    { day: 14, value: 68000 },
-    { day: 21, value: 90000 },
-    { day: 28, value: 88000 },
-  ],
-  August: [
-    { day: 1, value: 110000 },
-    { day: 3, value: 120000 },
-    { day: 5, value: 95000 },
-    { day: 7, value: 51749 },
-    { day: 9, value: 88000 },
-    { day: 12, value: 70000 },
-    { day: 15, value: 62000 },
-    { day: 18, value: 75000 },
-    { day: 21, value: 90000 },
-    { day: 23, value: 45000 },
-    { day: 26, value: 70000 },
-    { day: 28, value: 55000 },
-    { day: 31, value: 98000 },
-  ],
-};
-
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-
-const engagementByYear: Record<Year, MonthlyEngagement[]> = {
-  2023: [
-    { month: "Jan", value: 60 },
-    { month: "Feb", value: 72 },
-    { month: "Mar", value: 40 },
-    { month: "Apr", value: 82 },
-    { month: "May", value: 105 },
-    { month: "Jun", value: 70 },
-    { month: "Jul", value: 95 },
-    { month: "Aug", value: 85 },
-    { month: "Sep", value: 115 },
-    { month: "Oct", value: 68 },
-    { month: "Nov", value: 92 },
-    { month: "Dec", value: 75 },
-  ],
-  2024: [
-    { month: "Jan", value: 70 },
-    { month: "Feb", value: 78 },
-    { month: "Mar", value: 45 },
-    { month: "Apr", value: 85 },
-    { month: "May", value: 110 },
-    { month: "Jun", value: 78 },
-    { month: "Jul", value: 98 },
-    { month: "Aug", value: 90 },
-    { month: "Sep", value: 120 },
-    { month: "Oct", value: 75 },
-    { month: "Nov", value: 95 },
-    { month: "Dec", value: 80 },
-  ],
-  2025: [
-    { month: "Jan", value: 65 },
-    { month: "Feb", value: 70 },
-    { month: "Mar", value: 50 },
-    { month: "Apr", value: 90 },
-    { month: "May", value: 100 },
-    { month: "Jun", value: 85 },
-    { month: "Jul", value: 105 },
-    { month: "Aug", value: 95 },
-    { month: "Sep", value: 110 },
-    { month: "Oct", value: 80 },
-    { month: "Nov", value: 98 },
-    { month: "Dec", value: 85 },
-  ],
-};
-
-const adminStatisticData = {
-  totalStudents: 1674767,
-  totalInstructors: 100,
-  totalPlatformRevenue: 7461767,
-  pendingCourses: 15,
-  newEnrollments: 20,
-  totalTransactions: 300,
-};
-
 const mapDateFilterToPeriod = (filter: DateFilter): DashboardPeriod => {
   if (filter === "all") return "all_time";
   if (filter === "last-month") return "last_month";
@@ -201,10 +98,12 @@ const DashboardAdminMain = () => {
             from,
             to,
           });
+          console.log("Fetched Revenue Data:", data);
           setChart(data);
         } else {
           const period = mapDateFilterToPeriod(dateFilter);
           const data = await dashboardService.getAdminChartsAPI({ period });
+          console.log("Fetched Signup Data:", data);
           setChart(data);
         }
       } catch {
@@ -217,19 +116,12 @@ const DashboardAdminMain = () => {
 
   const adminStatisticDataMapped = useMemo(
     () => ({
-      totalStudents:
-        overview?.cards.totalStudents ?? adminStatisticData.totalStudents,
-      totalInstructors:
-        overview?.cards.totalInstructors ?? adminStatisticData.totalInstructors,
-      totalPlatformRevenue:
-        overview?.cards.totalRevenue ?? adminStatisticData.totalPlatformRevenue,
-      pendingCourses:
-        overview?.cards.pendingCourses ?? adminStatisticData.pendingCourses,
-      newEnrollments:
-        overview?.cards.newEnrollments ?? adminStatisticData.newEnrollments,
-      totalTransactions:
-        overview?.cards.totalTransactions ??
-        adminStatisticData.totalTransactions,
+      totalStudents: overview?.cards.totalStudents ?? 0,
+      totalInstructors: overview?.cards.totalInstructors ?? 0,
+      totalPlatformRevenue: overview?.cards.totalRevenue ?? 0,
+      pendingCourses: overview?.cards.pendingCourses ?? 0,
+      newEnrollments: overview?.cards.newEnrollments ?? 0,
+      totalTransactions: overview?.cards.totalTransactions ?? 0,
     }),
     [overview],
   );
@@ -240,7 +132,7 @@ const DashboardAdminMain = () => {
 
     const hasApiShape = labels.length > 0 && apiData.length === labels.length;
 
-    if (!hasApiShape) return engagementByYear[2025];
+    if (!hasApiShape) return [];
 
     return labels.map((label, idx) => ({
       month: label,
@@ -254,7 +146,7 @@ const DashboardAdminMain = () => {
 
     const hasApiShape = labels.length > 0 && apiData.length === labels.length;
 
-    if (!hasApiShape) return revenueByMonth[month] ?? [];
+    if (!hasApiShape) return [];
 
     return labels.map((label, idx) => ({
       day: toRevenueDay(label, idx),
