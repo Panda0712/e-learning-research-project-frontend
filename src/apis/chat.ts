@@ -54,10 +54,23 @@ const sendDirectMessageAPI = async (payload: {
   return res.data;
 };
 
+const chatbotChatAPI = async (payload: {
+  question: string;
+  conversationId?: string;
+  topK?: number;
+}) => {
+  const res = await authorizedAxiosInstance.post(
+    `${API_ROOT}/v1/chatbot/chat`,
+    payload,
+  );
+  return res.data;
+};
+
 export const chatService = {
   getConversationsAPI,
   createConversationAPI,
   getMessagesAPI,
   markAsSeenAPI,
   sendDirectMessageAPI,
+  chatbotChatAPI,
 };

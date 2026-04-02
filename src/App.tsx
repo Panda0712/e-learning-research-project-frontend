@@ -13,7 +13,7 @@ import RbacRoute from "./components/core/RbacRoute";
 import CourseDetailChapter from "./components/dashboard/admin/courses/course-detail-chapter/CourseDetailChapter";
 import AdminCourseDetail from "./components/dashboard/admin/courses/course-detail/AdminCourseDetail";
 import DashboardCreateEditCurriculum from "./components/dashboard/lecturer/create-course/curriculum/DashboardCreateEditCurriculum";
-import Success from "./components/payment/Success";
+import AiChatWidget from "./components/chat/AiChatWidget";
 import Footer from "./components/ui/Footer";
 import Loading from "./components/ui/Loading";
 import Navbar from "./components/ui/Navbar";
@@ -330,6 +330,7 @@ const App = () => {
               <Navbar />
               <Outlet />
               <Footer />
+              <AiChatWidget />
             </div>
           }
         >
