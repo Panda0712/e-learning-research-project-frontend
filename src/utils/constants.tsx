@@ -203,6 +203,9 @@ export const ACCOUNT_ROLES = {
   LECTURER: "lecturer",
 };
 
+export const CHAT_SCROLLBAR_CLASS =
+  "overflow-y-auto [scrollbar-width:thin] [scrollbar-color:#94a3b8_#e2e8f0] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-slate-100 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 hover:[&::-webkit-scrollbar-thumb]:bg-slate-400";
+
 export const EMAIL_RULE = /^\S+@\S+\.\S+$/;
 export const EMAIL_RULE_MESSAGE = "Error email. (example@gmail.com)";
 

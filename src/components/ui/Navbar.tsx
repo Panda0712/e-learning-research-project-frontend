@@ -10,12 +10,13 @@ import {
   selectCurrentUser,
 } from "../../redux/activeUser/activeUserSlice";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { menuList } from "../../utils/constants";
+import { ACCOUNT_ROLES, menuList } from "../../utils/constants";
 import Button from "./Button";
 import AvatarLoginImg from "/avatar-login.png";
 import Logo from "/logo.png";
 import NotificationIconImg from "/notification-icon.png";
 import ShoppingCartImg from "/shopping-cart.png";
+import { normalizeRole } from "../../utils/helpers";
 
 const Navbar = () => {
   const [isLecturerDropdownOpen, setIsLecturerDropdownOpen] = useState(false);
@@ -94,6 +95,23 @@ const Navbar = () => {
       setUnreadCount(0);
     } finally {
       setIsMarkingAllRead(false);
+    }
+  };
+
+  const handleNotificationClick = async (item: NotificationItem) => {
+    if (!item.isRead) {
+      await handleMarkAsRead(item.id);
+    }
+
+    setIsNotificationDropdownOpen(false);
+
+    if (item.type === "message" && item.relatedId) {
+      const role = normalizeRole(currentUser?.role);
+      const target =
+        role === ACCOUNT_ROLES.LECTURER
+          ? `/dashboard/lecturer/communication?tab=messages&conversationId=${item.relatedId}`
+          : `/chat/student?conversationId=${item.relatedId}`;
+      navigate(target);
     }
   };
 
@@ -306,11 +324,7 @@ const Navbar = () => {
                         <button
                           type="button"
                           key={item.id}
-                          onClick={() => {
-                            if (!item.isRead) {
-                              handleMarkAsRead(item.id);
-                            }
-                          }}
+                          onClick={() => handleNotificationClick(item)}
                           className={`w-full text-left px-3 py-2 border-b last:border-b-0 border-gray-100 hover:bg-gray-50 ${
                             item.isRead ? "bg-white" : "bg-[#F4FAFC]"
                           }`}

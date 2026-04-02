@@ -9,10 +9,12 @@ import {
 } from "../../../redux/chat/socket";
 import { useAppDispatch } from "../../../redux/hooks";
 import { store } from "../../../redux/store";
+import { useSearchParams } from "react-router-dom";
 
 const DashboardCommunication = () => {
   const [activeTab, setActiveTab] = useState<"reviews" | "messages">("reviews");
   const dispatch = useAppDispatch();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     connectChatSocket(store);
@@ -27,6 +29,13 @@ const DashboardCommunication = () => {
       disconnectChatSocket();
     };
   }, [dispatch]);
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "messages") {
+      setActiveTab("messages");
+    }
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen bg-[#F5F7FA] p-8">

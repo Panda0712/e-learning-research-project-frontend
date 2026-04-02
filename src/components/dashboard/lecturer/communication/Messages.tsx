@@ -3,7 +3,7 @@ import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
 import dayjs from "dayjs";
 import { Search, Send, Smile } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { selectCurrentUser } from "../../../../redux/activeUser/activeUserSlice";
 import {
@@ -13,6 +13,8 @@ import {
   setActiveConversation,
 } from "../../../../redux/chat/chatSlice";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
+import { useSearchParams } from "react-router-dom";
+import { CHAT_SCROLLBAR_CLASS } from "../../../../utils/constants";
 
 const MOCK_LECTURER_MESSAGES = [
   {
@@ -40,12 +42,22 @@ const getDisplayName = (user?: {
 
 const Messages = () => {
   const dispatch = useAppDispatch();
+  const [searchParams] = useSearchParams();
   const currentUser = useAppSelector(selectCurrentUser);
   const chatState = useAppSelector((state) => state.chat);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [messageText, setMessageText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
+  const [isNearLatest, setIsNearLatest] = useState(true);
+  const [newMessageDividerId, setNewMessageDividerId] = useState<number | null>(
+    null,
+  );
+
+  const chatScrollRef = useRef<HTMLDivElement>(null);
+  const prevLastMsgIdRef = useRef<number | null>(null);
+  const prevConvIdRef = useRef<number | null>(null);
+  const prevMsgCountRef = useRef<number>(0);
 
   const activeConversationId = chatState?.activeConversationId ?? null;
   const loadingConversations = chatState?.loadingConversations ?? false;
@@ -101,6 +113,11 @@ const Messages = () => {
     return messagesByConversation[activeConversationId]?.items ?? [];
   }, [activeConversationId, chatState?.messagesByConversation]);
 
+  const lastMessage = currentMessages[currentMessages.length - 1] ?? null;
+  const activeConversationFromQuery = Number(
+    searchParams.get("conversationId"),
+  );
+
   const hasMore = useMemo(() => {
     if (!activeConversationId) return false;
 
@@ -121,6 +138,80 @@ const Messages = () => {
     dispatch(setActiveConversation(lecturerConversations[0].id));
   }, [activeConversationId, lecturerConversations, dispatch]);
 
+  useEffect(() => {
+    if (
+      Number.isInteger(activeConversationFromQuery) &&
+      activeConversationFromQuery > 0 &&
+      lecturerConversations.some((c) => c.id === activeConversationFromQuery)
+    ) {
+      dispatch(setActiveConversation(activeConversationFromQuery));
+    }
+  }, [activeConversationFromQuery, lecturerConversations, dispatch]);
+
+  useEffect(() => {
+    if (!activeConversationId) return;
+
+    const convChanged = prevConvIdRef.current !== activeConversationId;
+    const msgCountIncreased = currentMessages.length > prevMsgCountRef.current;
+
+    if (convChanged || msgCountIncreased) {
+      scrollToLatest("auto");
+    }
+
+    prevConvIdRef.current = activeConversationId;
+    prevMsgCountRef.current = currentMessages.length;
+  }, [activeConversationId, currentMessages.length]);
+
+  const scrollToLatest = (behavior: ScrollBehavior = "smooth") => {
+    const el = chatScrollRef.current;
+    if (!el) return;
+
+    requestAnimationFrame(() => {
+      el.scrollTo({
+        top: el.scrollHeight,
+        behavior,
+      });
+    });
+  };
+
+  const handleChatScroll = () => {
+    const el = chatScrollRef.current;
+    if (!el) return;
+
+    const distanceToBottom = el.scrollHeight - el.clientHeight - el.scrollTop;
+    setIsNearLatest(distanceToBottom <= 80);
+  };
+
+  useEffect(() => {
+    if (!activeConversationId) return;
+    scrollToLatest("auto");
+    prevLastMsgIdRef.current = null;
+    setNewMessageDividerId(null);
+  }, [activeConversationId]);
+
+  useEffect(() => {
+    if (!lastMessage) return;
+
+    const prevId = prevLastMsgIdRef.current;
+    const isNewIncoming =
+      prevId !== null &&
+      lastMessage.id !== prevId &&
+      Number(lastMessage.senderId) !== Number(currentUser?.id);
+
+    if (isNewIncoming) {
+      setNewMessageDividerId(lastMessage.id);
+      if (isNearLatest) scrollToLatest("smooth");
+    }
+
+    prevLastMsgIdRef.current = lastMessage.id;
+  }, [
+    lastMessage?.id,
+    lastMessage,
+    activeConversationId,
+    isNearLatest,
+    currentUser?.id,
+  ]);
+
   const handleSelectConversation = (conversationId: number) => {
     dispatch(setActiveConversation(conversationId));
   };
@@ -137,6 +228,7 @@ const Messages = () => {
     );
     setMessageText("");
     setShowEmoji(false);
+    scrollToLatest("smooth");
   };
 
   const fetchMoreMessages = async () => {
@@ -151,7 +243,7 @@ const Messages = () => {
   return (
     <div className="flex h-[calc(100vh-250px)] gap-6">
       {/* Left Sidebar - Users List */}
-      <div className="w-80 rounded-xl border border-gray-200 bg-white">
+      <div className="w-80 overflow-hidden rounded-xl border border-gray-200 bg-white">
         {/* Search */}
         <div className="border-b border-gray-200 p-4">
           <div className="relative">
@@ -173,7 +265,7 @@ const Messages = () => {
 
         {/* Users List */}
         <div
-          className="overflow-y-auto"
+          className={`overflow-y-auto ${CHAT_SCROLLBAR_CLASS}`}
           style={{ maxHeight: "calc(100% - 80px)" }}
         >
           {loadingConversations ? (
@@ -243,7 +335,12 @@ const Messages = () => {
         </div>
 
         {/* Messages Area */}
-        <div id="lecturer-chat-scroll" className="flex-1 overflow-y-auto p-6">
+        <div
+          id="lecturer-chat-scroll"
+          ref={chatScrollRef}
+          onScroll={handleChatScroll}
+          className={`flex-1 p-4 ${CHAT_SCROLLBAR_CLASS}`}
+        >
           {!selectedConversation ? (
             <p className="text-sm text-gray-500">
               Choose 1 student to start chatting.
@@ -270,19 +367,30 @@ const Messages = () => {
                   const isOwn =
                     Number(message.senderId) === Number(currentUser?.id);
                   return (
-                    <div
-                      key={message.id}
-                      className={`mb-3 flex ${isOwn ? "justify-end" : "justify-start"}`}
-                    >
+                    <div key={message.id}>
+                      {newMessageDividerId === message.id && (
+                        <div className="my-3 flex items-center gap-2">
+                          <div className="h-px flex-1 bg-blue-200" />
+                          <span className="text-xs font-semibold text-blue-600">
+                            New message
+                          </span>
+                          <div className="h-px flex-1 bg-blue-200" />
+                        </div>
+                      )}
+
                       <div
-                        className={`max-w-md rounded-2xl px-4 py-3 ${isOwn ? "bg-blue-500 text-white" : "bg-white text-[#000000] shadow-sm ring-1 ring-gray-200"}`}
+                        className={`mb-3 flex ${isOwn ? "justify-end" : "justify-start"}`}
                       >
-                        <p className="font-poppins text-sm">
-                          {message.content}
-                        </p>
-                        <p className="mt-1 font-poppins text-xs opacity-80">
-                          {dayjs(message.createdAt).format("HH:mm DD/MM")}
-                        </p>
+                        <div
+                          className={`max-w-md rounded-2xl px-4 py-3 ${isOwn ? "bg-blue-500 text-white" : "bg-white text-[#000000] shadow-sm ring-1 ring-gray-200"}`}
+                        >
+                          <p className="font-poppins text-sm">
+                            {message.content}
+                          </p>
+                          <p className="mt-1 font-poppins text-xs opacity-80">
+                            {dayjs(message.createdAt).format("HH:mm DD/MM")}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   );
