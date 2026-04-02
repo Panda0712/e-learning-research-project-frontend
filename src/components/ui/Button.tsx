@@ -35,7 +35,7 @@ const Button: React.FC<ButtonProps> = ({
       break;
     case "submit":
       buttonBg =
-        "h-10! w-auto rounded-full bg-linear-to-r from-blue-500 to-indigo-500 text-white text-[16px]! font-medium shadow-sm cursor-pointer duration-300 ease hover:opacity-90";
+        "h-10! w-auto rounded-full bg-[#19566A] text-white text-[16px]! font-medium shadow-sm cursor-pointer duration-300 ease hover:bg-[#123F4E]";
       break;
     case "submit-v2":
       buttonBg =
@@ -43,7 +43,7 @@ const Button: React.FC<ButtonProps> = ({
       break;
     case "cancel":
       buttonBg =
-        "bg-white h-10! rounded-full text-[#4458FE] text-[16px]! w-auto font-medium shadow-sm cursor-pointer duration-300 ease hover:opacity-90";
+        "bg-white border border-slate-200 h-10! rounded-full text-slate-600 text-[16px]! w-auto font-medium shadow-sm cursor-pointer duration-300 ease hover:bg-slate-50 hover:text-slate-800";
       break;
     case "cancel-v2":
       buttonBg =

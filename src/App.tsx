@@ -55,6 +55,7 @@ import Registration from "./pages/Lecturer/Registration";
 import NotFoundPage from "./pages/NotFound/NotFound";
 import Payment from "./pages/Payment/Payment";
 import PaymentCancel from "./pages/Payment/PaymentCancel";
+import AccountSettings from "./pages/AccountSettings/AccountSettings";
 import Profile from "./pages/Profile/Profile";
 import {
   fetchCurrentUserAPI,
@@ -384,6 +385,7 @@ const App = () => {
               }
             >
               <Route path="/profile" element={<Profile />} />
+              <Route path="/account-settings" element={<AccountSettings />} />
               <Route path="/profile/my-courses" element={<Profile />} />
               <Route path="/profile/lecturers" element={<Profile />} />
             </Route>
