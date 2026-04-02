@@ -4,6 +4,13 @@ import { useState, useEffect } from "react";
 import { Eye, EyeOff, AlertCircle, CheckCircle2 } from "lucide-react";
 import { profileService } from "../../../../apis/profile";
 
+const formatDateInputValue = (value?: string | Date | null) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString().slice(0, 10);
+};
+
 const AccountSetting = () => {
   const [activeTab] = useState("account");
   const [showCurrentPass, setShowCurrentPass] = useState(false);
@@ -11,11 +18,11 @@ const AccountSetting = () => {
   const [showConfirmPass, setShowConfirmPass] = useState(false);
 
   const [formData, setFormData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
-    location: "",
-    phone: "",
-    bio: "",
+    phoneNumber: "",
+    dateOfBirth: "",
   });
   const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState({ email: "", phone: "" });
@@ -33,11 +40,11 @@ const AccountSetting = () => {
         setLoading(true);
         const data = await profileService.getUserFullProfileAPI();
         setFormData({
-          name: data.name || "",
+          firstName: data.firstName || "",
+          lastName: data.lastName || "",
           email: data.email || "",
-          location: data.location || "",
-          phone: data.phone || "",
-          bio: data.bio || "",
+          phoneNumber: data.phoneNumber || "",
+          dateOfBirth: formatDateInputValue(data.dateOfBirth),
         });
       } catch (error: any) {
         toast.error(error?.message || "Failed to load lecturer data!");
@@ -50,7 +57,7 @@ const AccountSetting = () => {
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const numericValue = e.target.value.replace(/\D/g, "");
-    setFormData({ ...formData, phone: numericValue });
+    setFormData({ ...formData, phoneNumber: numericValue });
   };
 
   const validateEmail = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -74,7 +81,15 @@ const AccountSetting = () => {
 
   const handleSaveProfile = async () => {
     try {
-      await profileService.updateProfileAPI(formData);
+      await profileService.updateProfileAPI({
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim(),
+        phoneNumber: formData.phoneNumber.trim(),
+        dateOfBirth: formData.dateOfBirth
+          ? new Date(formData.dateOfBirth)
+          : undefined,
+      });
       toast.success("Updated profile successfully!");
     } catch (error: any) {
       toast.error(error?.message || "Failed to update data!");
@@ -185,11 +200,22 @@ const AccountSetting = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div className="space-y-2">
-                  <label className="text-sm text-gray-500">Name</label>
+                  <label className="text-sm text-gray-500">First name</label>
                   <input
-                    name="name"
+                    name="firstName"
                     type="text"
-                    value={formData.name}
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    className="w-full border border-gray-200 rounded-lg p-3 focus:outline-none focus:border-blue-500 text-sm"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-500">Last name</label>
+                  <input
+                    name="lastName"
+                    type="text"
+                    value={formData.lastName}
                     onChange={handleChange}
                     className="w-full border border-gray-200 rounded-lg p-3 focus:outline-none focus:border-blue-500 text-sm"
                   />
@@ -218,23 +244,11 @@ const AccountSetting = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm text-gray-500">Location</label>
-                  <input
-                    type="text"
-                    name="location"
-                    value={formData.location}
-                    onChange={handleChange}
-                    placeholder="Location"
-                    className="w-full border border-gray-200 rounded-lg p-3 focus:outline-none focus:border-blue-500 text-sm"
-                  />
-                </div>
-
-                <div className="space-y-2">
                   <label className="text-sm text-gray-500">Phone number</label>
                   <input
-                    name="phone"
+                    name="phoneNumber"
                     type="text"
-                    value={formData.phone}
+                    value={formData.phoneNumber}
                     onChange={handlePhoneChange}
                     placeholder="Phone number"
                     maxLength={11}
@@ -247,39 +261,13 @@ const AccountSetting = () => {
                 <label className="text-sm text-gray-500 block mb-2">
                   Date of Birth
                 </label>
-                <div className="grid grid-cols-3 gap-4 max-w-md">
-                  <select className="border border-gray-200 rounded-lg p-3 text-sm bg-white focus:outline-none focus:border-blue-500 text-gray-600">
-                    <option>DD</option>
-                    {[...Array(31)].map((_, i) => (
-                      <option key={i}>{i + 1}</option>
-                    ))}
-                  </select>
-                  <select className="border border-gray-200 rounded-lg p-3 text-sm bg-white focus:outline-none focus:border-blue-500 text-gray-600">
-                    <option>MM</option>
-                    {[...Array(12)].map((_, i) => (
-                      <option key={i}>{i + 1}</option>
-                    ))}
-                  </select>
-                  <select className="border border-gray-200 rounded-lg p-3 text-sm bg-white focus:outline-none focus:border-blue-500 text-gray-600">
-                    <option>YYYY</option>
-                    {[...Array(50)].map((_, i) => (
-                      <option key={i}>{2025 - i}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="mb-8">
-                <label className="text-sm text-gray-500 block mb-2">
-                  Bio/About
-                </label>
-                <textarea
-                  name="bio"
-                  value={formData.bio}
+                <input
+                  type="date"
+                  name="dateOfBirth"
+                  value={formData.dateOfBirth}
                   onChange={handleChange}
-                  rows={4}
-                  className="w-full border border-gray-200 rounded-lg p-3 focus:outline-none focus:border-blue-500 text-sm resize-none"
-                ></textarea>
+                  className="border border-gray-200 rounded-lg p-3 text-sm bg-white focus:outline-none focus:border-blue-500 text-gray-600"
+                />
               </div>
 
               <div className="flex gap-4 mb-10">

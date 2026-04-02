@@ -1,66 +1,106 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { lecturerCourseService } from "../../../apis/lecturer/course";
-import Button from "../../../components/ui/Button";
-import TableSkeleton from "../../../components/skeleton/TableSkeleton";
-import { type CourseStatus } from "../../../components/dashboard/lecturer/my-courses/DashboardCoursesTable";
+import type { MyCourseRow } from "../../../components/dashboard/lecturer/my-courses/DashboardCoursesColumns";
 import DashboardCoursesTableV2 from "../../../components/dashboard/lecturer/my-courses/DashboardCoursesTableV2";
-import DashboardFilter from "../../../components/dashboard/lecturer/my-courses/DashboardFilter";
 import DashboardCreateCourseModal from "../../../components/dashboard/lecturer/my-courses/DashboardCreateCourseModal";
-import { selectCurrentUser } from "../../../redux/activeUser/activeUserSlice";
-import { useAppSelector } from "../../../redux/hooks";
-import type { CourseAPIData } from "../../../types/course.type";
+import DashboardFilter from "../../../components/dashboard/lecturer/my-courses/DashboardFilter";
+import TableSkeleton from "../../../components/skeleton/TableSkeleton";
+import Button from "../../../components/ui/Button";
+import { DEFAULT_ITEMS_PER_PAGE } from "../../../utils/constants";
 
-type Course = {
-  id: number;
-  title: string;
-  status: CourseStatus;
-  enrollments: number;
-  completionRate: number;
-  lastUpdated: Date;
+type MyCoursesResponse = {
+  data: Array<{
+    id: number;
+    name: string;
+    status: string;
+    totalStudents?: number;
+    updatedAt?: string;
+    createdAt?: string;
+  }>;
+  pagination: {
+    page: number;
+    itemsPerPage: number;
+    total: number;
+    totalPages: number;
+  };
 };
 
-// const ITEMS_PER_PAGE = 6;
-
 const DashboardMyCourses = () => {
-  const currentUser = useAppSelector(selectCurrentUser);
+  const navigate = useNavigate();
+
   const [isLoading, setIsLoading] = useState(true);
   const [openModal, setOpenModal] = useState(false);
-  const [courses, setCourses] = useState<Course[]>([]);
+  const [rows, setRows] = useState<MyCourseRow[]>([]);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    itemsPerPage: DEFAULT_ITEMS_PER_PAGE,
+    total: 0,
+    totalPages: 1,
+  });
+  const [query, setQuery] = useState({
+    page: 1,
+    itemsPerPage: DEFAULT_ITEMS_PER_PAGE,
+    status: "all" as "all" | "published" | "draft" | "pending" | "rejected",
+    sortBy: "updatedAt" as "createdAt" | "updatedAt",
+    q: "",
+  });
 
-  // const { currentPage, setCurrentPage, currentData, totalPages } =
-  //   usePagination({
-  //     data: mockCoursesData,
-  //     itemsPerPage: ITEMS_PER_PAGE,
-  //   });
+  const handleEdit = (id: number) => {
+    localStorage.setItem(
+      "lecturerCreateCourseContext",
+      JSON.stringify({ courseId: id }),
+    );
+    navigate(
+      `/dashboard/lecturer/my-courses/create-course/detail?courseId=${id}`,
+    );
+  };
+
+  const handleDetail = (id: number) => {
+    navigate(
+      `/dashboard/lecturer/my-courses/create-course/detail?courseId=${id}&view=detail`,
+    );
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await lecturerCourseService.updateCourseAPI(id, { status: "draft" });
+      toast.success("Course updated.");
+      setQuery((prev) => ({ ...prev }));
+    } catch (error: any) {
+      toast.error(error?.message || "Cannot delete course.");
+    }
+  };
 
   useEffect(() => {
-    const lecturerId = Number(currentUser?.id);
-    if (!Number.isInteger(lecturerId) || lecturerId <= 0) {
-      setIsLoading(false);
-      return;
-    }
-
     setIsLoading(true);
     lecturerCourseService
-      .getCoursesByLecturerIdAPI(lecturerId)
-      .then((data) => {
-        const mapped = (data as CourseAPIData[]).map((item) => ({
+      .getMyCoursesAPI(query)
+      .then((res: MyCoursesResponse) => {
+        const mapped = (res?.data || []).map((item: any) => ({
           id: item.id,
           title: item.name,
-          status: (["draft", "pending", "published"].includes(item.status)
-            ? item.status
-            : "draft") as CourseStatus,
-          enrollments: item.totalStudents ?? 0,
+          status: (item.status || "draft") as MyCourseRow["status"],
+          enrollments: item.totalStudents || 0,
           completionRate: 0,
-          lastUpdated: new Date(),
+          lastUpdated: new Date(item.updatedAt || item.createdAt || Date.now()),
         }));
-        setCourses(mapped);
+        setRows(mapped);
+        setPagination({
+          page: Number(res?.pagination?.page || 1),
+          itemsPerPage: Number(
+            res?.pagination?.itemsPerPage || DEFAULT_ITEMS_PER_PAGE,
+          ),
+          total: Number(res?.pagination?.total || 0),
+          totalPages: Number(res?.pagination?.totalPages || 1),
+        });
       })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  }, [currentUser?.id]);
+      .catch((e) => toast.error(e?.message || "Cannot load courses"))
+      .finally(() => setIsLoading(false));
+  }, [query]);
 
   return (
     <div className="px-2 py-4 bg-[#f5f6fa]">
@@ -80,18 +120,30 @@ const DashboardMyCourses = () => {
         onClose={() => setOpenModal(false)}
       />
 
-      <DashboardFilter />
-
+      <DashboardFilter
+        status={query.status}
+        sortBy={query.sortBy}
+        onStatusChange={(status) =>
+          setQuery((q) => ({ ...q, status, page: 1 }))
+        }
+        onSortChange={(sortBy) => setQuery((q) => ({ ...q, sortBy, page: 1 }))}
+      />
       <div className="my-8"></div>
 
       {isLoading ? (
         <TableSkeleton />
       ) : (
-        <>
-          <DashboardCoursesTableV2 data={courses} />
-          {/* <div className="my-8"></div>
-          <DashboardCoursesTable data={currentData} /> */}
-        </>
+        <DashboardCoursesTableV2
+          data={rows}
+          pageCount={pagination.totalPages}
+          pageIndex={pagination.page - 1}
+          onPageChange={(idx) => setQuery((q) => ({ ...q, page: idx + 1 }))}
+          actions={{
+            onEdit: handleEdit,
+            onDelete: handleDelete,
+            onDetail: handleDetail,
+          }}
+        />
       )}
 
       {/* {!isLoading && (

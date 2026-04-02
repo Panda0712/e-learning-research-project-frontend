@@ -1,18 +1,28 @@
 import { ArrowUpRight } from "lucide-react";
-import Button from "../../../ui/Button";
 import type { RevenueStatsProps } from "../../../../types/assessment.type";
+import Button from "../../../ui/Button";
 
 const RevenueStats = ({
   onWithdrawClick,
+  totalEarnings,
+  thisMonthRevenue,
   availableBalance,
 }: RevenueStatsProps) => {
+  const formatAmount = (value: number) =>
+    value.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
         <div className="flex justify-between items-start mb-2">
-          <h3 className="text-2xl font-bold text-gray-900">+ $24,340</h3>
+          <h3 className="text-2xl font-bold text-gray-900">
+            ${formatAmount(totalEarnings)}
+          </h3>
           <span className="flex items-center text-xs font-medium bg-gray-100 px-2 py-1 rounded text-gray-600">
-            <ArrowUpRight size={14} className="mr-1" /> 8%
+            <ArrowUpRight size={14} className="mr-1" /> Live
           </span>
         </div>
         <p className="text-gray-500 text-sm">Total Earnings</p>
@@ -20,18 +30,20 @@ const RevenueStats = ({
 
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
         <div className="flex justify-between items-start mb-2">
-          <h3 className="text-2xl font-bold text-gray-900">+ $98.76</h3>
+          <h3 className="text-2xl font-bold text-gray-900">
+            ${formatAmount(thisMonthRevenue)}
+          </h3>
           <span className="flex items-center text-xs font-medium bg-gray-100 px-2 py-1 rounded text-gray-600">
-            <ArrowUpRight size={14} className="mr-1" /> 8%
+            <ArrowUpRight size={14} className="mr-1" /> Live
           </span>
         </div>
         <p className="text-gray-500 text-sm">This Month's Revenue</p>
       </div>
 
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex justify-between items-center bg-[#FFFBEB]">
+      <div className="p-6 rounded-xl shadow-sm border border-gray-200 flex justify-between items-center bg-[#FFFBEB]">
         <div>
           <h3 className="text-2xl font-bold text-gray-900">
-            ${availableBalance}
+            ${formatAmount(availableBalance)}
           </h3>
           <p className="text-gray-500 text-sm mt-1 font-medium">
             Available for Withdrawal

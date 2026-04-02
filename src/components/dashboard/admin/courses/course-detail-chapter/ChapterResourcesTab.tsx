@@ -79,9 +79,20 @@ const ChapterResourcesTab: React.FC<Props> = ({ data }) => {
                   {data.videoPreview.title}
                 </div>
 
-                <button className="text-xs text-blue-600 font-semibold hover:underline">
-                  Click Download
-                </button>
+                {data.videoPreview.url ? (
+                  <a
+                    href={data.videoPreview.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs text-blue-600 font-semibold hover:underline"
+                  >
+                    Click Download
+                  </a>
+                ) : (
+                  <span className="text-xs text-gray-400 font-semibold">
+                    No file URL
+                  </span>
+                )}
               </div>
             </div>
           ) : (
@@ -94,7 +105,14 @@ const ChapterResourcesTab: React.FC<Props> = ({ data }) => {
             {data.attachedFiles?.map((file, index) => (
               <div key={file.id} className="text-sm text-gray-600 flex gap-2">
                 <span className="font-medium text-gray-400">{index + 1}.</span>
-                <span>{file.name}</span>
+                <a
+                  href={file.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  {file.name}
+                </a>
               </div>
             ))}
           </div>

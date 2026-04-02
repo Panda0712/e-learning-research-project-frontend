@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronDown } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -24,6 +25,8 @@ import {
   MAX_VIDEO_SIZE,
   VIDEO_TYPES,
 } from "../../../../utils/constants";
+
+type SubmitIntent = "draft" | "save" | "publish";
 
 const faqItemSchema = z.object({
   question: z
@@ -96,14 +99,21 @@ const ccOptions = [
   { label: "Vietnamese", value: "vietnamese" },
 ];
 
+const resolveCourseStatus = (
+  intent: SubmitIntent,
+  hasDetail: boolean,
+  hasCurriculum: boolean,
+): "draft" | "pending" | "published" => {
+  if (intent === "draft") return "draft";
+  if (intent === "publish" && hasDetail && hasCurriculum) return "published";
+  return "pending";
+};
+
 const DashboardDetail = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const currentUser = useAppSelector(selectCurrentUser);
   const [openDropdown, setOpenDropDown] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState<
-    "draft" | "pending" | "published"
-  >("draft");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categories, setCategories] = useState<CourseCategoryAPIData[]>([]);
 
@@ -145,9 +155,28 @@ const DashboardDetail = () => {
     return stored ? (JSON.parse(stored) as string) : "";
   }, [searchParams]);
 
+  const courseIdFromQuery = useMemo(() => {
+    const raw = searchParams.get("courseId");
+    const parsed = Number(raw);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+  }, [searchParams]);
+
   useEffect(() => {
     if (courseTitle) setValue("courseName", courseTitle);
   }, [courseTitle, setValue]);
+
+  useEffect(() => {
+    if (courseIdFromQuery) {
+      localStorage.setItem(
+        "lecturerCreatedCourseId",
+        String(courseIdFromQuery),
+      );
+      localStorage.setItem(
+        "lecturerCreateCourseContext",
+        JSON.stringify({ courseId: courseIdFromQuery, courseTitle }),
+      );
+    }
+  }, [courseIdFromQuery, courseTitle]);
 
   useEffect(() => {
     lecturerCourseService
@@ -168,11 +197,18 @@ const DashboardDetail = () => {
     setValue("introVideo", file, { shouldValidate: true });
   };
 
-  const onSubmit = async (data: CourseFormValues) => {
-    const lecturerFullName = `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim();
+  const onSubmit = async (data: CourseFormValues, intent: SubmitIntent) => {
+    const lecturerFullName =
+      `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim();
     const lecturerName = lecturerFullName || currentUser?.email || "Lecturer";
     const categoryId = Number(data.category);
-    const storedCourseId = Number(localStorage.getItem("lecturerCreatedCourseId"));
+
+    const storedCourseId = Number(
+      localStorage.getItem("lecturerCreatedCourseId"),
+    );
+    const hasCurriculum =
+      localStorage.getItem("lecturerCurriculumReady") === "1";
+    const status = resolveCourseStatus(intent, true, hasCurriculum);
 
     if (!Number.isInteger(categoryId) || categoryId <= 0) {
       toast.error("Category is invalid.");
@@ -181,20 +217,22 @@ const DashboardDetail = () => {
 
     setIsSubmitting(true);
     try {
-      const thumbnail = await lecturerCourseService.uploadCourseThumbnailAPI(
-        data.introImage,
-      );
+      const [thumbnail, introVideo] = await Promise.all([
+        lecturerCourseService.uploadCourseThumbnailAPI(data.introImage),
+        lecturerCourseService.uploadCourseIntroVideoAPI(data.introVideo),
+      ]);
 
       const payload = {
         categoryId,
         thumbnail,
+        introVideo,
         name: data.courseName.trim(),
         lecturerName,
         duration: "N/A",
         level: data.level,
         overview: data.description.trim(),
         price: Number(data.price),
-        status: submitStatus,
+        status,
       } as const;
 
       let courseId = storedCourseId;
@@ -202,7 +240,8 @@ const DashboardDetail = () => {
       if (Number.isInteger(storedCourseId) && storedCourseId > 0) {
         await lecturerCourseService.updateCourseAPI(storedCourseId, payload);
       } else {
-        const createdCourse = await lecturerCourseService.createCourseAPI(payload);
+        const createdCourse =
+          await lecturerCourseService.createCourseAPI(payload);
         courseId = Number((createdCourse as { id?: number }).id);
       }
 
@@ -215,6 +254,7 @@ const DashboardDetail = () => {
             courseTitle: data.courseName.trim(),
           }),
         );
+        localStorage.setItem("lecturerDetailReady", "1");
 
         await Promise.allSettled(
           data.faqs.map((faq) =>
@@ -229,14 +269,19 @@ const DashboardDetail = () => {
 
       toast.success("Course detail saved successfully.");
       navigate("/dashboard/lecturer/my-courses/create-course/curriculum");
+    } catch (error: any) {
+      toast.error(error?.message || "Cannot save course details.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const submitWithIntent = (intent: SubmitIntent) =>
+    handleSubmit((data) => onSubmit(data, intent))();
+
   return (
     <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onSubmit)} className="relative my-4">
+      <form className="relative my-4">
         <div className="flex items-center justify-between">
           <h3 className="text-[22px] text-[#0F172A] font-poppins font-semibold">
             Details
@@ -247,20 +292,19 @@ const DashboardDetail = () => {
               type="cancel-v2"
               content="Draft"
               disabled={isSubmitting}
-              onClick={() => setSubmitStatus("draft")}
+              onClick={() => submitWithIntent("draft")}
             />
             <Button
               type="submit-v2"
               content="Save"
               disabled={isSubmitting}
-              onClick={() => setSubmitStatus("pending")}
+              onClick={() => submitWithIntent("save")}
             />
             <Button
-              type="submit-v2"
+              type="publish"
               content="Publish"
               disabled={isSubmitting}
-              onClick={() => setSubmitStatus("published")}
-              additionalClass="bg-[#3B82F6]!"
+              onClick={() => submitWithIntent("publish")}
             />
           </div>
         </div>

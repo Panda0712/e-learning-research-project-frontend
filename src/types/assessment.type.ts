@@ -8,6 +8,8 @@ export interface StudentSubmission {
 
 export interface RevenueStatsProps {
   onWithdrawClick: () => void;
+  totalEarnings: number;
+  thisMonthRevenue: number;
   availableBalance: number;
 }
 

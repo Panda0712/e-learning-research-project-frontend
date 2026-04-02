@@ -1,8 +1,30 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ChevronLeft, ChevronRight, Eye, X, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { transactionService } from "../../../apis/transaction"; 
+import { transactionService } from "../../../apis/transaction";
 
+// Types copied from src/types/transaction.type.ts to avoid import issues
+export interface TransactionItem {
+  courseId: number;
+  courseTitle: string;
+  instructorName: string;
+  discountAmount: number;
+  discountCode: string | null;
+}
+export interface Transaction {
+  id: number;
+  userId: number;
+  userEmail: string;
+  userFullName: string;
+  amount: number;
+  paymentMethod: string;
+  status: string;
+  gatewayReference: string;
+  createdAt: string;
+  items: TransactionItem[];
+}
+
+// Local type for the component's mapped data state
 interface TransactionType {
   id: string;
   studentName: string;
@@ -83,16 +105,17 @@ const DashboardTransactions = () => {
         setIsLoading(true);
         setError(null);
 
-        const rawData = await transactionService.getAllTransactionsAPI();
+        const rawData: Transaction[] = await transactionService.getAllTransactionsAPI();
+        console.log("Fetched Transactions Data:", rawData);
 
-        const mappedData: TransactionType[] = rawData.map((item: any) => {
+        const mappedData: TransactionType[] = rawData.map((item) => {
           const courses =
-            item.items?.map((st: any) => st.courseTitle).join(", ") ||
+            item.items?.map((st) => st.courseTitle).join(", ") ||
             "Courses deleted";
 
           const totalDiscount =
             item.items?.reduce(
-              (acc: number, st: any) => acc + (st.discountAmount || 0),
+              (acc, st) => acc + (st.discountAmount || 0),
               0,
             ) || 0;
 

@@ -19,6 +19,7 @@ export type UploadedResource = {
 export type LecturerCoursePayload = {
   categoryId: number;
   thumbnail: UploadedResource;
+  introVideo?: UploadedResource;
   name: string;
   lecturerName: string;
   duration: string;
@@ -49,8 +50,22 @@ const uploadCourseThumbnailAPI = async (file: File) => {
   return mapCloudinaryResource(res.data as CloudinaryUploadResponse);
 };
 
+const uploadCourseIntroVideoAPI = async (file: File) => {
+  const formData = new FormData();
+  formData.append("video", file);
+
+  const res = await authorizedAxiosInstance.post(
+    `${API_ROOT}/v1/courses/intro-video`,
+    formData,
+  );
+  return mapCloudinaryResource(res.data);
+};
+
 const createCourseAPI = async (payload: LecturerCoursePayload) => {
-  const res = await authorizedAxiosInstance.post(`${API_ROOT}/v1/courses`, payload);
+  const res = await authorizedAxiosInstance.post(
+    `${API_ROOT}/v1/courses`,
+    payload,
+  );
   return res.data;
 };
 
@@ -70,12 +85,17 @@ const createCourseFaqAPI = async (payload: {
   question: string;
   answer: string;
 }) => {
-  const res = await authorizedAxiosInstance.post(`${API_ROOT}/v1/courses/faq`, payload);
+  const res = await authorizedAxiosInstance.post(
+    `${API_ROOT}/v1/courses/faq`,
+    payload,
+  );
   return res.data;
 };
 
 const getCourseCategoriesAPI = async () => {
-  const res = await authorizedAxiosInstance.get(`${API_ROOT}/v1/courses/categories`);
+  const res = await authorizedAxiosInstance.get(
+    `${API_ROOT}/v1/courses/categories`,
+  );
   return res.data;
 };
 
@@ -86,11 +106,27 @@ const getCoursesByLecturerIdAPI = async (lecturerId: number) => {
   return res.data;
 };
 
+const getMyCoursesAPI = async (params: {
+  page?: number;
+  itemsPerPage?: number;
+  status?: "all" | "draft" | "pending" | "published" | "rejected";
+  q?: string;
+  sortBy?: "createdAt" | "updatedAt";
+}) => {
+  const res = await authorizedAxiosInstance.get(
+    `${API_ROOT}/v1/courses/lecturer/my-courses`,
+    { params },
+  );
+  return res.data;
+};
+
 export const lecturerCourseService = {
   uploadCourseThumbnailAPI,
+  uploadCourseIntroVideoAPI,
   createCourseAPI,
   updateCourseAPI,
   createCourseFaqAPI,
   getCourseCategoriesAPI,
   getCoursesByLecturerIdAPI,
+  getMyCoursesAPI,
 };

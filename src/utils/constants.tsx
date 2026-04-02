@@ -14,6 +14,7 @@ import {
   FileText,
   LayoutDashboard,
   Receipt,
+  Tag,
   TicketPercent,
   User,
   Wallet,
@@ -93,6 +94,11 @@ export const menuDashboard2 = [
     label: "Voucher",
     path: "/dashboard/admin/vouchers",
     icon: <TicketPercent size={22} />,
+  },
+  {
+    label: "Voucher Category",
+    path: "/dashboard/admin/voucher-categories",
+    icon: <Tag size={22} />,
   },
 ];
 

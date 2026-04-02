@@ -10,12 +10,14 @@ interface SettingsMenuProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   userProfile?: { name: string; avatar: string; updatedAt?: string };
+  onLogout?: () => void;
 }
 
 const SettingsMenu: React.FC<SettingsMenuProps> = ({
   activeTab,
   setActiveTab,
   userProfile,
+  onLogout,
 }) => {
   //const dispatch = useDispatch();
 
@@ -23,6 +25,10 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({
     userProfile?.avatar,
   );
   const [isUploading, setIsUploading] = useState(false);
+
+  React.useEffect(() => {
+    setCurrentAvatar(userProfile?.avatar);
+  }, [userProfile?.avatar]);
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -53,7 +59,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({
 
   const handleLogout = () => {
     if (window.confirm("Bạn có chắc chắn muốn đăng xuất không?")) {
-      //dispatch(logoutUserAPI(false) as any);
+      onLogout?.();
     }
   };
 
@@ -81,7 +87,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({
         <div className="relative">
           {/* Avatar UI */}
           <img
-            src={currentAvatar || "/public/avatar1.png"}
+            src={currentAvatar || "/avatar1.png"}
             alt="Profile"
             className={`w-24 h-24 rounded-full object-cover bg-blue-100 transition-opacity ${isUploading ? "opacity-50" : "opacity-100"}`}
           />

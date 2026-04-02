@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useRef } from "react";
 import {
   BrowserRouter,
   Navigate,
@@ -6,7 +7,8 @@ import {
   Route,
   Routes,
 } from "react-router-dom";
-import { ToastContainer } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
+import { io, Socket } from "socket.io-client";
 import RbacRoute from "./components/core/RbacRoute";
 import CourseDetailChapter from "./components/dashboard/admin/courses/course-detail-chapter/CourseDetailChapter";
 import AdminCourseDetail from "./components/dashboard/admin/courses/course-detail/AdminCourseDetail";
@@ -36,6 +38,7 @@ import DashboardPayouts from "./pages/Dashboard/Admin/DashboardPayouts";
 import DashboardTransactions from "./pages/Dashboard/Admin/DashboardTransactions";
 import DashboardUser from "./pages/Dashboard/Admin/DashboardUser";
 import DashboardVoucher from "./pages/Dashboard/Admin/DashboardVoucher";
+import DashboardVoucherCategory from "./pages/Dashboard/Admin/DashboardVoucherCategory";
 import DashboardLayout from "./pages/Dashboard/Dashboard";
 import DashboardAssessment from "./pages/Dashboard/Lecturer/DashboardAssessment";
 import DashboardCommunication from "./pages/Dashboard/Lecturer/DashboardCommunication";
@@ -51,6 +54,7 @@ import LecturerDetails from "./pages/Lecturer/LecturerDetails";
 import Registration from "./pages/Lecturer/Registration";
 import NotFoundPage from "./pages/NotFound/NotFound";
 import Payment from "./pages/Payment/Payment";
+import PaymentCancel from "./pages/Payment/PaymentCancel";
 import Profile from "./pages/Profile/Profile";
 import {
   fetchCurrentUserAPI,
@@ -59,7 +63,7 @@ import {
 } from "./redux/activeUser/activeUserSlice";
 import { useAppDispatch, useAppSelector } from "./redux/hooks";
 import type { UserProfile } from "./types/user.type";
-import { ACCOUNT_ROLES } from "./utils/constants";
+import { ACCOUNT_ROLES, API_ROOT } from "./utils/constants";
 import { normalizeRole } from "./utils/helpers";
 
 const AuthBootstrap = () => <Loading caption="Checking your session..." />;
@@ -132,10 +136,49 @@ const App = () => {
   const dispatch = useAppDispatch();
   const currentUser = useAppSelector(selectCurrentUser);
   const authResolved = useAppSelector(selectAuthResolved);
+  const notificationSocketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
     dispatch(fetchCurrentUserAPI()).catch(() => {});
   }, [dispatch]);
+
+  useEffect(() => {
+    const userId = Number(currentUser?.id);
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+      if (notificationSocketRef.current) {
+        notificationSocketRef.current.disconnect();
+        notificationSocketRef.current = null;
+      }
+      return;
+    }
+
+    if (notificationSocketRef.current) return;
+
+    const socket = io(API_ROOT, {
+      withCredentials: true,
+      transports: ["websocket"],
+    });
+
+    socket.on("new-notification", (payload: any) => {
+      const title = payload?.title || "New notification";
+      const message = payload?.message || "You have a new notification.";
+
+      toast.info(`${title}: ${message}`);
+      window.dispatchEvent(
+        new CustomEvent("app:new-notification", { detail: payload }),
+      );
+    });
+
+    notificationSocketRef.current = socket;
+
+    return () => {
+      socket.disconnect();
+      if (notificationSocketRef.current === socket) {
+        notificationSocketRef.current = null;
+      }
+    };
+  }, [currentUser?.id]);
 
   // console.log("Current User:", currentUser);
   // console.log("User Role:", currentUser?.role);
@@ -271,6 +314,10 @@ const App = () => {
                 />
                 <Route path="admin/user" element={<DashboardUser />} />
                 <Route path="admin/vouchers" element={<DashboardVoucher />} />
+                <Route
+                  path="admin/voucher-categories"
+                  element={<DashboardVoucherCategory />}
+                />
               </Route>
             </Route>
           </Route>
@@ -376,6 +423,8 @@ const App = () => {
               }
             >
               <Route path="/payment/:id" element={<Payment />} />
+              <Route path="/payment/success" element={<Success />} />
+              <Route path="/payment/cancel" element={<PaymentCancel />} />
             </Route>
           </Route>
         </Route>
