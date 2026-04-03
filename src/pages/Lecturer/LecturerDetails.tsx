@@ -7,7 +7,15 @@ import {
   Share2,
   Twitter,
 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import {
+  lecturerService,
+  type PublicLecturerDetailResponse,
+  type PublicLecturerItem,
+} from "../../apis/lecturer";
+import { toast } from "react-toastify";
+import { DEFAULT_ITEMS_PER_PAGE } from "../../utils/constants";
 
 interface LecturerData {
   id: number;
@@ -22,56 +30,70 @@ interface LecturerData {
   expertise: string[];
 }
 
+const fallbackAvatar =
+  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop";
+
 const LecturerDetails = () => {
   const { id } = useParams();
+  const [loading, setLoading] = useState(false);
+  const [lecturerDetail, setLecturerDetail] =
+    useState<PublicLecturerDetailResponse | null>(null);
+  const [otherInstructors, setOtherInstructors] = useState<PublicLecturerItem[]>(
+    [],
+  );
 
-  // Mock data - in real app, fetch based on id
-  const lecturer: LecturerData = {
-    id: Number(id),
-    name: "SÁMOL",
-    role: "Lecturer",
-    image:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop",
-    phone: "11000000000000000",
-    address: "An Duong Vuong",
-    email: "hienlu@gmail.com",
-    bio: "My greatest passion is sharing knowledge and helping beginners demystify the world of programming. I believe anyone can learn to code with the right roadmap and a dedicated instructor.",
-    education:
-      'My Philosophy: "Learning by doing." I focus on practical, project-based learning that helps you build real products, not just memorize theory.',
-    expertise: ["Lectures", "My Skill", "Consulting"],
-  };
+  useEffect(() => {
+    if (!id) return;
 
-  // Mock data for other instructors
-  const otherInstructors = [
-    {
-      id: 1,
-      name: "Tuan Andy",
-      role: "Lecturer",
-      image:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
-    },
-    {
-      id: 2,
-      name: "Samuel",
-      role: "Lecturer",
-      image:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop",
-    },
-    {
-      id: 3,
-      name: "Khai Travis",
-      role: "Lecturer",
-      image:
-        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop",
-    },
-    {
-      id: 4,
-      name: "Lina",
-      role: "Lecturer",
-      image:
-        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop",
-    },
-  ];
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [detail, list] = await Promise.all([
+          lecturerService.getPublicLecturerDetailAPI(Number(id)),
+          lecturerService.getPublicLecturersAPI({
+            page: 1,
+            itemsPerPage: DEFAULT_ITEMS_PER_PAGE,
+          }),
+        ]);
+
+        setLecturerDetail(detail);
+        setOtherInstructors((list.lecturers || []).filter((item) => item.id !== Number(id)).slice(0, 4));
+      } catch (error: any) {
+        toast.error(error?.message || "Failed to fetch lecturer detail.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [id]);
+
+  const lecturer: LecturerData = useMemo(
+    () => ({
+      id: Number(id || 0),
+      name:
+        `${lecturerDetail?.firstName || ""} ${lecturerDetail?.lastName || ""}`.trim() ||
+        lecturerDetail?.email ||
+        "Lecturer",
+      role: lecturerDetail?.lecturerProfile?.professionalTitle || "Lecturer",
+      image: lecturerDetail?.avatar?.fileUrl || fallbackAvatar,
+      phone: lecturerDetail?.phoneNumber || "Updating...",
+      address: lecturerDetail?.lecturerProfile?.nationality || "Updating...",
+      email: lecturerDetail?.email || "Updating...",
+      bio:
+        lecturerDetail?.lecturerProfile?.bio ||
+        "Lecturer bio is currently being updated.",
+      education:
+        lecturerDetail?.lecturerProfile?.highestDegree ||
+        "Lecturer education information is currently being updated.",
+      expertise: [
+        lecturerDetail?.lecturerProfile?.professionalTitle || "Lecturing",
+        lecturerDetail?.lecturerProfile?.nationality || "Global",
+        "Mentoring",
+      ],
+    }),
+    [id, lecturerDetail],
+  );
 
   return (
     <div className="flex-1 bg-white">
@@ -98,6 +120,9 @@ const LecturerDetails = () => {
 
       {/* Main Content */}
       <div className=" px-20 pb-0 py-16 bg-white">
+        {loading ? (
+          <p className="text-center text-[#737A86] mb-8">Loading lecturer detail...</p>
+        ) : null}
         <div className="bg-[#E8E6F5] p-10 ">
           <div className="grid grid-cols-3 gap-8 mb-20">
             {/* Left Sidebar - Lecturer Info */}
@@ -224,8 +249,8 @@ const LecturerDetails = () => {
                 {/* Image Container */}
                 <div className="relative group">
                   <img
-                    src={instructor.image}
-                    alt={instructor.name}
+                    src={instructor.avatar?.fileUrl || fallbackAvatar}
+                    alt={`${instructor.firstName || ""} ${instructor.lastName || ""}`.trim()}
                     className="w-full h-50 object-cover"
                   />
                   {/* Share Button */}
@@ -237,10 +262,11 @@ const LecturerDetails = () => {
                 {/* Info Container */}
                 <div className="p-6">
                   <h3 className="text-[22px] font-semibold text-[#190D30] mb-1">
-                    {instructor.name}
+                    {`${instructor.firstName || ""} ${instructor.lastName || ""}`.trim() ||
+                      instructor.email}
                   </h3>
                   <p className="text-[16px] text-[#778BE5] font-poppins">
-                    {instructor.role}
+                    {instructor.lecturerProfile?.professionalTitle || "Lecturer"}
                   </p>
                 </div>
               </a>

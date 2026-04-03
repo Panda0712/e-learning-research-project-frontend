@@ -2,7 +2,7 @@
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
 import { Search, Send, Smile } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { toast } from "react-toastify";
 import { profileService } from "../../apis/profile";
@@ -22,6 +22,8 @@ import {
 } from "../../redux/chat/socket";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { store } from "../../redux/store";
+import { useSearchParams } from "react-router-dom";
+import { CHAT_SCROLLBAR_CLASS } from "../../utils/constants";
 
 const STUDENT_CHAT_DEFAULTS = {
   page: 1,
@@ -30,6 +32,7 @@ const STUDENT_CHAT_DEFAULTS = {
 
 const StudentChatPage = () => {
   const dispatch = useAppDispatch();
+  const [searchParams] = useSearchParams();
   const currentUser = useAppSelector(selectCurrentUser);
   const { conversations, activeConversationId, messagesByConversation } =
     useAppSelector((state) => state.chat);
@@ -38,6 +41,15 @@ const StudentChatPage = () => {
   const [search, setSearch] = useState("");
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
+  const [isNearLatest, setIsNearLatest] = useState(true);
+  const [newMessageDividerId, setNewMessageDividerId] = useState<number | null>(
+    null,
+  );
+
+  const chatScrollRef = useRef<HTMLDivElement>(null);
+  const prevLastMsgIdRef = useRef<number | null>(null);
+  const prevConvIdRef = useRef<number | null>(null);
+  const prevMsgCountRef = useRef<number>(0);
 
   const activeConversation = useMemo(
     () => conversations.find((item) => item.id === activeConversationId),
@@ -47,6 +59,10 @@ const StudentChatPage = () => {
   const currentMessages = activeConversationId
     ? (messagesByConversation[activeConversationId]?.items ?? [])
     : [];
+  const lastMessage = currentMessages[currentMessages.length - 1] ?? null;
+  const activeConversationFromQuery = Number(
+    searchParams.get("conversationId"),
+  );
 
   useEffect(() => {
     connectChatSocket(store);
@@ -91,6 +107,60 @@ const StudentChatPage = () => {
     dispatch(markAsSeenAPI(activeConversationId));
   }, [activeConversationId, dispatch]);
 
+  useEffect(() => {
+    if (
+      Number.isInteger(activeConversationFromQuery) &&
+      activeConversationFromQuery > 0 &&
+      conversations.some((c) => c.id === activeConversationFromQuery)
+    ) {
+      dispatch(setActiveConversation(activeConversationFromQuery));
+    }
+  }, [activeConversationFromQuery, conversations, dispatch]);
+
+  useEffect(() => {
+    if (!activeConversationId) return;
+    scrollToLatest("auto");
+    prevLastMsgIdRef.current = null;
+    setNewMessageDividerId(null);
+  }, [activeConversationId]);
+
+  useEffect(() => {
+    if (!lastMessage) return;
+
+    const prevId = prevLastMsgIdRef.current;
+    const isNewIncoming =
+      prevId !== null &&
+      lastMessage.id !== prevId &&
+      Number(lastMessage.senderId) !== Number(currentUser?.id);
+
+    if (isNewIncoming) {
+      setNewMessageDividerId(lastMessage.id);
+      if (isNearLatest) scrollToLatest("smooth");
+    }
+
+    prevLastMsgIdRef.current = lastMessage.id;
+  }, [
+    lastMessage?.id,
+    lastMessage,
+    activeConversationId,
+    isNearLatest,
+    currentUser?.id,
+  ]);
+
+  useEffect(() => {
+    if (!activeConversationId) return;
+
+    const convChanged = prevConvIdRef.current !== activeConversationId;
+    const msgCountIncreased = currentMessages.length > prevMsgCountRef.current;
+
+    if (convChanged || msgCountIncreased) {
+      scrollToLatest("auto");
+    }
+
+    prevConvIdRef.current = activeConversationId;
+    prevMsgCountRef.current = currentMessages.length;
+  }, [activeConversationId, currentMessages.length]);
+
   const filteredLecturers = lecturers.filter((item) =>
     `${item.firstName ?? ""} ${item.lastName ?? ""}`
       .toLowerCase()
@@ -127,12 +197,36 @@ const StudentChatPage = () => {
     );
 
     setText("");
+    scrollToLatest("smooth");
+  };
+
+  const scrollToLatest = (behavior: ScrollBehavior = "smooth") => {
+    const el = chatScrollRef.current;
+    if (!el) return;
+
+    requestAnimationFrame(() => {
+      el.scrollTo({
+        top: el.scrollHeight,
+        behavior,
+      });
+    });
+  };
+
+  const handleChatScroll = () => {
+    const el = chatScrollRef.current;
+    if (!el) return;
+
+    const distanceToBottom = el.scrollHeight - el.clientHeight - el.scrollTop;
+    setIsNearLatest(distanceToBottom <= 80);
   };
 
   return (
-    <div className="mx-auto h-[calc(100vh-140px)] max-w-7xl p-6">
-      <div className="grid h-full grid-cols-12 gap-5">
-        <div className="col-span-4 rounded-xl border border-gray-200 bg-white">
+    <div className="mx-auto w-full max-w-7xl px-6 py-4">
+      <div className="grid h-[calc(100dvh-170px)] min-h-155 grid-cols-12 gap-5">
+        <div
+          className="col-span-4 flex flex-col overflow-hidden rounded-xl border 
+        border-gray-200 bg-white"
+        >
           <div className="border-b border-gray-200 p-4">
             <div className="relative">
               <Search
@@ -147,7 +241,7 @@ const StudentChatPage = () => {
               />
             </div>
           </div>
-          <div className="h-[calc(100%-70px)] overflow-y-auto">
+          <div className={`flex-1 ${CHAT_SCROLLBAR_CLASS}`}>
             {filteredLecturers.map((lecturer: any) => {
               const convo = conversations.find(
                 (item) => item.lecturerId === lecturer.id,
@@ -179,12 +273,17 @@ const StudentChatPage = () => {
           </div>
         </div>
 
-        <div className="col-span-8 flex flex-col rounded-xl border border-gray-200 bg-white">
+        <div className="col-span-8 flex flex-col rounded-xl overflow-hidden border border-gray-200 bg-white">
           <div className="border-b border-gray-200 p-4 text-sm font-semibold">
             {activeConversation ? "Conversation" : "Select a lecturer"}
           </div>
 
-          <div id="student-chat-scroll" className="flex-1 overflow-y-auto p-4">
+          <div
+            id="student-chat-scroll"
+            ref={chatScrollRef}
+            onScroll={handleChatScroll}
+            className={`flex-1 p-4 ${CHAT_SCROLLBAR_CLASS}`}
+          >
             <InfiniteScroll
               dataLength={currentMessages.length}
               next={() =>
@@ -208,22 +307,29 @@ const StudentChatPage = () => {
               scrollableTarget="student-chat-scroll"
               style={{ display: "flex", flexDirection: "column-reverse" }}
             >
-              {[...currentMessages].reverse().map((message) => {
-                const isOwn =
-                  Number(message.senderId) === Number(currentUser?.id);
-                return (
+              {[...currentMessages].reverse().map((message) => (
+                <div key={message.id}>
+                  {newMessageDividerId === message.id && (
+                    <div className="my-3 flex items-center gap-2">
+                      <div className="h-px flex-1 bg-blue-200" />
+                      <span className="text-xs font-semibold text-blue-600">
+                        New message
+                      </span>
+                      <div className="h-px flex-1 bg-blue-200" />
+                    </div>
+                  )}
+
                   <div
-                    key={message.id}
-                    className={`mb-3 flex ${isOwn ? "justify-end" : "justify-start"}`}
+                    className={`mb-3 flex ${Number(message.senderId) === Number(currentUser?.id) ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`max-w-[70%] rounded-2xl px-4 py-2 text-sm ${isOwn ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-900"}`}
+                      className={`max-w-[70%] rounded-2xl px-4 py-2 text-sm ${Number(message.senderId) === Number(currentUser?.id) ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-900"}`}
                     >
                       {message.content}
                     </div>
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </InfiniteScroll>
           </div>
 
