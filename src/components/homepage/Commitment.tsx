@@ -2,8 +2,11 @@ import Button from "../ui/Button";
 import HeadingText from "../text/HeadingText";
 import SubHeadingText from "../text/SubHeadingText";
 import Student from "/students.png";
+import { useNavigate } from "react-router-dom";
 
 const Commitment = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="flex px-5 mt-20 justify-center items-center gap-6">
       <img src={Student} className="object-cover" alt="" />
@@ -16,6 +19,7 @@ const Commitment = () => {
         />
         <Button
           content="Sign Up For Free"
+          onClick={() => navigate("/auth/register")}
           type="primary"
           additionalClass="w-[200px] mt-7 ml-10"
         />

@@ -1,5 +1,7 @@
 import { Mail, MapPin, PhoneCall } from "lucide-react";
 import { useState } from "react";
+import { toast } from "react-toastify";
+import { contactService } from "../../apis/contact";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -9,9 +11,10 @@ const Contact = () => {
     subject: "",
     comment: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     setFormData({
       ...formData,
@@ -19,10 +22,41 @@ const Contact = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
-    // Handle form submission logic here
+
+    const payload = {
+      name: formData.name.trim(),
+      email: formData.email.trim(),
+      phone: formData.phone.trim(),
+      subject: formData.subject.trim(),
+      comment: formData.comment.trim(),
+    };
+
+    if (
+      !payload.name ||
+      !payload.email ||
+      !payload.subject ||
+      !payload.comment
+    ) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await contactService.submitContactAPI(payload);
+      toast.success("Your message has been sent.");
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        subject: "",
+        comment: "",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -106,7 +140,7 @@ const Contact = () => {
               <input
                 type="text"
                 name="name"
-                placeholder="Your Name"
+                placeholder="Your Name *"
                 value={formData.name}
                 onChange={handleChange}
                 className="w-full px-6 py-4 bg-[#F2F2F2] rounded-lg text-[16px] 
@@ -173,10 +207,10 @@ const Contact = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              className="px-8 py-4 bg-[#704FE6] text-white text-[16px] font-medium 
-                       rounded-lg hover:bg-[#5F3DD4] transition-colors"
+              disabled={isSubmitting}
+              className="px-8 py-4 bg-[#704FE6] text-white text-[16px] font-medium rounded-lg hover:bg-[#5F3DD4] transition-colors disabled:opacity-60"
             >
-              Send Message
+              {isSubmitting ? "Sending..." : "Send Message"}
             </button>
           </form>
         </div>
