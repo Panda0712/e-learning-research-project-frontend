@@ -1,17 +1,60 @@
-import { PlayCircle } from "lucide-react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { PlayCircle, ShoppingCart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { cartService } from "../../../apis/cart";
 import Button from "../../../components/ui/Button";
-import type { Course } from "../../../types/course.type";
+import { selectCurrentUser } from "../../../redux/activeUser/activeUserSlice";
+import { useAppSelector } from "../../../redux/hooks";
+import type { Course, CourseStudentState } from "../../../types/course.type";
 
-const CourseSidebar = ({ course }: { course: Course }) => {
+const CourseSidebar = ({
+  course,
+  studentState,
+  onAddedToCart,
+}: {
+  course: Course;
+  studentState?: CourseStudentState | null;
+  onAddedToCart?: () => void;
+}) => {
   const navigate = useNavigate();
+  const currentUser = useAppSelector(selectCurrentUser);
+
+  const isPurchased = Boolean(studentState?.isPurchased);
+  const isInCart = Boolean(studentState?.isInCart);
+  const canAddToCart = Boolean(studentState?.canAddToCart);
 
   const handleStartLearning = () => {
     navigate(`/learning/${course.id}`);
   };
 
-  const buyCourse = () => {
+  const handleBuyNow = () => {
     navigate(`/payment/${course.id}`);
+  };
+
+  const handleAddToCart = async () => {
+    if (!currentUser?.id) {
+      navigate("/auth/login");
+      return;
+    }
+
+    if (isPurchased) {
+      toast.info("You already purchased this course.");
+      return;
+    }
+
+    if (isInCart) {
+      toast.info("Course already in cart.");
+      return;
+    }
+
+    try {
+      await cartService.addToCart({ courseId: course.id });
+      toast.success("Added to cart successfully!");
+      onAddedToCart?.();
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to add course to cart");
+    }
   };
 
   return (
@@ -41,19 +84,32 @@ const CourseSidebar = ({ course }: { course: Course }) => {
             ${course.price + 20}
           </span>
         </div>
-        <Button
-          content="Start Now"
-          type="primary"
-          onClick={handleStartLearning}
-          additionalClass="!w-full !rounded-full !text-white !text-lg !font-bold shadow-lg shadow-orange mb-6 !bg-orange-500"
-        />
+        {isPurchased ? (
+          <Button
+            content="Start Now"
+            type="primary"
+            onClick={handleStartLearning}
+            additionalClass="!w-full !rounded-full !text-white !text-lg !font-bold mb-4 !bg-orange-500"
+          />
+        ) : (
+          <Button
+            content="Buy Now"
+            type="primary"
+            onClick={handleBuyNow}
+            additionalClass="!w-full !rounded-full !text-white !text-lg !font-bold mb-4 !bg-orange-500"
+          />
+        )}
 
-        <Button
-          content="Buy Now"
-          type="primary"
-          onClick={buyCourse}
-          additionalClass="!w-full !rounded-full !text-white !text-lg !font-bold shadow-lg shadow-orange mb-6 !bg-orange-500"
-        />
+        {!isPurchased && (
+          <Button
+            icon={<ShoppingCart size={18} />}
+            content={isInCart ? "Already in cart" : "Add to cart"}
+            type="secondary"
+            onClick={handleAddToCart}
+            disabled={isInCart || !canAddToCart}
+            additionalClass="!w-full !rounded-full !text-sm !font-bold"
+          />
+        )}
       </div>
     </div>
   );

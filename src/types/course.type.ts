@@ -66,7 +66,16 @@ export interface Course {
   rating?: number;
   ratingCount?: number;
   viewers?: Student[];
+  studentState?: CourseStudentState;
 }
+
+export type CourseStudentState = {
+  courseId: number;
+  isAuthenticated: boolean;
+  isPurchased: boolean;
+  isInCart: boolean;
+  canAddToCart: boolean;
+};
 
 export interface DashboardStudent {
   id: number | string;
