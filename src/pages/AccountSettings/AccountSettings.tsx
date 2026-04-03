@@ -10,7 +10,7 @@ import {
   updateUserAPI,
 } from "../../redux/activeUser/activeUserSlice";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { buildDateOfBirthV3 } from "../../utils/helpers";
+import { buildDateOfBirthV2 } from "../../utils/helpers";
 
 const AccountSettings = () => {
   const currentUser = useAppSelector(selectCurrentUser);
@@ -28,7 +28,7 @@ const AccountSettings = () => {
   const saveProfile = async (data: any) => {
     const normalizedData = {
       ...data,
-      dateOfBirth: buildDateOfBirthV3(data?.dateOfBirth),
+      dateOfBirth: buildDateOfBirthV2(data?.dateOfBirth),
     };
 
     dispatch(updateUserAPI(normalizedData))
@@ -106,4 +106,3 @@ const AccountSettings = () => {
 };
 
 export default AccountSettings;
-

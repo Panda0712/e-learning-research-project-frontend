@@ -1,4 +1,4 @@
-import { CheckCheck, ChevronDown, ShoppingCart, Bell } from "lucide-react";
+import { Bell, CheckCheck, ChevronDown, ShoppingCart } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -15,8 +15,6 @@ import { normalizeRole } from "../../utils/helpers";
 import Button from "./Button";
 import AvatarLoginImg from "/avatar-login.png";
 import Logo from "/logo.png";
-import NotificationIconImg from "/notification-icon.png";
-import ShoppingCartImg from "/shopping-cart.png";
 
 const Navbar = () => {
   const [isLecturerDropdownOpen, setIsLecturerDropdownOpen] = useState(false);
@@ -205,10 +203,20 @@ const Navbar = () => {
 
   return (
     <div className="sticky top-0 z-50 w-full pt-4 pb-2">
-      <nav className="mx-auto flex w-[95%] max-w-[1320px] items-center justify-between rounded-full border border-slate-200/70 bg-white/85 px-4 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.05)] backdrop-blur-xl">
+      <nav
+        className="mx-auto flex w-[95%] max-w-330 items-center justify-between rounded-full 
+      border border-slate-200/70 bg-white/85 px-4 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.05)] backdrop-blur-xl"
+      >
         {/* LOGO */}
-        <Link to="/" className="ml-2 flex items-center gap-2 transition-opacity duration-300 hover:opacity-70">
-          <img src={Logo} className="h-10 w-10 object-contain" alt="EduLearn Logo" />
+        <Link
+          to="/"
+          className="ml-2 flex items-center gap-2 transition-opacity duration-300 hover:opacity-70"
+        >
+          <img
+            src={Logo}
+            className="h-10 w-10 object-contain"
+            alt="EduLearn Logo"
+          />
           <h1 className="text-[26px] font-extrabold tracking-tight text-[#19566A]">
             Learn
           </h1>
@@ -225,27 +233,35 @@ const Navbar = () => {
                     onClick={() =>
                       setIsLecturerDropdownOpen(!isLecturerDropdownOpen)
                     }
-                    className={`flex items-center gap-1.5 rounded-full px-5 py-2.5 text-[16px] font-bold transition-colors duration-300 ${
-                      location.pathname.startsWith(item.path)
-                        ? "bg-[#19566A] text-white shadow-md shadow-[#19566A]/20"
-                        : "text-[#327186] hover:bg-[#EDF7FA] hover:text-[#19566A]"
-                    }`}
+                    className={`flex items-center gap-1.5 rounded-full px-5 py-2.5 
+                      text-[16px] font-bold transition-colors duration-300 ${
+                        location.pathname.startsWith(item.path)
+                          ? "bg-[#19566A] text-white shadow-md shadow-[#19566A]/20"
+                          : "text-[#327186] hover:bg-[#EDF7FA] hover:text-[#19566A]"
+                      }`}
                   >
                     <span>{item.name}</span>
                     <ChevronDown className="h-4 w-4" />
                   </button>
 
                   {isLecturerDropdownOpen && (
-                    <div className="absolute left-0 top-full z-50 mt-3 min-w-[220px] overflow-hidden rounded-2xl border border-slate-100 bg-white p-1.5 shadow-xl">
+                    <div
+                      className="absolute left-0 top-full z-50 mt-3 min-w-55 
+                    overflow-hidden rounded-2xl border border-slate-100 bg-white p-1.5 shadow-xl"
+                    >
                       <Link
+                        onClick={() => setIsLecturerDropdownOpen(false)}
                         to="/lecturer"
-                        className="block rounded-xl px-4 py-3 text-[15px] font-medium text-[#327186] transition-colors hover:bg-[#EDF7FA] hover:text-[#19566A]"
+                        className="block rounded-xl px-4 py-3 text-[15px] font-medium text-[#327186] 
+                        transition-colors hover:bg-[#EDF7FA] hover:text-[#19566A]"
                       >
                         Lecturer
                       </Link>
                       <Link
+                        onClick={() => setIsLecturerDropdownOpen(false)}
                         to="/registration"
-                        className="block rounded-xl px-4 py-3 text-[15px] font-medium text-[#327186] transition-colors hover:bg-[#EDF7FA] hover:text-[#19566A]"
+                        className="block rounded-xl px-4 py-3 text-[15px] font-medium text-[#327186] 
+                        transition-colors hover:bg-[#EDF7FA] hover:text-[#19566A]"
                       >
                         Registration
                       </Link>
@@ -255,11 +271,12 @@ const Navbar = () => {
               ) : (
                 <Link
                   to={item.path}
-                  className={`block rounded-full px-5 py-2.5 text-[16px] font-bold transition-colors duration-300 ${
-                    location.pathname === item.path
-                      ? "bg-[#19566A] text-white shadow-md shadow-[#19566A]/20"
-                      : "text-[#327186] hover:bg-[#EDF7FA] hover:text-[#19566A]"
-                  }`}
+                  className={`block rounded-full px-5 py-2.5 text-[16px] 
+                    font-bold transition-colors duration-300 ${
+                      location.pathname === item.path
+                        ? "bg-[#19566A] text-white shadow-md shadow-[#19566A]/20"
+                        : "text-[#327186] hover:bg-[#EDF7FA] hover:text-[#19566A]"
+                    }`}
                 >
                   {item.name}
                 </Link>
@@ -270,158 +287,178 @@ const Navbar = () => {
 
         {/* RIGHT SIDE */}
         <div className="flex items-center gap-2 pr-1">
-        {currentUser ? (
-          <>
-            <button
-              type="button"
-              className="flex h-[42px] w-[42px] items-center justify-center rounded-full text-[#327186] transition-colors duration-300 hover:bg-[#EDF7FA] hover:text-[#19566A]"
-              aria-label="Shopping cart"
-            >
-              <ShoppingCart strokeWidth={2} className="h-5 w-5" />
-            </button>
-
-            <div className="relative" ref={notificationRef}>
+          {currentUser ? (
+            <>
               <button
                 type="button"
-                onClick={() => {
-                  const next = !isNotificationDropdownOpen;
-                  setIsNotificationDropdownOpen(next);
-                  if (next) {
-                    loadNotifications();
-                    loadUnreadCount();
-                  }
-                }}
-                className="relative flex h-[42px] w-[42px] items-center justify-center rounded-full text-[#327186] transition-colors duration-300 hover:bg-[#EDF7FA] hover:text-[#19566A]"
+                onClick={() => navigate("/cart")}
+                className="flex h-10.5 w-10.5 items-center justify-center rounded-full 
+                text-[#327186] transition-colors duration-300 hover:bg-[#EDF7FA] hover:text-[#19566A]"
+                aria-label="Shopping cart"
               >
-                <Bell strokeWidth={2} className="h-5 w-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute right-1 top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-white bg-red-500 px-1.5 text-[10px] font-extrabold text-white">
-                    {unreadCount > 99 ? "99+" : unreadCount}
-                  </span>
-                )}
+                <ShoppingCart strokeWidth={2} className="h-5 w-5" />
               </button>
 
-              {isNotificationDropdownOpen && (
-                <div className="absolute right-0 top-full z-50 mt-3 w-85 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xl">
-                  <div className="flex items-center justify-between border-b border-slate-50 bg-slate-50/50 px-4 py-3">
-                    <h4 className="text-[15px] font-bold text-slate-800">
-                      Notifications
-                    </h4>
-                    <button
-                      type="button"
-                      onClick={handleMarkAllAsRead}
-                      disabled={isMarkingAllRead || unreadCount === 0}
-                      className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#327186] transition-colors hover:text-[#19566A] disabled:text-gray-400"
+              <div className="relative" ref={notificationRef}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = !isNotificationDropdownOpen;
+                    setIsNotificationDropdownOpen(next);
+                    if (next) {
+                      loadNotifications();
+                      loadUnreadCount();
+                    }
+                  }}
+                  className="relative flex h-10.5 w-10.5 items-center justify-center rounded-full 
+                  text-[#327186] transition-colors duration-300 hover:bg-[#EDF7FA] hover:text-[#19566A]"
+                >
+                  <Bell strokeWidth={2} className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span
+                      className="absolute right-1 top-1 flex h-4.5 min-w-4.5 items-center 
+                    justify-center rounded-full border-2 border-white bg-red-500 px-1.5 text-[10px] font-extrabold text-white"
                     >
-                      <CheckCheck className="h-4 w-4" />
-                      Mark all read
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {isNotificationDropdownOpen && (
+                  <div
+                    className="absolute right-0 top-full z-50 mt-3 w-85 overflow-hidden 
+                  rounded-2xl border border-slate-100 bg-white shadow-xl"
+                  >
+                    <div
+                      className="flex items-center justify-between border-b 
+                    border-slate-50 bg-slate-50/50 px-4 py-3"
+                    >
+                      <h4 className="text-[15px] font-bold text-slate-800">
+                        Notifications
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={handleMarkAllAsRead}
+                        disabled={isMarkingAllRead || unreadCount === 0}
+                        className="inline-flex items-center gap-1.5 text-[13px] font-semibold 
+                        text-[#327186] transition-colors hover:text-[#19566A] disabled:text-gray-400"
+                      >
+                        <CheckCheck className="h-4 w-4" />
+                        Mark all read
+                      </button>
+                    </div>
+
+                    <div className="max-h-90 overflow-y-auto">
+                      {isLoadingNotifications ? (
+                        <p className="px-4 py-6 text-center text-sm font-medium text-slate-500">
+                          Loading...
+                        </p>
+                      ) : notifications.length === 0 ? (
+                        <p className="px-4 py-6 text-center text-sm font-medium text-slate-500">
+                          No notifications yet.
+                        </p>
+                      ) : (
+                        notifications.map((item) => (
+                          <button
+                            type="button"
+                            key={item.id}
+                            onClick={() => handleNotificationClick(item)}
+                            className={`w-full text-left px-3 py-2 border-b 
+                              last:border-b-0 border-gray-100 hover:bg-gray-50 ${
+                                item.isRead ? "bg-white" : "bg-[#F4FAFC]"
+                              }`}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="line-clamp-1 text-[14px] font-bold text-slate-800">
+                                {item.title}
+                              </p>
+                              {!item.isRead && (
+                                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-500"></span>
+                              )}
+                            </div>
+                            <p className="mt-1 line-clamp-2 text-[13px] text-slate-600">
+                              {item.message}
+                            </p>
+                            <p className="mt-1.5 text-[11px] font-medium text-slate-400">
+                              {new Date(item.createdAt).toLocaleString()}
+                            </p>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="mx-2 h-7 w-px bg-slate-200"></div>
+
+              {/* USER DROPDOWN */}
+              <div className="relative" ref={userRef}>
+                <button
+                  type="button"
+                  onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                  className="flex cursor-pointer items-center gap-3 rounded-full border 
+                  border-transparent p-1 pr-3 transition-colors duration-300 hover:bg-slate-100/80"
+                >
+                  <img
+                    src={currentUser?.avatar?.fileUrl || AvatarLoginImg}
+                    className="h-10 w-10 rounded-full border border-slate-100 object-cover shadow-sm"
+                    alt=""
+                  />
+                  <div className="max-w-35 text-left">
+                    <h4 className="truncate text-[14px] font-bold text-slate-800">
+                      {currentUser.firstName + " " + currentUser.lastName}
+                    </h4>
+                    <h5 className="truncate text-[12px] font-medium text-slate-500">
+                      {currentUser.email}
+                    </h5>
+                  </div>
+                </button>
+
+                {isUserDropdownOpen && (
+                  <div
+                    className="absolute right-0 top-full z-50 mt-3 min-w-50 overflow-hidden 
+                  rounded-2xl border border-slate-100 bg-white p-1.5 shadow-xl"
+                  >
+                    <button
+                      onClick={() => {
+                        setIsUserDropdownOpen(false);
+                        navigate(getProfileTargetPath());
+                      }}
+                      className="block w-full rounded-xl px-4 py-2.5 text-left text-[15px] 
+                      font-medium text-gray-700 transition-colors hover:bg-[#EDF7FA] hover:text-[#19566A]"
+                    >
+                      Profile
+                    </button>
+                    <button
+                      onClick={async () => {
+                        setIsUserDropdownOpen(false);
+                        await dispatch(logoutUserAPI(true));
+                        navigate("/auth/login");
+                      }}
+                      className="block w-full rounded-xl px-4 py-2.5 text-left text-[15px] 
+                      font-medium text-red-600 transition-colors hover:bg-red-50"
+                    >
+                      Logout
                     </button>
                   </div>
-
-                  <div className="max-h-90 overflow-y-auto">
-                    {isLoadingNotifications ? (
-                      <p className="px-4 py-6 text-center text-sm font-medium text-slate-500">
-                        Loading...
-                      </p>
-                    ) : notifications.length === 0 ? (
-                      <p className="px-4 py-6 text-center text-sm font-medium text-slate-500">
-                        No notifications yet.
-                      </p>
-                    ) : (
-                      notifications.map((item) => (
-                        <button
-                          type="button"
-                          key={item.id}
-                          onClick={() => handleNotificationClick(item)}
-                          className={`w-full text-left px-3 py-2 border-b last:border-b-0 border-gray-100 hover:bg-gray-50 ${
-                            item.isRead ? "bg-white" : "bg-[#F4FAFC]"
-                          }`}
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <p className="line-clamp-1 text-[14px] font-bold text-slate-800">
-                              {item.title}
-                            </p>
-                            {!item.isRead && (
-                              <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-500"></span>
-                            )}
-                          </div>
-                          <p className="mt-1 line-clamp-2 text-[13px] text-slate-600">
-                            {item.message}
-                          </p>
-                          <p className="mt-1.5 text-[11px] font-medium text-slate-400">
-                            {new Date(item.createdAt).toLocaleString()}
-                          </p>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={() => navigate("/auth/login")}
+                type="primary"
+                content="Log In"
+              />
+              <Button
+                onClick={() => navigate("/auth/register")}
+                type="primary"
+                content="Sign Up"
+              />
             </div>
-
-            <div className="mx-2 h-7 w-[1px] bg-slate-200"></div>
-
-            {/* USER DROPDOWN */}
-            <div className="relative" ref={userRef}>
-              <button
-                type="button"
-                onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                className="flex cursor-pointer items-center gap-3 rounded-full border border-transparent p-1 pr-3 transition-colors duration-300 hover:bg-slate-100/80"
-              >
-                <img
-                  src={currentUser?.avatar?.fileUrl || AvatarLoginImg}
-                  className="h-10 w-10 rounded-full border border-slate-100 object-cover shadow-sm"
-                  alt=""
-                />
-                <div className="max-w-[140px] text-left">
-                  <h4 className="truncate text-[14px] font-bold text-slate-800">
-                    {currentUser.firstName + " " + currentUser.lastName}
-                  </h4>
-                  <h5 className="truncate text-[12px] font-medium text-slate-500">
-                    {currentUser.email}
-                  </h5>
-                </div>
-              </button>
-
-              {isUserDropdownOpen && (
-                <div className="absolute right-0 top-full z-50 mt-3 min-w-[200px] overflow-hidden rounded-2xl border border-slate-100 bg-white p-1.5 shadow-xl">
-                  <button
-                    onClick={() => {
-                      setIsUserDropdownOpen(false);
-                      navigate(getProfileTargetPath());
-                    }}
-                    className="block w-full rounded-xl px-4 py-2.5 text-left text-[15px] font-medium text-gray-700 transition-colors hover:bg-[#EDF7FA] hover:text-[#19566A]"
-                  >
-                    Profile
-                  </button>
-                  <button
-                    onClick={async () => {
-                      setIsUserDropdownOpen(false);
-                      await dispatch(logoutUserAPI(true));
-                      navigate("/auth/login");
-                    }}
-                    className="block w-full rounded-xl px-4 py-2.5 text-left text-[15px] font-medium text-red-600 transition-colors hover:bg-red-50"
-                  >
-                    Logout
-                  </button>
-                </div>
-              )}
-            </div>
-          </>
-        ) : (
-          <div className="flex items-center gap-3">
-            <Button
-              onClick={() => navigate("/auth/login")}
-              type="primary"
-              content="Log In"
-            />
-            <Button
-              onClick={() => navigate("/auth/register")}
-              type="primary"
-              content="Sign Up"
-            />
-          </div>
-        )}
+          )}
         </div>
       </nav>
     </div>

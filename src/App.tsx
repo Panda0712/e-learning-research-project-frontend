@@ -20,6 +20,7 @@ import Loading from "./components/ui/Loading";
 import Navbar from "./components/ui/Navbar";
 import { permissions } from "./configs/rbacConfig";
 import AccessDenied from "./pages/AccessDenied/AccessDenied";
+import AccountSettings from "./pages/AccountSettings/AccountSettings";
 import ForgotPasswordPage from "./pages/Auth/ForgotPasswordPage";
 import LoginPage from "./pages/Auth/LoginPage";
 import OAuthGoogleCallbackPage from "./pages/Auth/OAuthGoogleCallbackPage";
@@ -27,6 +28,7 @@ import SignUpPage from "./pages/Auth/SignUpPage";
 import VerificationPage from "./pages/Auth/VerificationPage";
 import BlogDetail from "./pages/Blogs/BlogDetail";
 import BlogList from "./pages/Blogs/BlogList";
+import Cart from "./pages/Cart/Cart";
 import Contact from "./pages/Contact/Contact";
 import Course from "./pages/Course/Course";
 import CourseDetail from "./pages/Course/CourseDetail";
@@ -56,7 +58,6 @@ import Registration from "./pages/Lecturer/Registration";
 import NotFoundPage from "./pages/NotFound/NotFound";
 import Payment from "./pages/Payment/Payment";
 import PaymentCancel from "./pages/Payment/PaymentCancel";
-import AccountSettings from "./pages/AccountSettings/AccountSettings";
 import Profile from "./pages/Profile/Profile";
 import StudentChatPage from "./pages/Student/StudentChatPage";
 import {
@@ -401,6 +402,13 @@ const App = () => {
               }
             >
               <Route path="/learning/:id" element={<CourseLearning />} />
+            </Route>
+
+            {/* Cart */}
+            <Route
+              element={<RbacRoute requiredPermission={permissions.VIEW_CART} />}
+            >
+              <Route path="/cart" element={<Cart />} />
             </Route>
 
             {/* Lecturer */}

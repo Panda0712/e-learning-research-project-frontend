@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ArrowRight, ShoppingCart, Tag, Trash2, Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { ArrowRight, Loader2, ShoppingCart, Tag, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { toast } from "react-toastify"; 
-import { useAppSelector } from "../../redux/hooks";
-import { selectCurrentUser } from "../../redux/activeUser/activeUserSlice";
+import { toast } from "react-toastify";
 import { cartService } from "../../apis/cart";
+import { selectCurrentUser } from "../../redux/activeUser/activeUserSlice";
+import { useAppSelector } from "../../redux/hooks";
 
 const COLORS = {
   yellowBtn: "#FFD900",
@@ -41,22 +41,24 @@ const Cart = () => {
       try {
         setIsLoading(true);
         const cartData = await cartService.getCartByUserId(currentUser.id);
-        
+
         if (cartData && cartData.items) {
           const mappedItems = cartData.items.map((item: any) => ({
-            id: item.id, 
+            id: item.id,
             courseId: item.courseId,
             title: item.course?.name || "Course",
             lecturer: item.course?.lecturerName || "N/A",
             price: item.price,
-            originalPrice: item.price + 20, 
-            rating: 4.8, 
-            reviews: 1200, 
-            thumbnail: item.course?.thumbnail?.fileUrl || "https://placehold.co/600x400/2563eb/white?text=EduLearn",
+            originalPrice: item.price + 20,
+            rating: 4.8,
+            reviews: 1200,
+            thumbnail:
+              item.course?.thumbnail?.fileUrl ||
+              "https://placehold.co/600x400/2563eb/white?text=EduLearn",
           }));
           setCartItems(mappedItems);
         }
-      } catch (error:any) {
+      } catch (error: any) {
         toast.error(error?.message || "Failed to get cart data!");
       } finally {
         setIsLoading(false);
@@ -66,7 +68,10 @@ const Cart = () => {
     fetchCart();
   }, [currentUser]);
 
-  const totalOriginalPrice = cartItems.reduce((acc, item) => acc + item.originalPrice, 0);
+  const totalOriginalPrice = cartItems.reduce(
+    (acc, item) => acc + item.originalPrice,
+    0,
+  );
   const subtotal = cartItems.reduce((acc, item) => acc + item.price, 0);
   const total = subtotal - appliedDiscount;
 
@@ -75,14 +80,14 @@ const Cart = () => {
       setCartItems((prev) => prev.filter((item) => item.id !== itemId));
       await cartService.removeItem(itemId);
       toast.success("Deleted course from cart!");
-    } catch (error:any) {
-      toast.error("Delete failed! Please try again later!");
+    } catch (error: any) {
+      toast.error(error?.message || "Delete failed! Please try again later!");
     }
   };
 
   const handleApplyPromo = () => {
     if (promoCode.trim().toUpperCase() === "LEARN2026") {
-      setAppliedDiscount(5.0); 
+      setAppliedDiscount(5.0);
       toast.success("Applied coupon successfully!");
     } else {
       toast.error("Coupon code is not valid!");
@@ -104,8 +109,14 @@ const Cart = () => {
             </h2>
 
             {isLoading ? (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 flex flex-col items-center justify-center">
-                <Loader2 className="animate-spin text-blue-500 mb-2" size={32} />
+              <div
+                className="bg-white rounded-xl shadow-sm border border-gray-100 
+              p-12 flex flex-col items-center justify-center"
+              >
+                <Loader2
+                  className="animate-spin text-blue-500 mb-2"
+                  size={32}
+                />
                 <p className="text-gray-500">Loading cart...</p>
               </div>
             ) : cartItems.length > 0 ? (
@@ -113,7 +124,8 @@ const Cart = () => {
                 {cartItems.map((item) => (
                   <div
                     key={item.id}
-                    className="flex flex-col sm:flex-row items-start sm:items-center bg-white rounded-xl shadow-sm border border-gray-100 p-4 gap-4 transition hover:shadow-md"
+                    className="flex flex-col sm:flex-row items-start sm:items-center bg-white 
+                    rounded-xl shadow-sm border border-gray-100 p-4 gap-4 transition hover:shadow-md"
                   >
                     <div className="w-full sm:w-32 h-24 shrink-0 rounded-lg overflow-hidden bg-gray-200">
                       <img
@@ -140,7 +152,10 @@ const Cart = () => {
                       </div>
                     </div>
 
-                    <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto mt-4 sm:mt-0 pl-0 sm:pl-4 border-t sm:border-t-0 sm:border-l border-gray-100 pt-4 sm:pt-0">
+                    <div
+                      className="flex flex-row sm:flex-col items-center sm:items-end justify-between 
+                    w-full sm:w-auto mt-4 sm:mt-0 pl-0 sm:pl-4 border-t sm:border-t-0 sm:border-l border-gray-100 pt-4 sm:pt-0"
+                    >
                       <div className="text-left sm:text-right">
                         <div className="text-xl font-bold text-black">
                           ${item.price}
@@ -149,10 +164,11 @@ const Cart = () => {
                           ${item.originalPrice}
                         </div>
                       </div>
-                      
+
                       <button
                         onClick={() => handleRemoveItem(item.id)}
-                        className="mt-0 sm:mt-4 text-gray-400 hover:text-red-500 flex items-center gap-1 text-sm font-medium transition-colors"
+                        className="mt-0 sm:mt-4 text-gray-400 hover:text-red-500 flex 
+                        items-center gap-1 text-sm font-medium transition-colors"
                       >
                         <Trash2 size={16} />
                         <span className="sm:hidden">Remove</span>
@@ -162,7 +178,10 @@ const Cart = () => {
                 ))}
               </div>
             ) : (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 flex flex-col items-center justify-center text-center">
+              <div
+                className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 
+              flex flex-col items-center justify-center text-center"
+              >
                 <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-4">
                   <ShoppingCart size={40} className="text-gray-300" />
                 </div>
@@ -170,11 +189,13 @@ const Cart = () => {
                   Your cart is empty.
                 </h3>
                 <p className="text-gray-500 mb-6 max-w-md">
-                  Keep shopping to find a course! We have thousands of courses to help you learn new skills.
+                  Keep shopping to find a course! We have thousands of courses
+                  to help you learn new skills.
                 </p>
                 <Link
-                  to="/"
-                  className="px-6 py-3 rounded-lg font-bold text-black shadow-sm hover:opacity-90 transition flex items-center gap-2"
+                  to="/courses"
+                  className="px-6 py-3 rounded-lg font-bold text-black shadow-sm 
+                  hover:opacity-90 transition flex items-center gap-2"
                   style={{ backgroundColor: COLORS.yellowBtn }}
                 >
                   Keep Shopping
@@ -198,15 +219,18 @@ const Cart = () => {
                   <span>Course Discounts:</span>
                   <span>-${(totalOriginalPrice - subtotal).toFixed(2)}</span>
                 </div>
-                
+
                 {appliedDiscount > 0 && (
                   <div className="flex justify-between text-red-500 font-medium">
                     <span>Promo Code:</span>
                     <span>-${appliedDiscount.toFixed(2)}</span>
                   </div>
                 )}
-                
-                <div className="flex justify-between pt-4 border-t border-dashed border-gray-200 text-2xl font-bold text-black">
+
+                <div
+                  className="flex justify-between pt-4 border-t border-dashed 
+                border-gray-200 text-2xl font-bold text-black"
+                >
                   <span>Total:</span>
                   <span>${Math.max(0, total).toFixed(2)}</span>
                 </div>
@@ -222,12 +246,14 @@ const Cart = () => {
                     value={promoCode}
                     onChange={(e) => setPromoCode(e.target.value)}
                     placeholder="Enter Coupon"
-                    className="flex-1 px-4 py-2 border border-gray-200 rounded-lg outline-none focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 transition text-sm uppercase"
+                    className="flex-1 px-4 py-2 border border-gray-200 rounded-lg outline-none 
+                    focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 transition text-sm uppercase"
                   />
                   <button
                     onClick={handleApplyPromo}
                     disabled={!promoCode.trim() || cartItems.length === 0}
-                    className="px-4 py-2 bg-gray-900 text-white font-medium rounded-lg text-sm hover:bg-gray-800 transition disabled:opacity-50"
+                    className="px-4 py-2 bg-gray-900 text-white font-medium rounded-lg 
+                    text-sm hover:bg-gray-800 transition disabled:opacity-50"
                   >
                     Apply
                   </button>
@@ -236,12 +262,13 @@ const Cart = () => {
 
               <button
                 disabled={cartItems.length === 0}
-                className="w-full py-3.5 rounded-lg font-bold text-black shadow-sm hover:opacity-90 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3.5 rounded-lg font-bold text-black shadow-sm hover:opacity-90 
+                transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: COLORS.yellowBtn }}
               >
                 Checkout <ArrowRight size={18} />
               </button>
-              
+
               <p className="text-xs text-center text-gray-400 mt-4">
                 30-Day Money-Back Guarantee
               </p>
