@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { PlayCircle, ShoppingCart } from "lucide-react";
+import { Heart, PlayCircle, ShoppingCart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { cartService } from "../../../apis/cart";
@@ -7,15 +7,18 @@ import Button from "../../../components/ui/Button";
 import { selectCurrentUser } from "../../../redux/activeUser/activeUserSlice";
 import { useAppSelector } from "../../../redux/hooks";
 import type { Course, CourseStudentState } from "../../../types/course.type";
+import { wishlistService } from "../../../apis/wishlist";
 
 const CourseSidebar = ({
   course,
   studentState,
   onAddedToCart,
+  onAddedToWishlist,
 }: {
   course: Course;
   studentState?: CourseStudentState | null;
   onAddedToCart?: () => void;
+  onAddedToWishlist?: () => void;
 }) => {
   const navigate = useNavigate();
   const currentUser = useAppSelector(selectCurrentUser);
@@ -23,6 +26,8 @@ const CourseSidebar = ({
   const isPurchased = Boolean(studentState?.isPurchased);
   const isInCart = Boolean(studentState?.isInCart);
   const canAddToCart = Boolean(studentState?.canAddToCart);
+  const isInWishlist = Boolean(studentState?.isInWishlist);
+  const canAddToWishlist = Boolean(studentState?.canAddToWishlist);
 
   const handleStartLearning = () => {
     navigate(`/learning/${course.id}`);
@@ -54,6 +59,20 @@ const CourseSidebar = ({
       onAddedToCart?.();
     } catch (error: any) {
       toast.error(error?.message || "Failed to add course to cart");
+    }
+  };
+
+  const handleAddToWishlist = async () => {
+    if (!currentUser?.id) return navigate("/auth/login");
+    if (isPurchased) return toast.info("You already purchased this course.");
+    if (isInWishlist) return toast.info("Course already in wishlist.");
+
+    try {
+      await wishlistService.addToWishlistAPI({ courseId: course.id });
+      toast.success("Added to wishlist successfully!");
+      onAddedToWishlist?.();
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to add course to wishlist");
     }
   };
 
@@ -108,6 +127,19 @@ const CourseSidebar = ({
             onClick={handleAddToCart}
             disabled={isInCart || !canAddToCart}
             additionalClass="!w-full !rounded-full !text-sm !font-bold"
+          />
+        )}
+
+        {!isPurchased && (
+          <Button
+            icon={
+              <Heart size={18} className={isInWishlist ? "fill-current" : ""} />
+            }
+            content={isInWishlist ? "Already in wishlist" : "Add to wishlist"}
+            type="secondary"
+            onClick={handleAddToWishlist}
+            disabled={isInWishlist || !canAddToWishlist}
+            additionalClass="!mt-3 !w-full !rounded-full !text-sm !font-bold"
           />
         )}
       </div>

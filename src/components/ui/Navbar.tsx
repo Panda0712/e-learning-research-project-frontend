@@ -1,4 +1,10 @@
-import { Bell, CheckCheck, ChevronDown, ShoppingCart } from "lucide-react";
+import {
+  Bell,
+  CheckCheck,
+  ChevronDown,
+  ShoppingCart,
+  Heart,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -289,6 +295,15 @@ const Navbar = () => {
         <div className="flex items-center gap-2 pr-1">
           {currentUser ? (
             <>
+              <button
+                type="button"
+                onClick={() => navigate("/wishlist")}
+                className="flex h-10.5 w-10.5 items-center justify-center rounded-full text-[#327186] transition-colors duration-300 hover:bg-[#EDF7FA] hover:text-[#19566A]"
+                aria-label="Wishlist"
+              >
+                <Heart strokeWidth={2} className="h-5 w-5" />
+              </button>
+
               <button
                 type="button"
                 onClick={() => navigate("/cart")}

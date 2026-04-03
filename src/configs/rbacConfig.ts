@@ -9,6 +9,7 @@ export const permissions = {
   VIEW_LECTURER: "view_lecturer",
   VIEW_LECTURER_REGISTRATION: "view_lecturer_registration",
   VIEW_CART: "view_cart",
+  VIEW_WISHLIST: "view_wishlist",
 };
 
 export const rolePermissions = {
@@ -23,11 +24,13 @@ export const rolePermissions = {
     permissions.VIEW_LECTURER,
     permissions.VIEW_LECTURER_REGISTRATION,
     permissions.VIEW_CART,
+    permissions.VIEW_WISHLIST,
   ],
   [ACCOUNT_ROLES.LECTURER]: [
     permissions.VIEW_DASHBOARD_LECTURER,
     permissions.VIEW_LECTURER,
     permissions.VIEW_LECTURER_REGISTRATION,
     permissions.VIEW_CART,
+    permissions.VIEW_WISHLIST,
   ],
 };
