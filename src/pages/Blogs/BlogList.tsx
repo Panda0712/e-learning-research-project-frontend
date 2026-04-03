@@ -27,7 +27,9 @@ const BlogList = () => {
         const data = await blogApi.getAllBlogPostsAPI();
         setBlogList(data);
       } catch (error: any) {
-        toast.error(error?.message || "Failed to get blogs data! Please try again later!");
+        toast.error(
+          error?.message || "Failed to get blogs data! Please try again later!",
+        );
       } finally {
         setLoading(false);
       }
@@ -54,7 +56,7 @@ const BlogList = () => {
           {loading ? (
             <p>Loading blogs data...</p>
           ) : (
-            blogList.map((blog: BlogData) => (
+            (blogList.length ? blogList : []).map((blog: BlogData) => (
               <BlogCard key={blog.id} data={blog} />
             ))
           )}
