@@ -1,4 +1,4 @@
-import { CheckCheck, ChevronDown } from "lucide-react";
+import { CheckCheck, ChevronDown, ShoppingCart, Bell } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -11,12 +11,12 @@ import {
 } from "../../redux/activeUser/activeUserSlice";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { ACCOUNT_ROLES, menuList } from "../../utils/constants";
+import { normalizeRole } from "../../utils/helpers";
 import Button from "./Button";
 import AvatarLoginImg from "/avatar-login.png";
 import Logo from "/logo.png";
 import NotificationIconImg from "/notification-icon.png";
 import ShoppingCartImg from "/shopping-cart.png";
-import { normalizeRole } from "../../utils/helpers";
 
 const Navbar = () => {
   const [isLecturerDropdownOpen, setIsLecturerDropdownOpen] = useState(false);
@@ -36,6 +36,7 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const normalizedRole = normalizeRole(currentUser?.role);
 
   const numericUserId = Number(currentUser?.id);
 
@@ -190,83 +191,94 @@ const Navbar = () => {
     };
   }, [numericUserId]);
 
+  const getProfileTargetPath = () => {
+    if (normalizedRole === ACCOUNT_ROLES.LECTURER) {
+      return "/dashboard/lecturer/setting";
+    }
+
+    if (normalizedRole === ACCOUNT_ROLES.ADMIN) {
+      return "/admin";
+    }
+
+    return "/account-settings";
+  };
+
   return (
-    <nav className="bg-white flex items-center justify-between px-10 py-2">
-      {/* LOGO */}
-      <div className="flex items-end">
-        <img src={Logo} className="w-21 h-21" alt="" />
-        <h1 className="text-[30px] text-[#19566A] font-bold leading-none -ml-5">
-          Learn
-        </h1>
-      </div>
+    <div className="sticky top-0 z-50 w-full pt-4 pb-2">
+      <nav className="mx-auto flex w-[95%] max-w-[1320px] items-center justify-between rounded-full border border-slate-200/70 bg-white/85 px-4 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.05)] backdrop-blur-xl">
+        {/* LOGO */}
+        <Link to="/" className="ml-2 flex items-center gap-2 transition-opacity duration-300 hover:opacity-70">
+          <img src={Logo} className="h-10 w-10 object-contain" alt="EduLearn Logo" />
+          <h1 className="text-[26px] font-extrabold tracking-tight text-[#19566A]">
+            Learn
+          </h1>
+        </Link>
 
-      {/* MENU */}
-      <ul className="flex gap-12 items-center">
-        {menuList.map((item) => (
-          <li key={item.name} className="relative">
-            {item.name === "Lecturer" ? (
-              <div className="relative" ref={lecturerRef}>
-                <div
-                  onClick={() =>
-                    setIsLecturerDropdownOpen(!isLecturerDropdownOpen)
-                  }
-                  className="flex items-center gap-1 cursor-pointer"
-                >
-                  <h2
-                    className={`${
+        {/* MENU */}
+        <ul className="flex items-center gap-1.5">
+          {menuList.map((item) => (
+            <li key={item.name} className="relative">
+              {item.name === "Lecturer" ? (
+                <div className="relative" ref={lecturerRef}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setIsLecturerDropdownOpen(!isLecturerDropdownOpen)
+                    }
+                    className={`flex items-center gap-1.5 rounded-full px-5 py-2.5 text-[16px] font-bold transition-colors duration-300 ${
                       location.pathname.startsWith(item.path)
-                        ? "text-[#6A6B6C] font-bold"
-                        : ""
-                    } text-[22px] text-[#327186]`}
+                        ? "bg-[#19566A] text-white shadow-md shadow-[#19566A]/20"
+                        : "text-[#327186] hover:bg-[#EDF7FA] hover:text-[#19566A]"
+                    }`}
                   >
-                    {item.name}
-                  </h2>
-                  <ChevronDown className="w-4 h-4 text-[#327186]" />
-                </div>
+                    <span>{item.name}</span>
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
 
-                {isLecturerDropdownOpen && (
-                  <div className="absolute top-full left-0 bg-white shadow-lg rounded-lg py-2 min-w-45 z-50">
-                    <Link
-                      to="/lecturer"
-                      className="block px-6 py-3 text-[18px] text-[#327186] hover:bg-gray-100"
-                    >
-                      Lecturer
-                    </Link>
-                    <Link
-                      to="/registration"
-                      className="block px-6 py-3 text-[18px] text-[#327186] hover:bg-gray-100"
-                    >
-                      Registration
-                    </Link>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <Link to={item.path}>
-                <h2
-                  className={`${
+                  {isLecturerDropdownOpen && (
+                    <div className="absolute left-0 top-full z-50 mt-3 min-w-[220px] overflow-hidden rounded-2xl border border-slate-100 bg-white p-1.5 shadow-xl">
+                      <Link
+                        to="/lecturer"
+                        className="block rounded-xl px-4 py-3 text-[15px] font-medium text-[#327186] transition-colors hover:bg-[#EDF7FA] hover:text-[#19566A]"
+                      >
+                        Lecturer
+                      </Link>
+                      <Link
+                        to="/registration"
+                        className="block rounded-xl px-4 py-3 text-[15px] font-medium text-[#327186] transition-colors hover:bg-[#EDF7FA] hover:text-[#19566A]"
+                      >
+                        Registration
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link
+                  to={item.path}
+                  className={`block rounded-full px-5 py-2.5 text-[16px] font-bold transition-colors duration-300 ${
                     location.pathname === item.path
-                      ? "text-[#6A6B6C] font-bold"
-                      : ""
-                  } text-[22px] text-[#327186]`}
+                      ? "bg-[#19566A] text-white shadow-md shadow-[#19566A]/20"
+                      : "text-[#327186] hover:bg-[#EDF7FA] hover:text-[#19566A]"
+                  }`}
                 >
                   {item.name}
-                </h2>
-              </Link>
-            )}
-          </li>
-        ))}
-      </ul>
+                </Link>
+              )}
+            </li>
+          ))}
+        </ul>
 
-      {/* RIGHT SIDE */}
-      <div className="flex items-center gap-6">
+        {/* RIGHT SIDE */}
+        <div className="flex items-center gap-2 pr-1">
         {currentUser ? (
           <>
-            <img
-              src={ShoppingCartImg}
-              className="w-9 h-10 object-cover"
-              alt=""
-            />
+            <button
+              type="button"
+              className="flex h-[42px] w-[42px] items-center justify-center rounded-full text-[#327186] transition-colors duration-300 hover:bg-[#EDF7FA] hover:text-[#19566A]"
+              aria-label="Shopping cart"
+            >
+              <ShoppingCart strokeWidth={2} className="h-5 w-5" />
+            </button>
 
             <div className="relative" ref={notificationRef}>
               <button
@@ -279,44 +291,40 @@ const Navbar = () => {
                     loadUnreadCount();
                   }
                 }}
-                className="relative"
+                className="relative flex h-[42px] w-[42px] items-center justify-center rounded-full text-[#327186] transition-colors duration-300 hover:bg-[#EDF7FA] hover:text-[#19566A]"
               >
-                <img
-                  src={NotificationIconImg}
-                  className="w-9 h-10 object-cover"
-                  alt=""
-                />
+                <Bell strokeWidth={2} className="h-5 w-5" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[11px] leading-5 text-center">
+                  <span className="absolute right-1 top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-white bg-red-500 px-1.5 text-[10px] font-extrabold text-white">
                     {unreadCount > 99 ? "99+" : unreadCount}
                   </span>
                 )}
               </button>
 
               {isNotificationDropdownOpen && (
-                <div className="absolute top-full right-0 mt-2 bg-white shadow-lg rounded-lg py-2 w-85 z-50 border border-gray-100">
-                  <div className="flex items-center justify-between px-3 pb-2 border-b border-gray-100">
-                    <h4 className="text-sm font-semibold text-gray-800">
+                <div className="absolute right-0 top-full z-50 mt-3 w-85 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xl">
+                  <div className="flex items-center justify-between border-b border-slate-50 bg-slate-50/50 px-4 py-3">
+                    <h4 className="text-[15px] font-bold text-slate-800">
                       Notifications
                     </h4>
                     <button
                       type="button"
                       onClick={handleMarkAllAsRead}
                       disabled={isMarkingAllRead || unreadCount === 0}
-                      className="text-xs text-[#327186] disabled:text-gray-400 inline-flex items-center gap-1"
+                      className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#327186] transition-colors hover:text-[#19566A] disabled:text-gray-400"
                     >
-                      <CheckCheck className="w-3 h-3" />
+                      <CheckCheck className="h-4 w-4" />
                       Mark all read
                     </button>
                   </div>
 
                   <div className="max-h-90 overflow-y-auto">
                     {isLoadingNotifications ? (
-                      <p className="px-3 py-3 text-sm text-gray-500">
+                      <p className="px-4 py-6 text-center text-sm font-medium text-slate-500">
                         Loading...
                       </p>
                     ) : notifications.length === 0 ? (
-                      <p className="px-3 py-3 text-sm text-gray-500">
+                      <p className="px-4 py-6 text-center text-sm font-medium text-slate-500">
                         No notifications yet.
                       </p>
                     ) : (
@@ -329,13 +337,18 @@ const Navbar = () => {
                             item.isRead ? "bg-white" : "bg-[#F4FAFC]"
                           }`}
                         >
-                          <p className="text-sm font-semibold text-gray-800 truncate">
-                            {item.title}
-                          </p>
-                          <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="line-clamp-1 text-[14px] font-bold text-slate-800">
+                              {item.title}
+                            </p>
+                            {!item.isRead && (
+                              <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-500"></span>
+                            )}
+                          </div>
+                          <p className="mt-1 line-clamp-2 text-[13px] text-slate-600">
                             {item.message}
                           </p>
-                          <p className="text-[11px] text-gray-400 mt-1">
+                          <p className="mt-1.5 text-[11px] font-medium text-slate-400">
                             {new Date(item.createdAt).toLocaleString()}
                           </p>
                         </button>
@@ -346,35 +359,48 @@ const Navbar = () => {
               )}
             </div>
 
+            <div className="mx-2 h-7 w-[1px] bg-slate-200"></div>
+
             {/* USER DROPDOWN */}
             <div className="relative" ref={userRef}>
-              <div
+              <button
+                type="button"
                 onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                className="flex items-center gap-3 cursor-pointer"
+                className="flex cursor-pointer items-center gap-3 rounded-full border border-transparent p-1 pr-3 transition-colors duration-300 hover:bg-slate-100/80"
               >
                 <img
-                  src={AvatarLoginImg}
-                  className="w-14 h-14 object-cover"
+                  src={currentUser?.avatar?.fileUrl || AvatarLoginImg}
+                  className="h-10 w-10 rounded-full border border-slate-100 object-cover shadow-sm"
                   alt=""
                 />
-                <div>
-                  <h4 className="font-medium text-[18px]">
+                <div className="max-w-[140px] text-left">
+                  <h4 className="truncate text-[14px] font-bold text-slate-800">
                     {currentUser.firstName + " " + currentUser.lastName}
                   </h4>
-                  <h5 className="text-[13px] text-gray-500">
+                  <h5 className="truncate text-[12px] font-medium text-slate-500">
                     {currentUser.email}
                   </h5>
                 </div>
-              </div>
+              </button>
 
               {isUserDropdownOpen && (
-                <div className="absolute top-full right-0 bg-white shadow-lg rounded-lg py-2 w-48 z-50">
+                <div className="absolute right-0 top-full z-50 mt-3 min-w-[200px] overflow-hidden rounded-2xl border border-slate-100 bg-white p-1.5 shadow-xl">
+                  <button
+                    onClick={() => {
+                      setIsUserDropdownOpen(false);
+                      navigate(getProfileTargetPath());
+                    }}
+                    className="block w-full rounded-xl px-4 py-2.5 text-left text-[15px] font-medium text-gray-700 transition-colors hover:bg-[#EDF7FA] hover:text-[#19566A]"
+                  >
+                    Profile
+                  </button>
                   <button
                     onClick={async () => {
+                      setIsUserDropdownOpen(false);
                       await dispatch(logoutUserAPI(true));
                       navigate("/auth/login");
                     }}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="block w-full rounded-xl px-4 py-2.5 text-left text-[15px] font-medium text-red-600 transition-colors hover:bg-red-50"
                   >
                     Logout
                   </button>
@@ -383,7 +409,7 @@ const Navbar = () => {
             </div>
           </>
         ) : (
-          <>
+          <div className="flex items-center gap-3">
             <Button
               onClick={() => navigate("/auth/login")}
               type="primary"
@@ -394,10 +420,11 @@ const Navbar = () => {
               type="primary"
               content="Sign Up"
             />
-          </>
+          </div>
         )}
-      </div>
-    </nav>
+        </div>
+      </nav>
+    </div>
   );
 };
 
