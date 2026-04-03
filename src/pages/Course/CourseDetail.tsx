@@ -18,6 +18,7 @@ import type {
   CourseAPIData,
   CourseCategoryAPIData,
   CourseFaqAPIData,
+  CourseStudentState,
   LessonAPIData,
   ModuleAPIData,
   Review,
@@ -25,6 +26,8 @@ import type {
   Section,
 } from "../../types/course.type";
 import { MOCK_COURSES } from "../../utils/mockData";
+import { useAppSelector } from "../../redux/hooks";
+import { selectCurrentUser } from "../../redux/activeUser/activeUserSlice";
 
 type TabType = "Overview" | "Curriculum" | "Instructor" | "FAQs" | "Reviews";
 const TABS: TabType[] = [
@@ -121,8 +124,13 @@ const mapCourseDetail = (
 
 const CourseDetail = () => {
   const { id } = useParams();
+  const currentUser = useAppSelector(selectCurrentUser);
+
   const [course, setCourse] = useState<Course | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>("Overview");
+  const [studentState, setStudentState] = useState<CourseStudentState | null>(
+    null,
+  );
 
   const fallbackCourse = useMemo(
     () => MOCK_COURSES.find((c) => c.id.toString() === id),
@@ -180,10 +188,21 @@ const CourseDetail = () => {
           fallback,
         ),
       );
+
+      if (currentUser?.id) {
+        try {
+          const state = await courseService.getCourseStudentStateAPI(courseId);
+          setStudentState(state);
+        } catch {
+          setStudentState(null);
+        }
+      } else {
+        setStudentState(null);
+      }
     })().catch(() => {
       setCourse(null);
     });
-  }, [id]);
+  }, [id, currentUser?.id]);
 
   const displayCourse = course || fallbackCourse;
   if (!displayCourse) return <div>Course not found</div>;
@@ -241,7 +260,17 @@ const CourseDetail = () => {
           </div>
 
           <div className="lg:col-span-1">
-            <CourseSidebar course={displayCourse} />
+            <CourseSidebar
+              course={displayCourse}
+              studentState={studentState}
+              onAddedToCart={() =>
+                setStudentState((prev) =>
+                  prev
+                    ? { ...prev, isInCart: true, canAddToCart: false }
+                    : prev,
+                )
+              }
+            />
           </div>
         </div>
       </div>

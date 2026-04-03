@@ -8,11 +8,7 @@ const getCartByUserId = async (userId: number) => {
   return res.data;
 };
 
-const addToCart = async (data: {
-  userId: number;
-  courseId: number;
-  price: number;
-}) => {
+const addToCart = async (data: { courseId: number }) => {
   const res = await authorizedAxiosInstance.post(
     `${API_ROOT}/v1/carts/add-to-cart`,
     data,

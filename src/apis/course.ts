@@ -64,6 +64,13 @@ const getReviewsByCourseIdAPI = async ({
   return res.data;
 };
 
+const getCourseStudentStateAPI = async (id: number) => {
+  const res = await authorizedAxiosInstance.get(
+    `${API_ROOT}/v1/courses/get-course-student-state/${id}`,
+  );
+  return res.data;
+};
+
 const getReviewsByCourseIdAPIV2 = async ({
   courseId,
   params,
@@ -88,6 +95,7 @@ const getResourceByIdAPI = async (resourceId: number) => {
 export const courseService = {
   getCoursesAPI,
   getCourseByIdAPI,
+  getCourseStudentStateAPI,
   getCourseCategoriesAPI,
   getCourseFaqsByCourseIdAPI,
   getCoursesByCategoryIdAPI,
