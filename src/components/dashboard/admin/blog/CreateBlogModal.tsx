@@ -280,8 +280,11 @@ const CreateBlogModal = ({
                 content_style:
                   "body { font-family: Poppins, sans-serif; font-size: 14px; padding: 12px; }",
                 branding: false,
-                images_upload_handler: async (blobInfo) => {
-                  const file = blobInfo.blob();
+                images_upload_handler: async (blobInfo: { blob: () => Blob }) => {
+                  const blob = blobInfo.blob();
+                  const file = new File([blob], "editor-image", {
+                    type: blob.type || "image/png",
+                  });
                   return await uploadImageForEditor(file);
                 },
               }}

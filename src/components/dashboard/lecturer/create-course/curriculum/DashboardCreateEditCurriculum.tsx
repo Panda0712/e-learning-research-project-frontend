@@ -19,6 +19,8 @@ import {
   curriculumSchema,
   type CurriculumFormValues,
 } from "../../../../../schemas/curriculum.schema";
+import type { LessonFormValues } from "../../../../../schemas/lesson.schema";
+import type { QuizFormValues } from "../../../../../schemas/quiz.schema";
 import Button from "../../../../ui/Button";
 import Input from "../../../../ui/Input";
 import { Field } from "../../../../ui/InputBox";
@@ -150,7 +152,7 @@ const DashboardCreateEditCurriculum = () => {
 
   const moduleQuiz = watch("lessons.0.quizzes");
 
-  const onSubmit = async (data: CurriculumFormValues, action: "push") => {
+  const onSubmit = async (data: CurriculumFormValues) => {
     // Validate all lesson inputs first to avoid creating module without lessons.
     for (let i = 0; i < data.lessons.length; i += 1) {
       const lesson = data.lessons[i];
@@ -403,8 +405,7 @@ const DashboardCreateEditCurriculum = () => {
     }
   };
 
-  const submitWithAction = (action: "push") =>
-    handleSubmit((data) => onSubmit(data, action))();
+  const submitWithAction = () => handleSubmit(onSubmit)();
 
   useEffect(() => {
     if (!id) return;
@@ -422,7 +423,7 @@ const DashboardCreateEditCurriculum = () => {
         const lessonRows =
           await lecturerLessonService.getPublicLessonsByModuleIdAPI(moduleId);
 
-        const normalizedLessons =
+        const normalizedLessons: LessonFormValues[] =
           Array.isArray(lessonRows) && lessonRows.length > 0
             ? lessonRows.map((lesson: any) => ({
                 id: Number(lesson?.id || 0) || undefined,
@@ -462,7 +463,7 @@ const DashboardCreateEditCurriculum = () => {
             const quizzes =
               await lecturerQuizService.getQuizzesByLessonAPI(firstLessonId);
             if (Array.isArray(quizzes) && quizzes.length > 0) {
-              const mappedQuizzes = await Promise.all(
+              const mappedQuizzes: QuizFormValues[] = await Promise.all(
                 quizzes.map(async (quiz: any) => {
                   const questions =
                     await lecturerQuestionService.getQuestionsByQuizAPI(
@@ -574,7 +575,7 @@ const DashboardCreateEditCurriculum = () => {
               type="publish"
               content={isEditModuleMode ? "Update" : "Push"}
               disabled={isSubmitting}
-              onClick={() => submitWithAction("push")}
+              onClick={submitWithAction}
             />
           </div>
         </div>

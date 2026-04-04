@@ -178,8 +178,10 @@ const DashboardInstructorRequests = () => {
       }));
       
       setAllRequests(formattedData);
-    } catch (err:any) {
-      toast.error(error?.message || "Failed to load instructor requests data!");
+    } catch (err: any) {
+      toast.error(
+        err?.message || "Failed to load instructor requests data!",
+      );
     } finally {
       setLoading(false);
     }

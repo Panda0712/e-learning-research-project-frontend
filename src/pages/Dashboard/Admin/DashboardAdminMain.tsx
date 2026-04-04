@@ -14,19 +14,22 @@ import type {
   DashboardPeriod,
 } from "../../../types/dashboard.type";
 
-type Year = 2023 | 2024 | 2025;
-
-type RevenuePoint = {
-  day: number;
-  value: number;
-};
-
 type DateFilter = "all" | "last-month" | "this-month" | "this-year" | "custom";
 
-interface MonthlyEngagement {
-  month: string;
-  value: number;
-}
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+] as const;
 
 const mapDateFilterToPeriod = (filter: DateFilter): DashboardPeriod => {
   if (filter === "all") return "all_time";
@@ -48,7 +51,7 @@ const DashboardAdminMain = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isChartLoading, setIsChartLoading] = useState(true);
   const [openFilter, setOpenFilter] = useState(false);
-  const [month, setMonth] = useState("August");
+  const [month, setMonth] = useState<string>(MONTHS[new Date().getMonth()]);
   const [type, setType] = useState<string>("sign-up");
   const [dateFilter, setDateFilter] = useState<DateFilter>("this-year");
 
@@ -87,6 +90,10 @@ const DashboardAdminMain = () => {
       try {
         if (type === "revenue") {
           const monthIndex = MONTHS.findIndex((m) => m === month);
+          if (monthIndex < 0) {
+            throw new Error(`Invalid month selected: ${month}`);
+          }
+
           const year = new Date().getFullYear();
           const from = new Date(year, monthIndex, 1).toISOString().slice(0, 10);
           const to = new Date(year, monthIndex + 1, 0)
@@ -98,12 +105,10 @@ const DashboardAdminMain = () => {
             from,
             to,
           });
-          console.log("Fetched Revenue Data:", data);
           setChart(data);
         } else {
           const period = mapDateFilterToPeriod(dateFilter);
           const data = await dashboardService.getAdminChartsAPI({ period });
-          console.log("Fetched Signup Data:", data);
           setChart(data);
         }
       } catch {

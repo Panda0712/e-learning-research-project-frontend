@@ -106,6 +106,8 @@ const mockCourses: EnrolledCourse[] = [
 ];
 
 const EnrolledCourses = ({ studentId }: EnrolledCoursesProps) => {
+  void studentId;
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Completed":

@@ -220,11 +220,15 @@ export const PASSWORD_RULE_MESSAGE =
   "Password has to be at least 1 character, 1 number and 8 characters min.";
 export const PASSWORD_CONFIRMATION_MESSAGE = "Confirm password not match!";
 
-let apiRoot = "http://localhost:8017";
-if (import.meta.env.VITE_BUILD_MODE === "dev") {
-  apiRoot = "http://localhost:8017";
-}
-if (import.meta.env.VITE_BUILD_MODE === "production") {
-  apiRoot = "https://meo-station-backend.onrender.com";
-}
-export const API_ROOT = apiRoot;
+const PROD_API_ROOT = "https://meo-station-backend.onrender.com";
+const DEV_API_ROOT = "http://localhost:8017";
+
+export const API_ROOT =
+  import.meta.env.VITE_BASE_API ||
+  (import.meta.env.VITE_BUILD_MODE === "production"
+    ? PROD_API_ROOT
+    : import.meta.env.VITE_BUILD_MODE === "dev"
+      ? DEV_API_ROOT
+      : import.meta.env.PROD
+        ? PROD_API_ROOT
+        : DEV_API_ROOT);

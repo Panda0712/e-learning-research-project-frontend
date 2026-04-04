@@ -83,10 +83,9 @@ authorizedAxiosInstance.interceptors.response.use(
       });
     }
 
-    let errorMessage = error?.message;
-    if (error.response?.data?.message) {
-      errorMessage = error.response.data.message;
-    }
+    const errorMessage = normalizeErrorMessage(
+      error.response?.data?.message ?? error?.message,
+    );
 
     if (error.response?.status !== 410) {
       toast.error(errorMessage);

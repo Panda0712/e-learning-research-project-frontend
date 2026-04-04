@@ -14,10 +14,11 @@ type LessonItem = {
   duration?: string;
   type: "video" | "quiz" | "doc";
   isPreview?: boolean;
-  moduleId?: number;
+  moduleId: number;
 };
 
 type SectionItem = {
+  moduleId: number;
   title: string;
   duration?: number | string;
   items: LessonItem[];

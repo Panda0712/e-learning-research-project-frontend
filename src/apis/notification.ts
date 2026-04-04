@@ -49,10 +49,14 @@ const writeLocalSettings = (data: Record<string, boolean>) => {
 };
 
 const getNotificationSettingsAPI = async () => {
-  const response = await authorizedAxiosInstance.get(
-    `${API_ROOT}/v1/users/notification-settings`,
-  );
-  return response.data;
+  try {
+    const response = await authorizedAxiosInstance.get(
+      `${API_ROOT}/v1/users/notification-settings`,
+    );
+    return { ...readLocalSettings(), ...response.data };
+  } catch {
+    return readLocalSettings();
+  }
 };
 
 const updateNotificationSettingAPI = async (data: Record<string, boolean>) => {
@@ -60,7 +64,7 @@ const updateNotificationSettingAPI = async (data: Record<string, boolean>) => {
     `${API_ROOT}/v1/users/notification-settings`,
     data,
   );
-  return response.data;
+  return writeLocalSettings(response.data || data);
 };
 
 const getNotificationsByUserIdAPI = async (
