@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Calendar, User } from "lucide-react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import AuthorBox from "../../components/box/AuthorBox";
+import { useNavigate, useParams } from "react-router-dom";
 import CommentList from "../../components/comment/CommentListBlog";
 import Sidebar from "../../components/ui/SideBar";
 import { useEffect, useState } from "react";

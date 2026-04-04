@@ -1,5 +1,21 @@
 import type { Course, Student, DashboardStudent } from "../types/course.type";
-import type { Transaction } from "../types/transaction.type";
+
+interface MockTransaction {
+  id: string;
+  studentName: string;
+  studentEmail: string;
+  courseTitle: string;
+  instructorName: string;
+  amount: number;
+  payoutMethod: string;
+  date: string;
+  status: string;
+  bankRef: string;
+  subtotal: number;
+  discount: number;
+  discountCode?: string;
+  paymentMethodDetail: string;
+}
 
 // ========================================================================
 // 1. DANH SÁCH HỌC VIÊN
@@ -682,7 +698,7 @@ export const STUDENT_DATA: DashboardStudent[] = [
 // ========================================================================
 // 4. DANH SÁCH GIAO DỊCH (TRANSACTIONS)
 // ========================================================================
-export const MOCK_TRANSACTIONS: Transaction[] = [
+export const MOCK_TRANSACTIONS: MockTransaction[] = [
     {
         id: "#TXN-192837",
         studentName: "Saron Mekonnen",

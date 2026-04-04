@@ -1,7 +1,15 @@
 import type {
-  AssessmentItem,
   StudentSubmission,
 } from "../types/assessment.type";
+
+interface AssessmentItem {
+  id: number;
+  title: string;
+  course: string;
+  submissions: string;
+  avgScore: string | null;
+  status: "Open" | "Closed";
+}
 
 export const MOCK_DATA_ASSESSMENT: AssessmentItem[] = [
   {

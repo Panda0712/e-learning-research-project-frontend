@@ -99,8 +99,8 @@ const Registration = () => {
         lecturerFile,
       );
 
-      const uploadedPublicId = uploadedFile?.public_id || uploadedFile?.publicId;
-      const uploadedSecureUrl = uploadedFile?.secure_url || uploadedFile?.fileUrl;
+      const uploadedPublicId = uploadedFile?.publicId;
+      const uploadedSecureUrl = uploadedFile?.fileUrl;
 
       if (!uploadedPublicId || !uploadedSecureUrl) {
         throw new Error("Upload file response is missing publicId/fileUrl.");

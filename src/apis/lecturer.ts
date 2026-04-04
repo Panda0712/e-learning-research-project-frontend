@@ -123,9 +123,14 @@ const uploadLecturerFileAPI = async (file: File) => {
     },
   );
 
-  return res.data as {
-    public_id: string;
-    secure_url: string;
+  const data = res.data as {
+    public_id?: string;
+    secure_url?: string;
+  };
+
+  return {
+    publicId: data.public_id || "",
+    fileUrl: data.secure_url || "",
   };
 };
 

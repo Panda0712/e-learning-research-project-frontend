@@ -138,7 +138,7 @@ const DashboardCurriculum = () => {
       },
       onDetail: (moduleId: number) => {
         if (!courseId) return;
-        navigate(`/learning/${courseId}`);
+        navigate(`/learning/${courseId}?moduleId=${moduleId}`);
       },
     }),
     [navigate, isViewMode, persistentQuery, courseId],

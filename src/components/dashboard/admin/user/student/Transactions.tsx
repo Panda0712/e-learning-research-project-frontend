@@ -21,6 +21,8 @@ const mockTransactions: Transaction[] = [
 ];
 
 const Transactions = ({ studentId }: TransactionsProps) => {
+  void studentId;
+
   return (
     <div className="rounded-xl bg-white p-8">
       <h2 className="mb-6 font-poppins text-xl font-bold text-[#000000]">Transactions</h2>
