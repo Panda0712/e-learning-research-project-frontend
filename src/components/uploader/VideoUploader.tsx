@@ -11,6 +11,10 @@ const VideoUploader = ({ videoUrl, onUpload }: VideoProps) => {
   const [preview, setPreview] = useState<string | null>(videoUrl ?? null);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    setPreview(videoUrl ?? null);
+  }, [videoUrl]);
+
   const handleVideoFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -44,7 +48,7 @@ const VideoUploader = ({ videoUrl, onUpload }: VideoProps) => {
 
   useEffect(() => {
     return () => {
-      if (preview) URL.revokeObjectURL(preview);
+      if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
     };
   }, [preview]);
 

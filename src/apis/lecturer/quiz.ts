@@ -15,6 +15,29 @@ const createQuizAPI = async (payload: {
   return res.data;
 };
 
+const updateQuizAPI = async (
+  id: number,
+  payload: {
+    title?: string;
+    description?: string;
+    timeLimit?: number;
+    passingScore?: number;
+  },
+) => {
+  const res = await authorizedAxiosInstance.patch(
+    `${API_ROOT}/v1/quizzes/by-id/${id}`,
+    payload,
+  );
+  return res.data;
+};
+
+const deleteQuizAPI = async (id: number) => {
+  const res = await authorizedAxiosInstance.delete(
+    `${API_ROOT}/v1/quizzes/by-id/${id}`,
+  );
+  return res.data;
+};
+
 const getQuizzesByLessonAPI = async (lessonId: number) => {
   const res = await authorizedAxiosInstance.get(
     `${API_ROOT}/v1/quizzes/by-lesson/${lessonId}`,
@@ -33,6 +56,8 @@ const getQuizzesByIdAPI = async (id: number) => {
 
 export const lecturerQuizService = {
   createQuizAPI,
+  updateQuizAPI,
+  deleteQuizAPI,
   getQuizzesByLessonAPI,
   getQuizzesByIdAPI,
 };

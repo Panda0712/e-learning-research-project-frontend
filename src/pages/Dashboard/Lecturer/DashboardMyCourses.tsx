@@ -49,19 +49,39 @@ const DashboardMyCourses = () => {
     q: "",
   });
 
+  const clearCreateDraftState = () => {
+    localStorage.removeItem("lecturerCourseDetailDraft");
+    localStorage.removeItem("lecturerCourseDetailImagePreview");
+    localStorage.removeItem("lecturerCourseDetailVideoPreview");
+  };
+
   const handleEdit = (id: number) => {
+    const selected = rows.find((row) => row.id === id);
     localStorage.setItem(
       "lecturerCreateCourseContext",
       JSON.stringify({ courseId: id }),
     );
+    if (selected?.title) {
+      localStorage.setItem("courseTitle", JSON.stringify(selected.title));
+    }
+    clearCreateDraftState();
     navigate(
-      `/dashboard/lecturer/my-courses/create-course/detail?courseId=${id}`,
+      `/dashboard/lecturer/my-courses/create-course/detail?courseId=${id}&mode=edit`,
     );
   };
 
   const handleDetail = (id: number) => {
+    const selected = rows.find((row) => row.id === id);
+    localStorage.setItem(
+      "lecturerCreateCourseContext",
+      JSON.stringify({ courseId: id }),
+    );
+    if (selected?.title) {
+      localStorage.setItem("courseTitle", JSON.stringify(selected.title));
+    }
+    clearCreateDraftState();
     navigate(
-      `/dashboard/lecturer/my-courses/create-course/detail?courseId=${id}&view=detail`,
+      `/dashboard/lecturer/my-courses/create-course/detail?courseId=${id}&mode=view`,
     );
   };
 

@@ -32,9 +32,14 @@ const DashboardCreateCourseModal = ({
     localStorage.removeItem("lecturerCreateCourseContext");
     localStorage.removeItem("curriculumTitle");
     localStorage.removeItem("cc");
+    localStorage.removeItem("lecturerCourseDetailDraft");
+    localStorage.removeItem("lecturerCourseDetailImagePreview");
+    localStorage.removeItem("lecturerCourseDetailVideoPreview");
+    localStorage.removeItem("lecturerCurriculumReady");
+    localStorage.removeItem("lecturerDetailReady");
 
     navigate(
-      `/dashboard/lecturer/my-courses/create-course/detail?courseTitle=${courseTitle}`,
+      `/dashboard/lecturer/my-courses/create-course/detail?courseTitle=${courseTitle}&mode=create`,
     );
   };
 

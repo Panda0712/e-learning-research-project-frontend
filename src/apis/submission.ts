@@ -1,15 +1,34 @@
-import authorizedAxiosInstance from "../utils/authorizedAxios";
-import { API_ROOT } from "../utils/constants";
 import type {
   GradeSubmissionPayload,
   NewSubmission,
   Submission,
 } from "../types/submission.type";
+import authorizedAxiosInstance from "../utils/authorizedAxios";
+import { API_ROOT } from "../utils/constants";
 
 const SUBMISSION_API_ROOT = `${API_ROOT}/v1/submissions`;
 
-const createSubmissionAPI = async (data: NewSubmission): Promise<Submission> => {
-  const response = await authorizedAxiosInstance.post(SUBMISSION_API_ROOT, data);
+const createSubmissionAPI = async (
+  data: NewSubmission,
+): Promise<Submission> => {
+  const response = await authorizedAxiosInstance.post(
+    SUBMISSION_API_ROOT,
+    data,
+  );
+  return response.data;
+};
+
+const getSubmissionsAPI = async (params?: {
+  page?: number;
+  limit?: number;
+  studentId?: number;
+  assessmentId?: number;
+  quizId?: number;
+  status?: string;
+}): Promise<{ data: Submission[]; pagination: any }> => {
+  const response = await authorizedAxiosInstance.get(SUBMISSION_API_ROOT, {
+    params,
+  });
   return response.data;
 };
 
@@ -42,6 +61,7 @@ const getSubmissionByIdAPI = async (id: number): Promise<Submission> => {
 
 export const submissionService = {
   createSubmissionAPI,
+  getSubmissionsAPI,
   gradeSubmissionAPI,
   getSubmissionsByStudentIdAPI,
   getSubmissionByIdAPI,

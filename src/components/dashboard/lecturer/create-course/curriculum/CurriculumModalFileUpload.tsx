@@ -114,6 +114,7 @@ const CurriculumModalFileUpload = ({
 
         <div className="flex items-center justify-between gap-4 mt-2">
           <button
+            type="button"
             onClick={onClose}
             className="h-12 px-6 bg-[#F5F7FA] 
             text-[16px] font-semibold cursor-pointer
@@ -123,6 +124,7 @@ const CurriculumModalFileUpload = ({
           </button>
 
           <button
+            type="button"
             disabled={file === null}
             onClick={uploadFile}
             className={`h-12 px-6 bg-[#FF6636] text-white 

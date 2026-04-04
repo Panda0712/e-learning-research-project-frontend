@@ -20,9 +20,15 @@ export type VideoPreview = {
 
 type VideoUploaderProps = {
   field: ControllerRenderProps<any, any>;
+  existingVideoUrl?: string;
+  onRemoveExisting?: () => void;
 };
 
-const CurriculumVideoUploader = ({ field }: VideoUploaderProps) => {
+const CurriculumVideoUploader = ({
+  field,
+  existingVideoUrl,
+  onRemoveExisting,
+}: VideoUploaderProps) => {
   const [openModal, setOpenModal] = useState(false);
   const [previewVideo, setPreviewVideo] = useState<VideoPreview | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -151,6 +157,24 @@ const CurriculumVideoUploader = ({ field }: VideoUploaderProps) => {
     if (!openModal) setError(null);
   }, [openModal]);
 
+  useEffect(() => {
+    if (field.value instanceof File && field.value.size > 0) {
+      setPreviewVideo((prev) => {
+        if (prev?.file === field.value) return prev;
+        return {
+          file: field.value,
+          name: field.value.name,
+          size: field.value.size,
+          duration: prev?.duration || 0,
+          formattedDuration: prev?.formattedDuration || "",
+          width: prev?.width || 0,
+          height: prev?.height || 0,
+          thumbnail: prev?.thumbnail || "",
+        };
+      });
+    }
+  }, [field.value]);
+
   return (
     <div className="flex flex-col gap-2">
       <h3 className="text-[14px] text-[#9D9D9D] font-normal font-poppins">
@@ -175,7 +199,27 @@ const CurriculumVideoUploader = ({ field }: VideoUploaderProps) => {
               size={24}
               className="absolute right-5 top-5 cursor-pointer 
               transition duration-300 hover:opacity-70"
-              onClick={() => setPreviewVideo(null)}
+              onClick={() => {
+                setPreviewVideo(null);
+                field.onChange(new File([], ""));
+              }}
+            />
+          </>
+        ) : existingVideoUrl ? (
+          <>
+            <video
+              src={existingVideoUrl}
+              controls
+              className="w-full h-full object-cover"
+            />
+            <X
+              size={24}
+              className="absolute right-5 top-5 cursor-pointer 
+              transition duration-300 hover:opacity-70"
+              onClick={() => {
+                onRemoveExisting?.();
+                field.onChange(new File([], ""));
+              }}
             />
           </>
         ) : (

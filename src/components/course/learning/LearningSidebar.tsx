@@ -14,6 +14,7 @@ type LessonItem = {
   duration?: string;
   type: "video" | "quiz" | "doc";
   isPreview?: boolean;
+  moduleId?: number;
 };
 
 type SectionItem = {
@@ -26,12 +27,18 @@ interface Props {
   sections: SectionItem[];
   currentLessonId?: number;
   onSelectLesson?: (lesson: LessonItem) => void;
+  isLessonLocked?: (lesson: LessonItem, section: SectionItem) => boolean;
+  isLessonCompleted?: (lesson: LessonItem, section: SectionItem) => boolean;
+  onBlockedLessonClick?: (lesson: LessonItem, section: SectionItem) => void;
 }
 
 const LearningSidebar = ({
   sections,
   currentLessonId,
   onSelectLesson,
+  isLessonLocked,
+  isLessonCompleted,
+  onBlockedLessonClick,
 }: Props) => {
   const [openSections, setOpenSections] = useState<number[]>([0, 1]);
 
@@ -83,14 +90,28 @@ const LearningSidebar = ({
               <div className="bg-white">
                 {section.items.map((lesson) => {
                   const isActive = currentLessonId === lesson.id;
-                  const isLocked = !isActive && !lesson.isPreview;
-                  const isCompleted = false;
+                  const isLocked = isLessonLocked
+                    ? isLessonLocked(lesson, section)
+                    : !isActive && !lesson.isPreview;
+                  const isCompleted = isLessonCompleted
+                    ? isLessonCompleted(lesson, section)
+                    : false;
+
+                  const typeLabel =
+                    lesson.type === "quiz"
+                      ? "Quiz"
+                      : lesson.type === "doc"
+                        ? "File"
+                        : "Video";
 
                   return (
                     <div
                       key={lesson.id}
                       onClick={() => {
-                        if (isLocked) return;
+                        if (isLocked) {
+                          onBlockedLessonClick?.(lesson, section);
+                          return;
+                        }
                         onSelectLesson?.(lesson);
                       }}
                       className={`flex items-start gap-3 p-4 border-b border-gray-50 cursor-pointer transition-colors group
@@ -122,9 +143,11 @@ const LearningSidebar = ({
                         >
                           {lesson.title}
                         </h5>
-                        <span className="text-xs text-gray-400 font-poppins">
-                          {lesson.duration}
-                        </span>
+                        <div className="flex items-center gap-2 text-xs text-gray-400 font-poppins">
+                          <span>{lesson.duration}</span>
+                          <span className="text-gray-300">•</span>
+                          <span>{typeLabel}</span>
+                        </div>
                       </div>
                     </div>
                   );

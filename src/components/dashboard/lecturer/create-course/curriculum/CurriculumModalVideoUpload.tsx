@@ -1,6 +1,6 @@
+import { X } from "lucide-react";
 import { useRef } from "react";
 import Input from "../../../../ui/Input";
-import { X } from "lucide-react";
 // import { bytesToGB } from "../../../../../../../utils/helpers";
 
 type VideoPreview = {
@@ -89,14 +89,11 @@ const CurriculumModalVideoUpload = ({
                     · {previewVideo.formattedDuration}
                   </span>
                 </p>
-
                 <p className="text-[14px] font-medium">{previewVideo.name}</p>
-
                 {/* <p className="text-xs text-gray-500 mt-1">
                   {previewVideo.width}x{previewVideo.height} ·{" "}
                   {bytesToGB(previewVideo.size)} GB
                 </p> */}
-
                 <button
                   type="button"
                   onClick={handleReplace}
@@ -104,6 +101,7 @@ const CurriculumModalVideoUpload = ({
                 >
                   Replace Video
                 </button>
+                type="button"
               </div>
             </div>
           )}
@@ -119,6 +117,7 @@ const CurriculumModalVideoUpload = ({
             />
 
             <button
+              type="button"
               onClick={handleBrowse}
               className="bg-[#E9EAF0] px-6 text-center
           h-12 text-[18px] font-semibold transition flex items-center justify-center
@@ -150,6 +149,7 @@ const CurriculumModalVideoUpload = ({
 
         <div className="flex items-center justify-between gap-4 mt-2">
           <button
+            type="button"
             onClick={onClose}
             className="h-12 px-6 bg-[#F5F7FA] 
             text-[16px] font-semibold cursor-pointer
@@ -159,6 +159,7 @@ const CurriculumModalVideoUpload = ({
           </button>
 
           <button
+            type="button"
             disabled={previewVideo === null}
             onClick={uploadVideo}
             className={`h-12 px-6 bg-[#FF6636] text-white 

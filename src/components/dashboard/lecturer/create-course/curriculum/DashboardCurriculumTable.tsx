@@ -4,12 +4,13 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import PaginationV2 from "../../../../ui/PaginationV2";
 import type { CurriculumData } from "../../../../../types/curriculum.type";
+import PaginationV2 from "../../../../ui/PaginationV2";
 import { columns } from "./DashboardCurriculumColumns";
 
 interface TableProps {
   data: CurriculumData[];
+  readOnly?: boolean;
   actions: {
     onEdit: (id: number) => void;
     onDelete: (id: number) => void;
@@ -17,10 +18,14 @@ interface TableProps {
   };
 }
 
-const DashboardCurriculumTable = ({ data, actions }: TableProps) => {
+const DashboardCurriculumTable = ({
+  data,
+  actions,
+  readOnly = false,
+}: TableProps) => {
   const table = useReactTable({
     data,
-    columns: columns(actions),
+    columns: columns(actions, readOnly),
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     initialState: {
