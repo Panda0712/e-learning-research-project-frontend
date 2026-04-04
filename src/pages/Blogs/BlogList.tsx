@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import BlogCard from "../../components/cards/BlogCard";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { blogApi } from "../../apis/blog";
 import { toast } from "react-toastify";
+import { blogApi } from "../../apis/blog";
+import BlogCard from "../../components/cards/BlogCard";
 import type { BlogCategoryItem } from "../../types/adminBlog.type";
 
 interface BlogData {
@@ -51,7 +51,13 @@ const getVisiblePages = (totalPages: number, currentPage: number) => {
 
   if (currentPage <= 3) return [1, 2, 3, 4, 5];
   if (currentPage >= totalPages - 2) {
-    return [totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    return [
+      totalPages - 4,
+      totalPages - 3,
+      totalPages - 2,
+      totalPages - 1,
+      totalPages,
+    ];
   }
 
   return [
@@ -136,7 +142,10 @@ const BlogList = () => {
     });
   }, [blogList, searchValue, selectedCategory]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredBlogs.length / BLOGS_PER_PAGE));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredBlogs.length / BLOGS_PER_PAGE),
+  );
   const visiblePages = getVisiblePages(totalPages, currentPage);
 
   const paginatedBlogs = useMemo(() => {
@@ -155,112 +164,157 @@ const BlogList = () => {
   }, [currentPage, totalPages]);
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-[#F8FAFC] via-white to-[#EFF6FF]">
-      <div className="flex h-12.5 w-full items-center bg-[#F5F5F5]">
-        <div className="container mx-auto px-4 max-w-7xl">
-          <div className="flex items-center gap-2 text-sm font-medium">
-            <span className="text-[#555555] cursor-pointer hover:underline">
-              Home
-            </span>
-            <span className="text-[#9D9D9D] mx-1">{">"}</span>
-
-            <span className="text-[#9D9D9D]">Blog</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8">
-        <div className="rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-sm backdrop-blur">
-          <h1 className="mb-4 text-2xl font-semibold text-slate-900 md:text-3xl">
-            Explore Topics and Skills
-          </h1>
-
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="relative w-full lg:max-w-md">
-              <Search
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                size={18}
-              />
-              <input
-                value={searchValue}
-                onChange={(event) => setSearchValue(event.target.value)}
-                type="text"
-                placeholder="Search blog by title, author, category..."
-                className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-sm text-slate-700 outline-none transition-colors focus:border-[#1E4ED8]"
-              />
+    <div className="min-h-screen bg-[linear-gradient(180deg,#f7f9fc_0%,#ffffff_28%,#f7f4ff_100%)]">
+      <div className="px-4 pb-10 pt-6 sm:px-8 lg:px-12 xl:px-20">
+        <div className="mx-auto max-w-7xl">
+          <div className="rounded-4xl border border-white/70 bg-white/82 p-6 shadow-[0_24px_80px_rgba(34,40,84,0.08)] backdrop-blur-sm sm:p-8 lg:p-10">
+            <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
+              <span className="cursor-pointer text-[#64748B] hover:text-[#19566A]">
+                Home
+              </span>
+              <span className="text-[#94A3B8]">/</span>
+              <span className="text-[#19566A]">Blog</span>
             </div>
 
-            <div className="flex w-full flex-wrap gap-2 lg:w-auto lg:justify-end">
-              {categories.map((category) => {
-                const active = selectedCategory === category;
+            <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)] lg:items-end">
+              <div className="max-w-3xl">
+                <span className="inline-flex rounded-full border border-[#704FE6]/15 bg-[#704FE6]/8 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#704FE6]">
+                  Blog journal
+                </span>
+                <h1 className="mt-5 text-4xl font-semibold leading-tight text-[#163541] md:text-5xl">
+                  Explore topics, ideas, and practical learning insights.
+                </h1>
+                <p className="mt-4 max-w-2xl text-[15px] leading-8 text-[#64748B] md:text-[16px]">
+                  Read articles designed to help learners stay inspired, build
+                  better habits, and keep up with new skills and trends.
+                </p>
+              </div>
 
-                return (
+              <div className="grid gap-4 rounded-[28px] border border-[#E7ECF3] bg-[linear-gradient(145deg,#ffffff_0%,#f8fbff_100%)] p-5 shadow-[0_16px_40px_rgba(34,40,84,0.05)] sm:grid-cols-3 lg:grid-cols-1">
+                <div className="rounded-2xl bg-[#F8FAFC] px-4 py-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#704FE6]">
+                    Articles
+                  </p>
+                  <p className="mt-2 text-2xl font-semibold text-[#163541]">
+                    {blogList.length}
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-[#F8FAFC] px-4 py-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#704FE6]">
+                    Categories
+                  </p>
+                  <p className="mt-2 text-2xl font-semibold text-[#163541]">
+                    {Math.max(0, categories.length - 1)}
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-[#F8FAFC] px-4 py-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#704FE6]">
+                    Showing
+                  </p>
+                  <p className="mt-2 text-2xl font-semibold text-[#163541]">
+                    {paginatedBlogs.length}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 rounded-[28px] border border-[#E7ECF3] bg-[linear-gradient(145deg,#ffffff_0%,#fbfcff_100%)] p-5 shadow-[0_16px_40px_rgba(34,40,84,0.05)]">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="relative w-full lg:max-w-md">
+                  <Search
+                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]"
+                    size={18}
+                  />
+                  <input
+                    value={searchValue}
+                    onChange={(event) => setSearchValue(event.target.value)}
+                    type="text"
+                    placeholder="Search blog by title, author, category..."
+                    className="h-12 w-full rounded-full border border-[#DCE7F0] bg-white pl-11 pr-4 text-sm text-[#163541] outline-none transition-all focus:border-[#704FE6]/25 focus:ring-4 focus:ring-[#704FE6]/8"
+                  />
+                </div>
+
+                <div className="flex w-full flex-wrap gap-2 lg:w-auto lg:justify-end">
+                  {categories.map((category) => {
+                    const active = selectedCategory === category;
+
+                    return (
+                      <button
+                        key={category}
+                        onClick={() => setSelectedCategory(category)}
+                        className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
+                          active
+                            ? "bg-[linear-gradient(135deg,#704FE6_0%,#5B3FD2_100%)] text-white shadow-[0_12px_24px_rgba(112,79,230,0.20)]"
+                            : "bg-[#F8FAFC] text-[#64748B] hover:bg-[#EEF4FF] hover:text-[#19566A]"
+                        }`}
+                      >
+                        {category}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8">
+            {loading ? (
+              <div className="rounded-[28px] border border-white/80 bg-white/92 py-14 text-center text-[#64748B] shadow-[0_18px_55px_rgba(34,40,84,0.08)]">
+                Loading blogs data...
+              </div>
+            ) : paginatedBlogs.length === 0 ? (
+              <div className="rounded-[28px] border border-dashed border-[#CBD5E1] bg-white/92 py-14 text-center text-[#64748B] shadow-[0_18px_55px_rgba(34,40,84,0.08)]">
+                No blogs found for this category or keyword.
+              </div>
+            ) : (
+              <>
+                <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                  {paginatedBlogs.map((blog: BlogData) => (
+                    <BlogCard key={blog.id} data={blog} />
+                  ))}
+                </div>
+
+                <div className="mt-8 flex items-center justify-center gap-2">
                   <button
-                    key={category}
-                    onClick={() => setSelectedCategory(category)}
-                    className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                      active
-                        ? "bg-[#1E4ED8] text-white"
-                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                    }`}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(1, prev - 1))
+                    }
+                    disabled={currentPage === 1}
+                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#DCE7F0] bg-white text-[#64748B] shadow-[0_8px_20px_rgba(34,40,84,0.04)] disabled:cursor-not-allowed disabled:opacity-40"
+                    aria-label="Previous page"
                   >
-                    {category}
+                    <ChevronLeft size={16} />
                   </button>
-                );
-              })}
-            </div>
+
+                  {visiblePages.map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`h-10 min-w-10 rounded-xl border px-3 text-sm font-semibold transition-colors ${
+                        page === currentPage
+                          ? "border-[#704FE6] bg-[linear-gradient(135deg,#704FE6_0%,#5B3FD2_100%)] text-white"
+                          : "border-[#DCE7F0] bg-white text-[#64748B] hover:bg-[#F8FAFC]"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+
+                  <button
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                    }
+                    disabled={currentPage === totalPages}
+                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#DCE7F0] bg-white text-[#64748B] shadow-[0_8px_20px_rgba(34,40,84,0.04)] disabled:cursor-not-allowed disabled:opacity-40"
+                    aria-label="Next page"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
-
-        {loading ? (
-          <p className="py-8 text-center text-slate-500">Loading blogs data...</p>
-        ) : paginatedBlogs.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-300 bg-white py-12 text-center text-slate-500">
-            No blogs found for this category or keyword.
-          </div>
-        ) : (
-          <>
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {paginatedBlogs.map((blog: BlogData) => (
-                <BlogCard key={blog.id} data={blog} />
-              ))}
-            </div>
-
-            <div className="mt-2 flex items-center justify-center gap-2">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
-                aria-label="Previous page"
-              >
-                <ChevronLeft size={16} />
-              </button>
-
-              {visiblePages.map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`h-10 min-w-10 rounded-lg border px-3 text-sm font-semibold transition-colors ${
-                    page === currentPage
-                      ? "border-[#1E4ED8] bg-[#1E4ED8] text-white"
-                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
-
-              <button
-                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-                className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
-                aria-label="Next page"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          </>
-        )}
       </div>
     </div>
   );

@@ -52,13 +52,21 @@ const CommentNode = ({
       : `${content.slice(0, COMMENT_PREVIEW_LIMIT).trimEnd()}...`;
 
   return (
-    <div className={`rounded-xl bg-white p-3 ${level > 0 ? "ml-4 mt-2" : ""}`}>
+    <div
+      className={`rounded-[22px] border border-[#E7ECF3] bg-[linear-gradient(145deg,#ffffff_0%,#fbfcff_100%)] p-4 shadow-[0_10px_24px_rgba(34,40,84,0.04)] ${
+        level > 0 ? "ml-4 mt-3" : ""
+      }`}
+    >
       <div className="mb-2 flex items-center justify-between gap-3">
-        <h4 className="text-base font-bold text-gray-900">{getDisplayName(comment)}</h4>
-        <span className="text-xs text-gray-500">{formatDate(comment.createdAt)}</span>
+        <h4 className="text-base font-bold text-[#163541]">
+          {getDisplayName(comment)}
+        </h4>
+        <span className="text-xs text-[#94A3B8]">
+          {formatDate(comment.createdAt)}
+        </span>
       </div>
 
-      <p className="mb-2 text-sm leading-relaxed text-gray-600 whitespace-pre-wrap wrap-break-word">
+      <p className="mb-2 text-sm leading-7 text-[#64748B] whitespace-pre-wrap wrap-break-word">
         {visibleContent || "(No content)"}
       </p>
 
@@ -66,7 +74,7 @@ const CommentNode = ({
         <button
           type="button"
           onClick={() => setExpanded((prev) => !prev)}
-          className="mb-3 text-xs font-semibold text-[#2563EB] hover:underline"
+          className="mb-3 text-xs font-semibold text-[#19566A] hover:underline"
         >
           {expanded ? "Show less" : "Show more"}
         </button>
@@ -76,7 +84,7 @@ const CommentNode = ({
         <button
           type="button"
           onClick={() => onReply(comment.id)}
-          className="flex items-center gap-1 text-xs font-bold text-[#FF6B6B] hover:underline"
+          className="flex items-center gap-1 text-xs font-bold text-[#704FE6] hover:underline"
         >
           <Reply size={16} /> Reply
         </button>
@@ -84,7 +92,9 @@ const CommentNode = ({
         {canModerate && currentUserId !== comment.userId && onBanUser ? (
           <button
             type="button"
-            onClick={() => onBanUser(comment.userId, Boolean(comment.isBannedUser))}
+            onClick={() =>
+              onBanUser(comment.userId, Boolean(comment.isBannedUser))
+            }
             className="text-xs font-semibold text-red-600 hover:underline"
           >
             {comment.isBannedUser ? "Unban" : "Ban user"}
@@ -99,7 +109,7 @@ const CommentNode = ({
       </div>
 
       {childComments.length > 0 ? (
-        <div className="mt-2 space-y-2 border-l border-gray-200 pl-3">
+        <div className="mt-3 space-y-3 border-l border-[#E2E8F0] pl-4">
           {childComments.map((reply) => (
             <CommentNode
               key={reply.id}
@@ -128,28 +138,37 @@ const CommentList = ({
   const rootComments = comments.filter((comment) => !comment.parentId);
 
   return (
-    <div className="mb-12 rounded-xl bg-[#F5F5F5] p-5">
-      <h3 className="mb-4 text-xl font-bold">Comments</h3>
+    <div className="mb-12 rounded-[28px] border border-white/80 bg-white/92 p-5 shadow-[0_18px_55px_rgba(34,40,84,0.08)] md:p-6">
+      <div className="mb-5 flex items-center justify-between gap-4">
+        <div>
+          <span className="inline-flex rounded-full border border-[#704FE6]/15 bg-[#704FE6]/8 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#704FE6]">
+            Discussion
+          </span>
+          <h3 className="mt-4 text-2xl font-semibold text-[#163541]">
+            Comments
+          </h3>
+        </div>
+      </div>
 
       <div className="max-h-96 overflow-y-auto no-scrollbar pr-1">
         <div className="flex flex-col gap-3">
-        {rootComments.length ? (
-          rootComments.map((comment) => (
-            <CommentNode
-              key={comment.id}
-              comment={comment}
-              replies={comments}
-              onReply={onReply}
-              onBanUser={onBanUser}
-              currentUserId={currentUserId}
-              canModerate={canModerate}
-            />
-          ))
-        ) : (
-          <div className="rounded-lg bg-white p-4 text-sm text-gray-600">
-            No comments yet. Be the first to comment.
-          </div>
-        )}
+          {rootComments.length ? (
+            rootComments.map((comment) => (
+              <CommentNode
+                key={comment.id}
+                comment={comment}
+                replies={comments}
+                onReply={onReply}
+                onBanUser={onBanUser}
+                currentUserId={currentUserId}
+                canModerate={canModerate}
+              />
+            ))
+          ) : (
+            <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] p-5 text-sm text-[#64748B]">
+              No comments yet. Be the first to comment.
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -11,28 +11,27 @@ const CommentList = ({ reviews }: Props) => {
       {reviews.map((review) => (
         <div
           key={review.id}
-          className="flex gap-4 p-4 bg-white border border-gray-50 
-          rounded-xl hover:bg-gray-50 transition-colors"
+          className="flex gap-4 rounded-[24px] border border-[#E7ECF3] bg-[linear-gradient(145deg,#ffffff_0%,#fbfcff_100%)] p-5 shadow-[0_12px_30px_rgba(34,40,84,0.04)] transition-colors hover:bg-[#FCFDFF]"
         >
           <div className="shrink-0">
             <img
               src={review.avatar}
               alt={review.user}
-              className="w-12 h-12 rounded-full object-cover border border-gray-200"
+              className="h-12 w-12 rounded-full border border-[#E2E8F0] object-cover"
             />
           </div>
 
           <div className="flex-1">
             <div className="flex justify-between items-start mb-1">
-              <h4 className="font-bold text-[#07152F] text-sm md:text-base font-poppins">
+              <h4 className="font-bold text-[#163541] text-sm md:text-base font-poppins">
                 {review.user}
               </h4>
-              <span className="text-xs text-[#9D9D9D] font-poppins">
+              <span className="text-xs text-[#94A3B8] font-poppins">
                 {review.date}
               </span>
             </div>
 
-            <p className="text-sm text-[#555555] mb-3 font-poppins leading-6">
+            <p className="mb-3 text-sm leading-7 text-[#64748B] font-poppins">
               {review.content}
             </p>
 
@@ -44,7 +43,7 @@ const CommentList = ({ reviews }: Props) => {
                 </div>
               }
               additionalClass="!w-auto !h-auto !bg-transparent !text-xs !font-bold 
-              !text-[#9D9D9D] hover:!text-orange-500 !p-0 !rounded-none 
+              !text-[#94A3B8] hover:!text-[#704FE6] !p-0 !rounded-none 
               !border-0 transition-colors"
             />
           </div>

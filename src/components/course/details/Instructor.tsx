@@ -2,52 +2,64 @@ import { BookOpen, Facebook, Twitter, Users, Youtube } from "lucide-react";
 import type { InstructorType } from "../../../types/course.type";
 
 const Instructor = ({ data }: { data?: InstructorType }) => {
-  if (!data) return <div>No instructor info.</div>;
+  if (!data)
+    return (
+      <div className="rounded-[28px] border border-white/80 bg-white/92 p-8 text-[#64748B] shadow-[0_18px_55px_rgba(34,40,84,0.08)]">
+        No instructor info.
+      </div>
+    );
 
   return (
-    <div className="bg-white p-6 md:p-8 rounded-xl border border-gray-100 shadow-sm">
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Avatar */}
+    <div className="rounded-[28px] border border-white/80 bg-white/92 p-6 shadow-[0_18px_55px_rgba(34,40,84,0.08)] md:p-8">
+      <div className="flex flex-col gap-6 md:flex-row">
         <div className="shrink-0">
           <img
             src={data.avatar}
             alt={data.name}
-            className="w-24 h-24 md:w-32 md:h-32 rounded-xl object-cover bg-gray-200"
+            className="h-24 w-24 rounded-3xl border border-[#E7ECF3] bg-gray-200 object-cover shadow-[0_14px_30px_rgba(34,40,84,0.08)] md:h-32 md:w-32"
           />
         </div>
 
-        {/* Info */}
         <div className="flex-1">
-          <h3 className="text-xl font-bold text-[#07152F] font-poppins">
+          <span className="inline-flex rounded-full border border-[#704FE6]/15 bg-[#704FE6]/8 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#704FE6]">
+            Instructor
+          </span>
+          <h3 className="mt-5 text-2xl font-semibold text-[#163541] font-poppins">
             {data.name}
           </h3>
-          <p className="text-sm text-[#9D9D9D] mb-4">{data.job}</p>
+          <p className="mb-5 mt-2 text-sm text-[#94A3B8]">{data.job}</p>
 
-          <p className="text-[#555555] text-sm leading-6 mb-6 font-poppins">
+          <p className="mb-6 text-[15px] leading-7 text-[#64748B] font-poppins">
             {data.bio}
           </p>
 
-          <div className="flex items-center gap-6 text-sm font-medium text-[#555555] mb-6">
-            <div className="flex items-center gap-2">
-              <Users size={16} className="text-orange-500" /> {data.students}{" "}
+          <div className="mb-6 grid gap-3 sm:grid-cols-2">
+            <div className="flex items-center gap-3 rounded-2xl bg-[#F8FAFC] px-4 py-3 text-sm font-medium text-[#64748B]">
+              <Users size={16} className="text-[#704FE6]" /> {data.students}{" "}
               Students
             </div>
-            <div className="flex items-center gap-2">
-              <BookOpen size={16} className="text-orange-500" /> {data.courses}{" "}
+            <div className="flex items-center gap-3 rounded-2xl bg-[#F8FAFC] px-4 py-3 text-sm font-medium text-[#64748B]">
+              <BookOpen size={16} className="text-[#704FE6]" /> {data.courses}{" "}
               Lessons
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-gray-400">
-            <span className="text-sm text-[#07152F] font-semibold">
+          <div className="flex items-center gap-4 text-[#94A3B8]">
+            <span className="text-sm font-semibold text-[#163541]">
               Follow:
             </span>
             <Facebook
               size={18}
-              className="hover:text-blue-600 cursor-pointer"
+              className="cursor-pointer transition-colors hover:text-[#19566A]"
             />
-            <Twitter size={18} className="hover:text-blue-400 cursor-pointer" />
-            <Youtube size={18} className="hover:text-red-600 cursor-pointer" />
+            <Twitter
+              size={18}
+              className="cursor-pointer transition-colors hover:text-[#19566A]"
+            />
+            <Youtube
+              size={18}
+              className="cursor-pointer transition-colors hover:text-[#19566A]"
+            />
           </div>
         </div>
       </div>

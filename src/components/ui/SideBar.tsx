@@ -28,11 +28,13 @@ const formatDate = (value?: string) => {
 
 const Sidebar = ({ recentPosts = [] }: SidebarProps) => {
   return (
-    <aside className="w-full lg:w-1/4 p-4 bg-white rounded-lg shadow-sm h-fit">
-      {/* recent post*/}
-      <div className="w-full max-w-94.75">
-        <h3 className="font-bold font-poppins text-xl mb-6 uppercase border-b-2 border-red-500 inline-block">
-          RECENT POST
+    <aside className="h-fit w-full rounded-[28px] border border-white/80 bg-white/92 p-5 shadow-[0_18px_55px_rgba(34,40,84,0.08)] backdrop-blur-sm lg:w-full lg:p-6">
+      <div className="w-full">
+        <span className="inline-flex rounded-full border border-[#704FE6]/15 bg-[#704FE6]/8 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#704FE6]">
+          Explore more
+        </span>
+        <h3 className="mb-6 mt-5 text-2xl font-semibold font-poppins text-[#163541]">
+          Recent Post
         </h3>
 
         {recentPosts.length ? (
@@ -40,30 +42,30 @@ const Sidebar = ({ recentPosts = [] }: SidebarProps) => {
             {recentPosts.slice(0, 6).map((post, index) => (
               <div
                 key={post.id}
-                className={`flex gap-5 py-5 ${
-                  index !== 0 ? "border-t border-gray-200" : ""
+                className={`flex gap-4 py-4 ${
+                  index !== 0 ? "border-t border-[#E7ECF3]" : ""
                 }`}
               >
                 <Link to={`/blog/${post.id}`} className="shrink-0">
                   <img
                     src={post.image}
                     alt={post.title}
-                    className="h-20 w-20 object-cover rounded-md hover:opacity-80 transition-opacity"
+                    className="h-22 w-22 rounded-[18px] object-cover transition-opacity hover:opacity-85"
                   />
                 </Link>
 
                 <div className="flex flex-col justify-center">
-                  <div className="flex items-center text-sm font-bold mb-2">
-                    <Calendar size={14} className="mr-2 text-[#FF6B6B]" />
-                    <span className="font-medium font-poppins text-[#333931] text-[10px]">
+                  <div className="mb-2 flex items-center text-sm font-bold">
+                    <Calendar size={14} className="mr-2 text-[#704FE6]" />
+                    <span className="text-[10px] font-medium font-poppins text-[#94A3B8]">
                       {formatDate(post.date)}
                     </span>
                   </div>
 
-                  <h4 className="font-semibold font-poppins text-gray-800 text-[15px] leading-snug line-clamp-2">
+                  <h4 className="line-clamp-2 text-[15px] font-semibold leading-7 font-poppins text-[#163541]">
                     <Link
                       to={`/blog/${post.id}`}
-                      className="hover:text-blue-600 transition-colors"
+                      className="transition-colors hover:text-[#19566A]"
                     >
                       {post.title}
                     </Link>
@@ -73,7 +75,7 @@ const Sidebar = ({ recentPosts = [] }: SidebarProps) => {
             ))}
           </div>
         ) : (
-          <div className="rounded-md border border-dashed border-gray-300 p-4 text-sm text-gray-500">
+          <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] p-4 text-sm text-[#64748B]">
             No recent posts found.
           </div>
         )}
