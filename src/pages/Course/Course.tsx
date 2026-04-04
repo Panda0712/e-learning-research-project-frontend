@@ -5,9 +5,6 @@ import { toast } from "react-toastify";
 import { courseService } from "../../apis/course";
 import CourseHeader from "../../components/course/CourseHeader";
 import CourseList from "../../components/course/CourseList";
-import Sidebar, {
-  type CourseFilters,
-} from "../../components/course/CourseSidebar";
 import Pagination from "../../components/ui/Pagination";
 import type {
   Course,
@@ -161,17 +158,9 @@ const CoursePage = () => {
     updateSearch({ q: q.length >= 2 ? q : "all" });
   };
 
-  const handleApplyFilters = (filters: CourseFilters) => {
-    updateSearch({
-      categoryId: filters.categoryId ? String(filters.categoryId) : "",
-      level: filters.level || "",
-      price: filters.price || "",
-    });
-  };
-
   return (
     <div
-      className="min-h-screen font-sans pb-20"
+      className="min-h-screen pb-20 font-sans bg-[linear-gradient(180deg,#f7f9fc_0%,#ffffff_24%,#f7f4ff_100%)]"
       style={{ backgroundColor: color.bg }}
     >
       <CourseHeader
@@ -180,23 +169,18 @@ const CoursePage = () => {
         onSubmit={handleSearchSubmit}
       />
 
-      <div className="max-w-7xl mx-auto px-4 mt-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 xl:gap-10">
-          <main className="lg:col-span-3">
-            <CourseList courses={courses} isLoading={isLoading} />
-            {!isLoading && (
-              <Pagination
-                currentPage={page}
-                totalPages={table.getPageCount()}
-                onChange={handlePageChange}
-                type="secondary"
-              />
-            )}
-          </main>
-          <div className="hidden lg:block lg:col-span-1">
-            <Sidebar categories={categories} onApply={handleApplyFilters} />
-          </div>
-        </div>
+      <div className="mx-auto mt-8 max-w-full px-4">
+        <main className="mx-auto max-w-400 rounded-4xl border border-white/70 bg-white/80 p-4 shadow-[0_24px_70px_rgba(34,40,84,0.06)] backdrop-blur-sm sm:p-6 lg:p-7">
+          <CourseList courses={courses} isLoading={isLoading} />
+          {!isLoading && (
+            <Pagination
+              currentPage={page}
+              totalPages={table.getPageCount()}
+              onChange={handlePageChange}
+              type="secondary"
+            />
+          )}
+        </main>
       </div>
     </div>
   );

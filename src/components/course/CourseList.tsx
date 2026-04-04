@@ -12,7 +12,7 @@ const CourseList = ({
   isLoading?: boolean;
 }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-10">
+    <div className="mb-10 grid grid-cols-1 gap-7 md:grid-cols-2 xl:grid-cols-3">
       {isLoading
         ? Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => (
             <CourseCardSkeleton key={i} />
