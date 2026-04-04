@@ -1,4 +1,4 @@
-import { ArrowDownRight, ArrowUpRight, Users } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { dashboardService } from "../../../apis/dashboard";
 import DashboardTopCourses from "../../../components/dashboard/DashboardTopCourses";

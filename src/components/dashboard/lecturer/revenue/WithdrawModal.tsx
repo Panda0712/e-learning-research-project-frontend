@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { payoutAccountService } from "../../../../apis/payoutAccount";
 import { payoutAdminService } from "../../../../apis/payoutAdmin";
+import { formatCurrencyVND } from "../../../../utils/helpers";
 import { PRESET_AMOUNTS } from "../../../../utils/mockDataAccounts";
 
 interface PayoutAccount {
@@ -96,10 +97,8 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
   };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value === "" || /^\d*\.?\d*$/.test(value)) {
-      setAmountStr(value);
-    }
+    const numericValue = e.target.value.replace(/[^\d]/g, "");
+    setAmountStr(numericValue);
   };
 
   const isFormValid =
@@ -123,7 +122,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
         lecturerId,
         payoutAccountId: selectedAccount.id,
         amount,
-        currency: "USD",
+        currency: "VND",
         payoutMethod: selectedAccount.cardType || "bank_transfer",
       });
 
@@ -166,7 +165,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
           <div className="flex justify-between items-center mb-8">
             <span className="text-gray-500 text-lg">Available balance</span>
             <span className="text-blue-700 text-2xl font-bold">
-              ${availableBalance.toFixed(2)}
+              {formatCurrencyVND(availableBalance)}
             </span>
           </div>
 
@@ -244,7 +243,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
               className="absolute left-4 top-1/2 -translate-y-1/2 
             text-gray-500 text-lg font-medium"
             >
-              $
+              ₫
             </span>
             <input
               type="text"
@@ -272,7 +271,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
                     }
                   `}
                 >
-                  ${amount}
+                  {formatCurrencyVND(amount)}
                 </button>
               );
             })}

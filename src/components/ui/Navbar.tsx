@@ -117,6 +117,11 @@ const Navbar = () => {
           ? `/dashboard/lecturer/communication?tab=messages&conversationId=${item.relatedId}`
           : `/chat/student?conversationId=${item.relatedId}`;
       navigate(target);
+      return;
+    }
+
+    if (item.type === "course_comment") {
+      navigate("/dashboard/lecturer/communication?tab=reviews");
     }
   };
 

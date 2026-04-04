@@ -20,6 +20,9 @@ export interface LecturerReviewItem {
   courseName: string;
   studentName: string;
   studentAvatar: string;
+  studentId?: number;
+  lecturerReply?: string | null;
+  lecturerReplyAt?: string | null;
 }
 
 export interface NotificationItem {

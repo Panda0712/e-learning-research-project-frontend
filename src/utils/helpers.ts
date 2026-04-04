@@ -4,6 +4,12 @@ type BirthParts = {
   birthYear: number;
 };
 
+const vndCurrencyFormatter = new Intl.NumberFormat("vi-VN", {
+  style: "currency",
+  currency: "VND",
+  maximumFractionDigits: 0,
+});
+
 export const normalizeRole = (role?: string) =>
   String(role || "")
     .trim()
@@ -55,6 +61,14 @@ export const formatDateTime = (date: Date) => {
     minute: "2-digit",
     hour12: true,
   });
+};
+
+export const formatCurrencyVND = (
+  value?: number | string | null,
+  fallback = 0,
+) => {
+  const amount = Number(value ?? fallback);
+  return vndCurrencyFormatter.format(Number.isFinite(amount) ? amount : fallback);
 };
 
 export const formatVideoDuration = (seconds: number) => {

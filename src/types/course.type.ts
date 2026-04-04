@@ -36,11 +36,16 @@ export interface InstructorType {
 
 export interface Review {
   id: number;
+  courseId?: number;
+  courseName?: string;
+  studentId?: number;
   user: string;
   avatar: string;
   date: string;
   rating: number;
   content: string;
+  lecturerReply?: string | null;
+  lecturerReplyAt?: string | null;
 }
 
 // Cập nhật lại interface Course chính
@@ -199,11 +204,16 @@ export type LessonAPIData = {
 
 export type ReviewAPIData = {
   id: number;
+  courseId?: number;
+  courseName?: string | null;
+  studentId?: number;
   rating: number;
   content?: string | null;
   studentName?: string | null;
   studentAvatar?: string | null;
   createdAt?: string | null;
+  lecturerReply?: string | null;
+  lecturerReplyAt?: string | null;
 };
 
 export type ResourceAPIData = {

@@ -10,6 +10,7 @@ import { payosService } from "../../apis/payos";
 import Button from "../../components/ui/Button";
 import { selectCurrentUser } from "../../redux/activeUser/activeUserSlice";
 import { useAppSelector } from "../../redux/hooks";
+import { formatCurrencyVND } from "../../utils/helpers";
 
 interface ApiCourse {
   id: number;
@@ -292,7 +293,7 @@ const Payment = () => {
       computed = Math.min(computed, Number(coupon.maxValue));
     }
 
-    return `$${Math.max(0, computed).toFixed(2)}`;
+    return formatCurrencyVND(Math.max(0, computed));
   };
 
   return (
@@ -386,7 +387,8 @@ const Payment = () => {
                           </p>
                           {voucher.minOrderValue ? (
                             <p className="text-[11px] text-gray-500 mt-1">
-                              Min order: ${Number(voucher.minOrderValue).toFixed(2)}
+                              Min order:{" "}
+                              {formatCurrencyVND(Number(voucher.minOrderValue))}
                             </p>
                           ) : null}
                         </div>
@@ -413,21 +415,21 @@ const Payment = () => {
             <div className="border-t border-dashed border-gray-200 pt-4 mb-6 space-y-2">
               <div className="flex justify-between text-sm text-gray-500">
                 <span>Course Price</span>
-                <span>${coursePrice.toFixed(2)}</span>
+                <span>{formatCurrencyVND(coursePrice)}</span>
               </div>
               {couponDiscount > 0 && (
                 <div className="flex justify-between text-sm text-green-600">
                   <span>Coupon Discount</span>
-                  <span>-${couponDiscount.toFixed(2)}</span>
+                  <span>-{formatCurrencyVND(couponDiscount)}</span>
                 </div>
               )}
               <div className="flex justify-between text-sm text-gray-500">
                 <span>Amount to Pay</span>
-                <span>${finalTotal.toFixed(2)}</span>
+                <span>{formatCurrencyVND(finalTotal)}</span>
               </div>
               <div className="flex justify-between text-lg font-bold text-[#07152F]">
                 <span>Total</span>
-                <span>${finalTotal.toFixed(2)}</span>
+                <span>{formatCurrencyVND(finalTotal)}</span>
               </div>
             </div>
 

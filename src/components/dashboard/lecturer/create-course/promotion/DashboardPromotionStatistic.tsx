@@ -1,4 +1,5 @@
 import { ArrowUp } from "lucide-react";
+import { formatCurrencyVND } from "../../../../../utils/helpers";
 
 interface PromotionStatisticData {
   totalRedeemed: number;
@@ -26,10 +27,10 @@ const DashboardPromotionStatistic = ({ data }: StatisticProps) => {
           <div className="flex flex-col gap-1">
             <h4 className="text-[24px] font-bold font-poppins">
               {i === 0
-                ? `$${data.totalRedeemed.toFixed(2)}`
+                ? formatCurrencyVND(data.totalRedeemed)
                 : i === 1
                 ? data.totalCoupons
-                : `$${data.redeemedAmount.toLocaleString()}`}
+                : formatCurrencyVND(data.redeemedAmount)}
             </h4>
             <p className="text-[14px] text-[#9D9D9D] font-normal font-poppins">
               {i === 0
