@@ -82,6 +82,9 @@ const getLecturerReviewsAPI = async (
         courseName: course.name || "Course",
         studentName: review.studentName || "Student",
         studentAvatar: review.studentAvatar || "/avatar1.png",
+        studentId: review.studentId,
+        lecturerReply: review.lecturerReply || null,
+        lecturerReplyAt: review.lecturerReplyAt || null,
       }));
     } catch {
       return [] as LecturerReviewItem[];
@@ -93,6 +96,19 @@ const getLecturerReviewsAPI = async (
   return merged.sort(
     (a, b) => new Date(b.postedDate).getTime() - new Date(a.postedDate).getTime(),
   );
+};
+
+const replyToCourseReviewAPI = async (
+  reviewId: number,
+  lecturerReply: string,
+) => {
+  const res = await authorizedAxiosInstance.put(
+    `${API_ROOT}/v1/course-reviews/${reviewId}`,
+    {
+      lecturerReply,
+    },
+  );
+  return res.data;
 };
 
 const getLecturerNotificationsAPI = async (
@@ -114,5 +130,6 @@ export const communicationService = {
   getLecturerConversationsAPI,
   getConversationMessagesAPI,
   getLecturerReviewsAPI,
+  replyToCourseReviewAPI,
   getLecturerNotificationsAPI,
 };

@@ -1,5 +1,6 @@
 import Button from "../ui/Button";
 import type { Course } from "../../types/course.type";
+import { formatCurrencyVND } from "../../utils/helpers";
 
 interface Props {
   course: Course;
@@ -49,7 +50,7 @@ const Method = ({ course, onNext }: Props) => {
       </div>
 
       <Button
-        content={`Enroll Course - $${course.price}`}
+        content={`Enroll Course - ${formatCurrencyVND(course.price)}`}
         onClick={onNext}
         additionalClass="!w-full !rounded-full !bg-[#2580D5] !text-white !font-bold !py-3 hover:!bg-blue-600 transition-colors shadow-lg shadow-blue-200"
       />

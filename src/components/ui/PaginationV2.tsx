@@ -14,29 +14,27 @@ interface Props<T> {
 const PaginationV2 = <T,>({ table }: Props<T>) => {
   const { pageIndex } = table.getState().pagination;
 
-  if (table.getPageCount() <= 1) return;
+  if (table.getPageCount() <= 1) return null;
 
   return (
-    <div className="flex items-center justify-center mt-8">
+    <div className="mt-8 flex items-center justify-center gap-4">
       <button
         disabled={!table.getCanPreviousPage()}
         onClick={() => table.previousPage()}
-        className="bg-white w-10.75 h-10.75 flex items-center justify-center
-         rounded-tl rounded-bl border border-[#E2E8F0] disabled:opacity-40 cursor-pointer"
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-[#eaeaea] text-[#190D30] transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <ChevronLeft size={16} fontWeight={600} />
+        <ChevronLeft size={16} />
       </button>
 
       {Array.from({ length: table.getPageCount() }).map((_, i) => (
         <button
           key={i}
           onClick={() => table.setPageIndex(i)}
-          className={`bg-white cursor-pointer w-10.75 h-10.75 flex items-center justify-center 
-                border border-[#E2E8F0] font-semibold text-[#334155] ${
-                  i == pageIndex
-                    ? "bg-gray-100 border-black"
-                    : "hover:bg-gray-100"
-                }`}
+          className={`flex h-10 w-10 items-center justify-center rounded-full border border-[#eaeaea] text-[16px] font-medium transition-colors ${
+            i === pageIndex
+              ? "bg-[#190D30] text-white"
+              : "text-[#190D30] hover:bg-gray-100"
+          }`}
         >
           {i + 1}
         </button>
@@ -45,10 +43,9 @@ const PaginationV2 = <T,>({ table }: Props<T>) => {
       <button
         disabled={!table.getCanNextPage()}
         onClick={() => table.nextPage()}
-        className="bg-white w-10.75 h-10.75 flex items-center justify-center
-         rounded-tr rounded-br border border-[#E2E8F0] disabled:opacity-40 cursor-pointer"
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-[#eaeaea] text-[#190D30] transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <ChevronRight size={16} fontWeight={600} />
+        <ChevronRight size={16} />
       </button>
     </div>
   );

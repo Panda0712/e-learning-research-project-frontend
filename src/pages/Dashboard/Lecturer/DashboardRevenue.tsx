@@ -12,6 +12,7 @@ import RevenueStats from "../../../components/dashboard/lecturer/revenue/Revenue
 import WithdrawModal from "../../../components/dashboard/lecturer/revenue/WithdrawModal";
 import { selectCurrentUser } from "../../../redux/activeUser/activeUserSlice";
 import { useAppSelector } from "../../../redux/hooks";
+import { formatCurrencyVND } from "../../../utils/helpers";
 
 // Copied from types/transaction.type.ts to avoid import issues
 interface TransactionItem {
@@ -337,7 +338,7 @@ const DashboardRevenue = () => {
                         {item.items.map((i) => i.courseTitle).join(", ")}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900 font-bold">
-                        ${item.amount.toFixed(2)}
+                        {formatCurrencyVND(item.amount)}
                       </td>
                     </tr>
                   ))

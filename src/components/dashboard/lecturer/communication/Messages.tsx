@@ -32,6 +32,7 @@ const MOCK_LECTURER_MESSAGES = [
     },
   },
 ];
+void MOCK_LECTURER_MESSAGES;
 
 const getDisplayName = (user?: {
   firstName?: string | null;
@@ -370,11 +371,8 @@ const Messages = () => {
               }
               style={{ display: "flex", flexDirection: "column-reverse" }}
             >
-              {[
-                ...(currentMessages.length
-                  ? currentMessages
-                  : MOCK_LECTURER_MESSAGES),
-              ]
+              {currentMessages
+                .slice()
                 .reverse()
                 .map((message) => {
                   const isOwn =

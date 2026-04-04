@@ -85,6 +85,36 @@ const getReviewsByCourseIdAPIV2 = async ({
   return res.data;
 };
 
+const createCourseReviewAPI = async (payload: {
+  courseId: number;
+  studentId: number;
+  rating: number;
+  content?: string;
+  studentName?: string;
+  studentAvatar?: string;
+}) => {
+  const res = await authorizedAxiosInstance.post(
+    `${API_ROOT}/v1/course-reviews`,
+    payload,
+  );
+  return res.data;
+};
+
+const updateCourseReviewAPI = async (
+  reviewId: number,
+  payload: {
+    rating?: number;
+    content?: string;
+    lecturerReply?: string | null;
+  },
+) => {
+  const res = await authorizedAxiosInstance.put(
+    `${API_ROOT}/v1/course-reviews/${reviewId}`,
+    payload,
+  );
+  return res.data;
+};
+
 const getResourceByIdAPI = async (resourceId: number) => {
   const res = await authorizedAxiosInstance.get(
     `${API_ROOT}/v1/resources/${resourceId}`,
@@ -103,5 +133,7 @@ export const courseService = {
   getLessonsByModuleIdAPI,
   getReviewsByCourseIdAPI,
   getReviewsByCourseIdAPIV2,
+  createCourseReviewAPI,
+  updateCourseReviewAPI,
   getResourceByIdAPI,
 };

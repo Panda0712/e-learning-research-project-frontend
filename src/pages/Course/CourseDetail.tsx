@@ -37,11 +37,16 @@ const mapFaqs = (faqs: CourseFaqAPIData[]) =>
 const mapReviews = (reviews: ReviewAPIData[]): Review[] =>
   reviews.map((r, idx) => ({
     id: r.id ?? idx,
+    courseId: r.courseId,
+    courseName: r.courseName || undefined,
+    studentId: r.studentId,
     user: r.studentName || "Student",
     avatar: r.studentAvatar || "/avatar1.png",
     date: r.createdAt || "Recently",
     rating: r.rating || 0,
     content: r.content || "",
+    lecturerReply: r.lecturerReply || null,
+    lecturerReplyAt: r.lecturerReplyAt || null,
   }));
 
 const mapCurriculum = (

@@ -9,6 +9,7 @@ import { orderService } from "../../apis/order";
 import { payosService } from "../../apis/payos";
 import { selectCurrentUser } from "../../redux/activeUser/activeUserSlice";
 import { useAppSelector } from "../../redux/hooks";
+import { formatCurrencyVND } from "../../utils/helpers";
 
 const COLORS = {
   yellowBtn: "#FFD900",
@@ -211,12 +212,9 @@ const Cart = () => {
                       Savings
                     </p>
                     <p className="mt-2 text-2xl font-semibold text-[#16A34A]">
-                      $
-                      {(
-                        totalOriginalPrice -
-                        subtotal +
-                        appliedDiscount
-                      ).toFixed(0)}
+                      {formatCurrencyVND(
+                        totalOriginalPrice - subtotal + appliedDiscount,
+                      )}
                     </p>
                   </div>
                   <div className="rounded-3xl border border-[#E7ECF3] bg-[linear-gradient(145deg,#ffffff_0%,#f8fbff_100%)] px-5 py-4 shadow-[0_14px_34px_rgba(34,40,84,0.05)]">
@@ -224,7 +222,7 @@ const Cart = () => {
                       Ready to pay
                     </p>
                     <p className="mt-2 text-2xl font-semibold text-[#163541]">
-                      ${Math.max(0, total).toFixed(0)}
+                      {formatCurrencyVND(Math.max(0, total))}
                     </p>
                   </div>
                 </div>
@@ -307,10 +305,10 @@ const Cart = () => {
                           <div className="flex w-full flex-row items-center justify-between border-t border-[#EDF2F7] pt-4 sm:mt-0 sm:w-auto sm:flex-col sm:items-end sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">
                             <div className="text-left sm:text-right">
                               <div className="text-[26px] font-bold text-[#163541]">
-                                ${item.price}
+                                {formatCurrencyVND(item.price)}
                               </div>
                               <div className="text-sm text-[#A0AEC0] line-through">
-                                ${item.originalPrice}
+                                {formatCurrencyVND(item.originalPrice)}
                               </div>
                             </div>
 
@@ -389,26 +387,26 @@ const Cart = () => {
                         <div className="flex justify-between">
                           <span>Original Price:</span>
                           <span className="font-medium text-[#163541]">
-                            ${totalOriginalPrice.toFixed(2)}
+                            {formatCurrencyVND(totalOriginalPrice)}
                           </span>
                         </div>
                         <div className="flex justify-between text-[#16A34A]">
                           <span>Course Discounts:</span>
                           <span className="font-medium">
-                            -${(totalOriginalPrice - subtotal).toFixed(2)}
+                            -{formatCurrencyVND(totalOriginalPrice - subtotal)}
                           </span>
                         </div>
 
                         {appliedDiscount > 0 && (
                           <div className="flex justify-between font-medium text-[#E11D48]">
                             <span>Promo Code:</span>
-                            <span>-${appliedDiscount.toFixed(2)}</span>
+                            <span>-{formatCurrencyVND(appliedDiscount)}</span>
                           </div>
                         )}
 
                         <div className="flex justify-between border-t border-dashed border-[#D7E0EA] pt-4 text-[28px] font-bold text-[#163541]">
                           <span>Total:</span>
-                          <span>${Math.max(0, total).toFixed(2)}</span>
+                          <span>{formatCurrencyVND(Math.max(0, total))}</span>
                         </div>
                       </div>
 

@@ -21,7 +21,6 @@ import LearningTabs from "../../components/course/learning/LearningTabs";
 import LectureNotes from "../../components/course/learning/LectureNotes";
 import VideoPlayer from "../../components/course/learning/VideoPlayer";
 import Pagination from "../../components/ui/Pagination";
-import { usePagination } from "../../hooks/usePagination";
 import { selectCurrentUser } from "../../redux/activeUser/activeUserSlice";
 import { useAppSelector } from "../../redux/hooks";
 import type {
@@ -80,11 +79,16 @@ type LearningSection = {
 const mapReviews = (reviews: ReviewAPIData[]): Review[] =>
   reviews.map((r, idx) => ({
     id: r.id ?? idx,
+    courseId: r.courseId,
+    courseName: r.courseName || undefined,
+    studentId: r.studentId,
     user: r.studentName || "Student",
     avatar: r.studentAvatar || "/avatar1.png",
     date: r.createdAt || "Recently",
     rating: r.rating || 0,
     content: r.content || "",
+    lecturerReply: r.lecturerReply || null,
+    lecturerReplyAt: r.lecturerReplyAt || null,
   }));
 
 const mapLearningCourse = (
@@ -151,6 +155,13 @@ const CourseLearning = () => {
 
   const [reviews, setReviews] = useState<Review[]>([]);
   const [totalReviews, setTotalReviews] = useState(0);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(false);
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [replyingToReviewId, setReplyingToReviewId] = useState<number | null>(
+    null,
+  );
+  const [replyText, setReplyText] = useState("");
+  const [isSubmittingReply, setIsSubmittingReply] = useState(false);
 
   const params = useMemo(
     () => new URLSearchParams(location.search),
@@ -227,13 +238,35 @@ const CourseLearning = () => {
     });
   };
   const page = Number(params.get("page")) || 1;
-  // const watchingStudents = MOCK_STUDENTS.slice(0, 5);
-  const { currentPage, setCurrentPage, currentData, totalPages } =
-    usePagination({
-      data: reviews.length ? reviews : [],
-      itemsPerPage: 6,
-      totalData: totalReviews,
-    });
+  const commentItemsPerPage = 6;
+  const totalCommentPages = Math.max(
+    1,
+    Math.ceil(totalReviews / commentItemsPerPage),
+  );
+
+  const fetchReviews = async (targetPage = page) => {
+    if (!id) return;
+
+    setIsLoadingReviews(true);
+    try {
+      const response = await courseService.getReviewsByCourseIdAPIV2({
+        courseId: Number(id),
+        params: {
+          page: targetPage,
+          itemsPerPage: commentItemsPerPage,
+        },
+      });
+
+      const mapped = mapReviews(response.data || []);
+      setReviews(mapped);
+      setTotalReviews(response.pagination?.total || mapped.length);
+    } catch {
+      setReviews([]);
+      setTotalReviews(0);
+    } finally {
+      setIsLoadingReviews(false);
+    }
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -436,24 +469,9 @@ const CourseLearning = () => {
   }, [id, currentUser?.id, localProgressPercent]);
 
   useEffect(() => {
-    if (!id) return;
-    const courseId = Number(id);
-    courseService
-      .getReviewsByCourseIdAPI({
-        courseId,
-        params: undefined,
-      })
-      .then((res) => {
-        const mapped = mapReviews(res.data || []);
-        setReviews(mapped);
-        setTotalReviews(res.pagination?.total || mapped.length);
-      })
-      .catch(() => {});
-  }, [id]);
-
-  useEffect(() => {
-    setCurrentPage(page);
-  }, [page, setCurrentPage]);
+    fetchReviews().catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, page]);
 
   const currentQuizQuestions = currentLesson?.questions || [];
   const totalQuizPoints = currentQuizQuestions.reduce(
@@ -549,8 +567,76 @@ const CourseLearning = () => {
   const handleCommentPageChange = (newPage: number) => {
     const next = new URLSearchParams(params);
     next.set("page", String(newPage));
-    setCurrentPage(newPage);
     navigate({ search: next.toString() });
+  };
+
+  const handleSubmitComment = async (payload: {
+    content: string;
+    rating: number;
+  }) => {
+    if (!id) return;
+
+    const studentId = Number(currentUser?.id || 0);
+    if (!Number.isInteger(studentId) || studentId <= 0) {
+      toast.error("Please login to post a comment.");
+      return;
+    }
+
+    try {
+      setIsSubmittingComment(true);
+      await courseService.createCourseReviewAPI({
+        courseId: Number(id),
+        studentId,
+        rating: payload.rating,
+        content: payload.content,
+        studentName:
+          `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim() ||
+          currentUser?.email ||
+          "Student",
+        studentAvatar: currentUser?.avatar?.fileUrl || "/avatar1.png",
+      });
+
+      toast.success("Comment posted successfully.");
+
+      if (page !== 1) {
+        const next = new URLSearchParams(params);
+        next.set("page", "1");
+        navigate({ search: next.toString() });
+      } else {
+        await fetchReviews(1);
+      }
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message || "Cannot post comment right now.",
+      );
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
+
+  const handleSubmitReply = async (review: Review) => {
+    const trimmedReply = replyText.trim();
+    if (!trimmedReply) {
+      toast.error("Please write a reply first.");
+      return;
+    }
+
+    try {
+      setIsSubmittingReply(true);
+      await courseService.updateCourseReviewAPI(review.id, {
+        lecturerReply: trimmedReply,
+      });
+      toast.success("Reply sent successfully.");
+      setReplyingToReviewId(null);
+      setReplyText("");
+      await fetchReviews(page);
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message || "Cannot send reply right now.",
+      );
+    } finally {
+      setIsSubmittingReply(false);
+    }
   };
 
   if (!course) {
@@ -861,16 +947,49 @@ const CourseLearning = () => {
               {activeTab === "Comments" && (
                 <>
                   <InstructorCard instructor={displayCourse.instructorInfo} />
-                  <CommentList reviews={currentData} />
+                  {isLoadingReviews ? (
+                    <div className="rounded-2xl border border-[#E2E8F0] bg-white p-5 text-sm text-[#64748B]">
+                      Loading comments...
+                    </div>
+                  ) : (
+                    <CommentList
+                      reviews={reviews}
+                      canReply={canAlwaysCheckQuiz}
+                      replyingToId={replyingToReviewId}
+                      replyValue={replyText}
+                      isReplySubmitting={isSubmittingReply}
+                      onReplyStart={(review) => {
+                        setReplyingToReviewId(review.id);
+                        setReplyText(review.lecturerReply || "");
+                      }}
+                      onReplyChange={setReplyText}
+                      onReplyCancel={() => {
+                        setReplyingToReviewId(null);
+                        setReplyText("");
+                      }}
+                      onReplySubmit={handleSubmitReply}
+                    />
+                  )}
+
                   <Pagination
                     type="secondary"
-                    currentPage={page || currentPage}
-                    totalPages={totalPages}
+                    currentPage={page}
+                    totalPages={totalCommentPages}
                     onChange={handleCommentPageChange}
                   />
-                  <div className="mt-8">
-                    <CommentForm />
-                  </div>
+
+                  {isStudent && currentUser ? (
+                    <div className="mt-8">
+                      <CommentForm
+                        currentUserName={
+                          `${currentUser.firstName || ""} ${currentUser.lastName || ""}`.trim()
+                        }
+                        currentUserEmail={currentUser.email}
+                        isSubmitting={isSubmittingComment}
+                        onSubmit={handleSubmitComment}
+                      />
+                    </div>
+                  ) : null}
                 </>
               )}
             </div>

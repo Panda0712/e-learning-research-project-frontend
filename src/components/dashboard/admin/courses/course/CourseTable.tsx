@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { adminCourseService } from "../../../../../apis/adminCourse";
+import { formatCurrencyVND } from "../../../../../utils/helpers";
 
 import type { Course } from "../../../../../utils/mockDataCourseAdmin";
 import Button from "../../../../ui/Button";
@@ -172,7 +173,7 @@ const CourseTable: React.FC<CourseTableProps> = ({
                   {course.category}
                 </td>
                 <td className="px-6 py-3 text-gray-900 text-sm font-medium text-center">
-                  {course.price ? `$${course.price}` : "-"}
+                  {course.price ? formatCurrencyVND(course.price) : "-"}
                 </td>
                 <td className="px-6 py-3 text-center">
                   <div className="flex justify-center">

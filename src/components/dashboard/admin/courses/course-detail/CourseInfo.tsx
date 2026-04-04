@@ -12,6 +12,7 @@ import {
   Underline,
 } from "lucide-react";
 import React from "react";
+import { formatCurrencyVND } from "../../../../../utils/helpers";
 import type { Course } from "../../../../../utils/mockDataCourseAdmin";
 
 interface CourseInfoProps {
@@ -152,7 +153,7 @@ const CourseInfo: React.FC<CourseInfoProps> = ({ data }) => {
             Course Price
           </label>
           <div className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-bold">
-            {data.price ? `$ ${data.price.toFixed(2)}` : "Free"}
+            {data.price ? formatCurrencyVND(data.price) : "Free"}
           </div>
         </div>
 

@@ -8,6 +8,7 @@ import Button from "../../../components/ui/Button";
 import { selectCurrentUser } from "../../../redux/activeUser/activeUserSlice";
 import { useAppSelector } from "../../../redux/hooks";
 import type { Course, CourseStudentState } from "../../../types/course.type";
+import { formatCurrencyVND } from "../../../utils/helpers";
 
 const CourseSidebar = ({
   course,
@@ -113,11 +114,11 @@ const CourseSidebar = ({
                 Course price
               </p>
               <span className="mt-2 block text-[34px] font-bold leading-none text-[#163541]">
-                ${course.price}
+                {formatCurrencyVND(course.price)}
               </span>
             </div>
             <span className="text-sm text-[#A0AEC0] line-through">
-              ${course.price + 20}
+              {formatCurrencyVND(course.price + 200000)}
             </span>
           </div>
 

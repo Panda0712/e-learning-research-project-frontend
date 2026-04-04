@@ -1,5 +1,6 @@
 import Button from "../ui/Button";
 import type { Course } from "../../types/course.type";
+import { formatCurrencyVND } from "../../utils/helpers";
 
 interface Props {
   course: Course;
@@ -38,11 +39,15 @@ const Step2_Details = ({ course, onNext, onBack }: Props) => {
         <div className="space-y-4 mb-6 text-sm">
           <div className="flex justify-between">
             <span className="text-gray-500">Original Price</span>
-            <span className="font-bold line-through">${course.price + 20}</span>
+            <span className="font-bold line-through">
+              {formatCurrencyVND(course.price + 200000)}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-500">Discounted Price</span>
-            <span className="font-bold text-orange-500">${course.price}</span>
+            <span className="font-bold text-orange-500">
+              {formatCurrencyVND(course.price)}
+            </span>
           </div>
         </div>
 
@@ -61,7 +66,7 @@ const Step2_Details = ({ course, onNext, onBack }: Props) => {
 
         <div className="flex justify-between font-bold text-lg mb-6 border-t pt-4">
           <span>Total</span>
-          <span>${course.price}</span>
+          <span>{formatCurrencyVND(course.price)}</span>
         </div>
 
         <Button

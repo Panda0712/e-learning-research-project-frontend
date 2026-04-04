@@ -12,4 +12,11 @@ export const MOCK_ACCOUNTS: Account[] = [
   { id: 4, cardNumber: "4411 0000 1234", type: "bank" },
 ];
 
-export const PRESET_AMOUNTS = [10, 50, 100, 150, 200, 1000];
+export const PRESET_AMOUNTS = [
+  100000,
+  200000,
+  500000,
+  1000000,
+  2000000,
+  5000000,
+];
