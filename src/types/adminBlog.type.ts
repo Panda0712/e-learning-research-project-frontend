@@ -11,6 +11,13 @@ export interface BlogThumbnailPayload {
   fileType?: string;
 }
 
+export type BlogPostStatus =
+  | "draft"
+  | "pending"
+  | "published"
+  | "rejected"
+  | "archived";
+
 export interface BlogPostItem {
   id: number;
   stt?: number;
@@ -23,6 +30,11 @@ export interface BlogPostItem {
   categoryId?: number;
   author: string;
   authorId: number;
+  status?: BlogPostStatus;
+  reviewNote?: string | null;
+  reviewedById?: number | null;
+  reviewedBy?: string | null;
+  publishedAt?: string | null;
   date?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -44,6 +56,7 @@ export interface BlogPostsPaginatedResponse {
 export interface AdminBlogListQuery {
   page: number;
   itemsPerPage: number;
+  status?: BlogPostStatus;
 }
 
 export interface UpsertBlogPostPayload {
@@ -51,5 +64,34 @@ export interface UpsertBlogPostPayload {
   slug: string;
   content: string;
   categoryId: number;
+  status?: BlogPostStatus;
   thumbnail?: BlogThumbnailPayload;
+}
+
+export interface UpdateBlogPostStatusPayload {
+  status: BlogPostStatus;
+  reviewNote?: string;
+}
+
+export interface BlogCommentItem {
+  id: number;
+  blogId: number;
+  userId: number;
+  content: string;
+  parentId: number | null;
+  createdAt: string;
+  updatedAt?: string | null;
+  isBannedUser?: boolean;
+  user: {
+    id: number;
+    firstName?: string | null;
+    lastName?: string | null;
+    email?: string | null;
+  };
+}
+
+export interface CreateBlogCommentPayload {
+  blogId: number;
+  content: string;
+  parentId?: number;
 }

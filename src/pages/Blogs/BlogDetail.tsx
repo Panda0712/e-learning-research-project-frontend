@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Calendar, Quote, User } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { Calendar, User } from "lucide-react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import AuthorBox from "../../components/box/AuthorBox";
 import CommentList from "../../components/comment/CommentListBlog";
 import Sidebar from "../../components/ui/SideBar";
@@ -8,6 +8,9 @@ import { useEffect, useState } from "react";
 import { blogApi } from "../../apis/blog";
 import { toast } from "react-toastify";
 import Loading from "../../components/ui/Loading";
+import { useAppSelector } from "../../redux/hooks";
+import { selectCurrentUser } from "../../redux/activeUser/activeUserSlice";
+import type { BlogCommentItem } from "../../types/adminBlog.type";
 
 interface BlogData {
   id: number;
@@ -16,22 +19,77 @@ interface BlogData {
   date: string;
   author: string;
   content: string;
-  description: string;
   category: string;
+  authorId: number;
+}
+
+interface RelatedBlogData {
+  id: number;
+  title: string;
+  image: string;
+  date?: string;
 }
 
 const BlogDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const currentUser = useAppSelector(selectCurrentUser);
+
   const [blog, setBlog] = useState<BlogData | null>(null); 
+  const [comments, setComments] = useState<BlogCommentItem[]>([]);
+  const [commentContent, setCommentContent] = useState("");
+  const [replyToCommentId, setReplyToCommentId] = useState<number | null>(null);
+  const [commentSubmitting, setCommentSubmitting] = useState(false);
+  const [relatedBlogs, setRelatedBlogs] = useState<RelatedBlogData[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const currentUserId = Number(currentUser?.id || 0);
+  const normalizedRole = String(currentUser?.role || "")
+    .trim()
+    .toLowerCase();
+
+  const canModerate =
+    Boolean(currentUserId) &&
+    (normalizedRole === "admin" || currentUserId === blog?.authorId);
+
+  const fetchComments = async (blogId: number) => {
+    const commentData = await blogApi.getBlogCommentsAPI(blogId);
+    setComments(commentData || []);
+  };
 
   useEffect(() => {
     const fetchBlogDetail = async () => {
       try {
         setLoading(true);
         if (id) {
-          const data = await blogApi.getBlogDetailAPI(id);
+          const [data, allBlogsResponse] = await Promise.all([
+            blogApi.getBlogDetailAPI(id),
+            blogApi.getAllBlogPostsAPI(),
+          ]);
+
           setBlog(data);
+          await fetchComments(Number(id));
+
+          const normalizedAllBlogs = Array.isArray(allBlogsResponse)
+            ? allBlogsResponse
+            : Array.isArray(allBlogsResponse?.data)
+              ? allBlogsResponse.data
+              : [];
+
+          const recentPosts = normalizedAllBlogs
+            .filter((item: any) => Number(item?.id) !== Number(id))
+            .slice(0, 6)
+            .map((item: any) => ({
+              id: Number(item?.id),
+              title: item?.title || "Untitled blog",
+              image:
+                item?.image ||
+                item?.thumbnail?.fileUrl ||
+                "/icons/no-image.png",
+              date: item?.date || item?.createdAt,
+            }));
+
+          setRelatedBlogs(recentPosts);
         }
       } catch (error:any) {
         toast.error(error?.message || "Failed to get blog detail data!");
@@ -41,6 +99,55 @@ const BlogDetail = () => {
     };
     fetchBlogDetail();
   }, [id]);
+
+  const handleCommentSubmit = async () => {
+    if (!blog?.id) return;
+
+    if (!currentUserId) {
+      toast.info("Please login to comment.");
+      navigate("/auth/login");
+      return;
+    }
+
+    if (!commentContent.trim()) {
+      toast.error("Comment content is required.");
+      return;
+    }
+
+    try {
+      setCommentSubmitting(true);
+      await blogApi.createBlogCommentAPI({
+        blogId: blog.id,
+        content: commentContent.trim(),
+        parentId: replyToCommentId || undefined,
+      });
+
+      toast.success(replyToCommentId ? "Reply posted." : "Comment posted.");
+      setCommentContent("");
+      setReplyToCommentId(null);
+      await fetchComments(blog.id);
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to submit comment.");
+    } finally {
+      setCommentSubmitting(false);
+    }
+  };
+
+  const handleBanUser = async (userId: number, isBanned: boolean) => {
+    if (!blog?.id) return;
+    try {
+      if (isBanned) {
+        await blogApi.unbanCommentUserAPI(blog.id, userId);
+        toast.success("User unbanned successfully.");
+      } else {
+        await blogApi.banCommentUserAPI(blog.id, userId);
+        toast.success("User banned from commenting.");
+      }
+      await fetchComments(blog.id);
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to update ban status.");
+    }
+  };
 
   if (loading) 
     return (
@@ -68,13 +175,6 @@ const BlogDetail = () => {
 
       <div className="container mx-auto px-4 pb-16 flex flex-col lg:flex-row gap-10 max-w-7xl">
         <div className="w-full lg:w-3/4">
-          <div className="w-full h-75 rounded-2xl overflow-hidden shadow-sm mb-8 relative">
-            <img
-              src={blog.image}
-              alt={blog.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
           <div className="flex items-center gap-6 text-gray-500 text-sm font-medium mb-4">
             <div className="flex items-center gap-2 ">
               <Calendar size={18} className="text-[#FF6B6B]" />
@@ -96,41 +196,17 @@ const BlogDetail = () => {
           </h1>
 
           <div className="prose max-w-none text-gray-700 leading-relaxed text-[16px]">
-            <p className="mb-4">{blog.content}</p>
-            <p className="mb-4">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur
-              vulputate vestibulum Phasellus rhoncus, dolor eget viverra
-              pretium, dolor tellus aliquet nunc, vitae ultricies erat elit eu
-              lacus.
-            </p>
-
-            <div className="bg-[#F9F9F9] p-8 my-8 text-center rounded-lg">
-              <div className="flex justify-center mb-4">
-                <Quote size={48} className="text-[#5B5CEB] fill-[#5B5CEB]" />
-              </div>
-
-              <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 leading-snug">
-                Smashing Podcast Episode With Paul Boag What Is Conversion
-                Optimization
-              </h3>
-
-              <p className="text-gray-500 font-bold text-sm italic">
-                John Mirnsdo
-              </p>
-            </div>
-
-            <p className="mb-4">
-              Vestibulum non justo consectetur, cursus ante tincidunt sapien.
-              Nulla quis diam sit amet turpis interdum accumsan quis nec enim.
-            </p>
+            <div dangerouslySetInnerHTML={{ __html: blog.content }} />
           </div>
 
-          <AuthorBox
-            authorName={blog.author}
-            authorImage="/public/avatar1.png"
-          />
 
-          <CommentList />
+          <CommentList
+            comments={comments}
+            onReply={(commentId) => setReplyToCommentId(commentId)}
+            onBanUser={handleBanUser}
+            currentUserId={currentUserId}
+            canModerate={canModerate}
+          />
 
           {/* Comment */}
           <div className="pt-8 border-t border-gray-100">
@@ -139,50 +215,52 @@ const BlogDetail = () => {
             </h3>
 
             <p className="text-[#555555] mb-6 text-sm">
-              Your email address will not be published. Required fields are
-              marked *
+              {currentUserId
+                ? "Share your thoughts with other learners and lecturers."
+                : "You need to login to leave a comment."}
             </p>
 
-            <form className="space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <input
-                  type="text"
-                  placeholder="Name*"
-                  className="border border-[#9D9D9D] p-3 rounded-md w-full focus:outline-none focus:border-[#FF782D] placeholder-[#9D9D9D] text-[#555555]"
-                />
-
-                <input
-                  type="email"
-                  placeholder="Email*"
-                  className="border border-[#9D9D9D] p-3 rounded-md w-full focus:outline-none focus:border-[#FF782D] placeholder-[#9D9D9D] text-[#555555]"
-                />
-              </div>
-
+            <div className="space-y-5">
+              {replyToCommentId ? (
+                <div className="rounded-lg bg-orange-50 px-3 py-2 text-sm text-orange-700">
+                  Replying to comment #{replyToCommentId}
+                  <button
+                    type="button"
+                    onClick={() => setReplyToCommentId(null)}
+                    className="ml-3 font-semibold underline"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : null}
               <textarea
                 placeholder="Comment"
                 rows={5}
+                value={commentContent}
+                onChange={(e) => setCommentContent(e.target.value)}
+                disabled={!currentUserId || commentSubmitting}
                 className="border border-[#9D9D9D] p-3 rounded-md w-full focus:outline-none focus:border-[#FF782D] placeholder-[#9D9D9D] text-[#555555]"
-              ></textarea>
-              <div className="flex items-center gap-2 mb-4">
-                <input
-                  type="checkbox"
-                  id="save-info"
-                  className="accent-[#FF782D]"
-                />
-                <label htmlFor="save-info" className="text-[#555555] text-sm">
-                  Save My Name, Email In This Browser For The Next Time I
-                  Comment
-                </label>
-              </div>
+              />
 
-              <button className="bg-[#FF782D] text-white px-8 py-3 rounded-full font-bold hover:opacity-90 transition-opacity shadow-sm">
-                Posts Comment
+              <button
+                type="button"
+                onClick={handleCommentSubmit}
+                disabled={commentSubmitting}
+                className="bg-[#FF782D] text-white px-8 py-3 rounded-full font-bold hover:opacity-90 transition-opacity shadow-sm disabled:opacity-60"
+              >
+                {currentUserId
+                  ? commentSubmitting
+                    ? "Submitting..."
+                    : replyToCommentId
+                      ? "Reply"
+                      : "Post Comment"
+                  : "Login To Comment"}
               </button>
-            </form>
+            </div>
           </div>
         </div>
 
-        <Sidebar />
+        <Sidebar recentPosts={relatedBlogs} />
       </div>
     </div>
   );

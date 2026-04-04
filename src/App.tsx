@@ -34,7 +34,7 @@ import Course from "./pages/Course/Course";
 import CourseDetail from "./pages/Course/CourseDetail";
 import CourseLearning from "./pages/Course/CourseLearning";
 import DashboardAdminMain from "./pages/Dashboard/Admin/DashboardAdminMain";
-import DashboardBlog from "./pages/Dashboard/Admin/DashboardBlog";
+import DashboardBlog from "./pages/Dashboard/Admin/DashboardBlog.tsx";
 import DashboardCourses from "./pages/Dashboard/Admin/DashboardCourses";
 import DashboardInstructorRequests from "./pages/Dashboard/Admin/DashboardInstructorRequests";
 import DashboardPayouts from "./pages/Dashboard/Admin/DashboardPayouts";
@@ -69,6 +69,7 @@ import { useAppDispatch, useAppSelector } from "./redux/hooks";
 import type { UserProfile } from "./types/user.type";
 import { ACCOUNT_ROLES, API_ROOT } from "./utils/constants";
 import { normalizeRole } from "./utils/helpers";
+import DashboardLecturerBlog from "./pages/Dashboard/Lecturer/DashboardBlog";
 import Wishlist from "./pages/Profile/Wishlist";
 
 const AuthBootstrap = () => <Loading caption="Checking your session..." />;
@@ -228,6 +229,10 @@ const App = () => {
                 <Route
                   path="lecturer/communication"
                   element={<DashboardCommunication />}
+                />
+                <Route
+                  path="lecturer/blog"
+                  element={<DashboardLecturerBlog />}
                 />
                 <Route
                   path="lecturer/my-courses"

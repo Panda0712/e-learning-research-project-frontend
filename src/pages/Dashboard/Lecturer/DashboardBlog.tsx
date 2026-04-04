@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
-import CreateBlogModal from "../../../components/dashboard/admin/blog/CreateBlogModal.tsx";
-import Pagination from "../../../components/ui/Pagination";
+import { toast } from "react-toastify";
 import { blogApi } from "../../../apis/blog";
+import CreateBlogModal from "../../../components/dashboard/admin/blog/CreateBlogModal";
+import Pagination from "../../../components/ui/Pagination";
 import type {
   BlogCategoryItem,
   BlogPostItem,
@@ -11,7 +12,6 @@ import type {
   UpsertBlogPostPayload,
 } from "../../../types/adminBlog.type";
 import { DEFAULT_ITEMS_PER_PAGE } from "../../../utils/constants";
-import { toast } from "react-toastify";
 
 const defaultPagination: BlogPostsPagination = {
   page: 1,
@@ -67,7 +67,7 @@ const formatDateTime = (value?: string | null) => {
   });
 };
 
-const DashboardBlog = () => {
+const DashboardLecturerBlog = () => {
   const [blogs, setBlogs] = useState<BlogPostItem[]>([]);
   const [categories, setCategories] = useState<BlogCategoryItem[]>([]);
   const [pagination, setPagination] = useState<BlogPostsPagination>(defaultPagination);
@@ -87,8 +87,7 @@ const DashboardBlog = () => {
   const fetchCategories = async () => {
     try {
       const response = await blogApi.getAllBlogCategoriesAPI();
-      const normalized = Array.isArray(response) ? response : [];
-      setCategories(normalized);
+      setCategories(Array.isArray(response) ? response : []);
     } catch (error: any) {
       toast.error(error?.message || "Failed to fetch blog categories.");
     }
@@ -97,7 +96,7 @@ const DashboardBlog = () => {
   const fetchBlogs = async (page: number, nextStatusFilter = statusFilter) => {
     try {
       setIsLoading(true);
-      const response = await blogApi.getAdminBlogPostsAPI({
+      const response = await blogApi.getLecturerBlogPostsAPI({
         page,
         itemsPerPage: DEFAULT_ITEMS_PER_PAGE,
         status: nextStatusFilter === "all" ? undefined : nextStatusFilter,
@@ -169,9 +168,9 @@ const DashboardBlog = () => {
     }
   };
 
-  const handleView = async (id: number) => {
+  const handleEdit = async (id: number) => {
     try {
-      const detail = await blogApi.getAdminBlogDetailAPI(String(id));
+      const detail = await blogApi.getLecturerBlogDetailAPI(String(id));
       setEditingBlog(detail);
       setModalMode("edit");
       setIsModalOpen(true);
@@ -190,16 +189,29 @@ const DashboardBlog = () => {
     try {
       await blogApi.deleteBlogPostAPI(id);
       toast.success("Deleted blog post successfully.");
-
-      const shouldMoveToPrev = blogs.length === 1 && currentPage > 1;
-      if (shouldMoveToPrev) {
-        setCurrentPage((prev) => Math.max(1, prev - 1));
-        return;
-      }
-
       await fetchBlogs(currentPage);
     } catch (error: any) {
       toast.error(error?.message || "Failed to delete blog post.");
+    }
+  };
+
+  const handleSubmitForReview = async (id: number) => {
+    try {
+      await blogApi.updateBlogPostAPI(id, { status: "pending" });
+      toast.success("Submitted for admin review.");
+      await fetchBlogs(currentPage);
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to submit for review.");
+    }
+  };
+
+  const handleArchive = async (id: number) => {
+    try {
+      await blogApi.updateBlogPostAPI(id, { status: "draft" });
+      toast.success("Moved to draft.");
+      await fetchBlogs(currentPage);
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to move post to draft.");
     }
   };
 
@@ -210,6 +222,9 @@ const DashboardBlog = () => {
       if (modalMode === "create") {
         await blogApi.createBlogPostAPI(payload);
         toast.success("Created blog post successfully.");
+      } else if (editingBlog?.id) {
+        await blogApi.updateBlogPostAPI(editingBlog.id, payload);
+        toast.success("Updated blog post successfully.");
       }
 
       closeModal();
@@ -218,20 +233,6 @@ const DashboardBlog = () => {
       toast.error(error?.message || "Failed to save blog post.");
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleStatusChange = async (
-    postId: number,
-    status: BlogPostStatus,
-    reviewNote?: string,
-  ) => {
-    try {
-      await blogApi.updateBlogPostStatusAPI(postId, { status, reviewNote });
-      toast.success(`Post moved to ${statusLabelMap[status]}.`);
-      await fetchBlogs(currentPage);
-    } catch (error: any) {
-      toast.error(error?.message || "Failed to update blog status.");
     }
   };
 
@@ -254,9 +255,9 @@ const DashboardBlog = () => {
       <div className="mb-6 rounded-2xl bg-white p-5 shadow-sm">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="font-inter text-3xl font-bold text-slate-900">Blog Review</h1>
+            <h1 className="font-inter text-3xl font-bold text-slate-900">My Blogs</h1>
             <p className="mt-1 text-sm text-slate-500">
-              Admin can review and approve lecturer blogs. Edit is disabled in review mode.
+              Manage your posts and submit drafts for admin review.
             </p>
           </div>
 
@@ -312,7 +313,6 @@ const DashboardBlog = () => {
         mode={modalMode}
         initialData={editingBlog}
         submitting={isSubmitting}
-        readOnly={modalMode === "edit"}
       />
 
       {isCategoryModalOpen ? (
@@ -383,15 +383,14 @@ const DashboardBlog = () => {
         </div>
       ) : null}
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="min-w-275 w-full border-collapse">
+      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-x-auto overflow-y-visible">
+          <table className="min-w-250 w-full border-collapse">
           <thead className="bg-slate-100">
             <tr>
               <th className="border-r border-slate-200 px-4 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">#</th>
               <th className="border-r border-slate-200 px-4 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Thumbnail</th>
               <th className="border-r border-slate-200 px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Title</th>
-              <th className="border-r border-slate-200 px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Author</th>
               <th className="border-r border-slate-200 px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Category</th>
               <th className="border-r border-slate-200 px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Created</th>
               <th className="border-r border-slate-200 px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Accepted</th>
@@ -402,13 +401,13 @@ const DashboardBlog = () => {
           <tbody className="divide-y divide-slate-200">
             {isLoading ? (
               <tr>
-                <td colSpan={9} className="px-6 py-10 text-center text-sm text-slate-500">
+                <td colSpan={8} className="px-6 py-10 text-center text-sm text-slate-500">
                   Loading blog posts...
                 </td>
               </tr>
             ) : blogs.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-6 py-10 text-center text-sm text-slate-500">
+                <td colSpan={8} className="px-6 py-10 text-center text-sm text-slate-500">
                   No blog posts found.
                 </td>
               </tr>
@@ -437,7 +436,6 @@ const DashboardBlog = () => {
                       <p className="mt-1 max-w-72 truncate text-xs text-rose-600">Note: {blog.reviewNote}</p>
                     ) : null}
                   </td>
-                  <td className="border-r border-slate-200 px-5 py-4 text-sm text-slate-700">{blog.author}</td>
                   <td className="border-r border-slate-200 px-5 py-4 text-sm text-slate-700">{blog.category}</td>
                   <td className="border-r border-slate-200 px-5 py-4 text-sm text-slate-700">{formatDateTime(blog.createdAt)}</td>
                   <td className="border-r border-slate-200 px-5 py-4 text-sm text-slate-700">
@@ -446,21 +444,13 @@ const DashboardBlog = () => {
                   <td className="border-r border-slate-200 px-5 py-4">{renderStatusChip(blog.status)}</td>
                   <td className="relative px-4 py-4">
                     <div className="flex items-center justify-end gap-2">
-                      {blog.status === "pending" ? (
-                        <>
-                          <button
-                            onClick={() => handleStatusChange(blog.id, "published", "Approved by admin.")}
-                            className="rounded-md bg-emerald-600 px-2 py-1 text-xs font-medium text-white hover:bg-emerald-700"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleStatusChange(blog.id, "rejected", "Please revise content before publishing.")}
-                            className="rounded-md bg-rose-600 px-2 py-1 text-xs font-medium text-white hover:bg-rose-700"
-                          >
-                            Reject
-                          </button>
-                        </>
+                      {blog.status === "draft" || blog.status === "rejected" ? (
+                        <button
+                          onClick={() => handleSubmitForReview(blog.id)}
+                          className="rounded-md bg-amber-600 px-2 py-1 text-xs font-medium text-white hover:bg-amber-700"
+                        >
+                          Submit
+                        </button>
                       ) : null}
 
                       <button
@@ -473,16 +463,23 @@ const DashboardBlog = () => {
 
                     {openMenuId === blog.id ? (
                       <div
-                        className={`absolute right-5 z-20 w-40 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg ${
+                        className={`absolute right-5 z-20 w-44 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg ${
                           index >= blogs.length - 2 ? "bottom-12" : "top-12"
                         }`}
                       >
                         <button
-                          onClick={() => handleView(blog.id)}
+                          onClick={() => handleEdit(blog.id)}
                           className="flex w-full items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
                         >
-                          <span>👁️</span>
-                          View
+                          <span>✏️</span>
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleArchive(blog.id)}
+                          className="flex w-full items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
+                        >
+                          <span>📦</span>
+                          Move to Draft
                         </button>
                         <button
                           onClick={() => handleDelete(blog.id)}
@@ -514,4 +511,4 @@ const DashboardBlog = () => {
   );
 };
 
-export default DashboardBlog;
+export default DashboardLecturerBlog;
