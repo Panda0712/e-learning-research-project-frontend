@@ -34,7 +34,7 @@ const BlogDetail = () => {
   const navigate = useNavigate();
   const currentUser = useAppSelector(selectCurrentUser);
 
-  const [blog, setBlog] = useState<BlogData | null>(null); 
+  const [blog, setBlog] = useState<BlogData | null>(null);
   const [comments, setComments] = useState<BlogCommentItem[]>([]);
   const [commentContent, setCommentContent] = useState("");
   const [replyToCommentId, setReplyToCommentId] = useState<number | null>(null);
@@ -90,7 +90,7 @@ const BlogDetail = () => {
 
           setRelatedBlogs(recentPosts);
         }
-      } catch (error:any) {
+      } catch (error: any) {
         toast.error(error?.message || "Failed to get blog detail data!");
       } finally {
         setLoading(false);
@@ -148,118 +148,140 @@ const BlogDetail = () => {
     }
   };
 
-  if (loading) 
+  if (loading)
     return (
-      <div className="flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(180deg,#f7f9fc_0%,#ffffff_28%,#f7f4ff_100%)]">
         <Loading caption="Loading blog detail data..." />
       </div>
     );
-  if (!blog) return <div className="text-center py-10">Blog detail not found! Please try again later!</div>;
+  if (!blog)
+    return (
+      <div className="py-10 text-center">
+        Blog detail not found! Please try again later!
+      </div>
+    );
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      <div className="w-full h-12.5 bg-[#F5F5F5] flex items-center mb-8">
-        <div className="container mx-auto px-4 max-w-7xl">
-          <div className="flex items-center gap-2 text-sm font-medium">
-            <span className="text-[#555555] cursor-pointer hover:underline">
-              Home
-            </span>
-            <span className="text-[#9D9D9D] mx-1">{">"}</span>
-            <span className="text-[#9D9D9D]">Blog</span>
-            <span className="text-[#9D9D9D] mx-1">{">"}</span>
-            <span className="text-[#9D9D9D]">Blog Detail</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 pb-16 flex flex-col lg:flex-row gap-10 max-w-7xl">
-        <div className="w-full lg:w-3/4">
-          <div className="flex items-center gap-6 text-gray-500 text-sm font-medium mb-4">
-            <div className="flex items-center gap-2 ">
-              <Calendar size={18} className="text-[#FF6B6B]" />
-              <span className="font-medium font-poppins text-[#333931] text-[10px]">
-                {blog.date}
+    <div className="min-h-screen bg-[linear-gradient(180deg,#f7f9fc_0%,#ffffff_28%,#f7f4ff_100%)]">
+      <div className="px-4 pb-16 pt-6 sm:px-8 lg:px-12 xl:px-20">
+        <div className="mx-auto max-w-7xl">
+          <div className="rounded-4xl border border-white/70 bg-white/84 p-6 shadow-[0_24px_80px_rgba(34,40,84,0.08)] backdrop-blur-sm sm:p-8 lg:p-10">
+            <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
+              <span className="cursor-pointer text-[#64748B] hover:text-[#19566A]">
+                Home
               </span>
+              <span className="text-[#94A3B8]">/</span>
+              <span className="text-[#64748B]">Blog</span>
+              <span className="text-[#94A3B8]">/</span>
+              <span className="text-[#19566A]">Blog Detail</span>
             </div>
 
-            <div className="flex items-center gap-2 text-gray-500">
-              <User size={18} className="text-[#FF6B6B]" />
-              <span className="font-medium font-poppins text-[#333931] text-[10px]">
-                {blog.author}
-              </span>
-            </div>
-          </div>
+            <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+              <div className="min-w-0">
+                <div className="rounded-[30px] border border-white/80 bg-white/92 p-6 shadow-[0_18px_55px_rgba(34,40,84,0.08)] md:p-8">
+                  <div className="mb-5 flex flex-wrap items-center gap-3 text-sm font-medium">
+                    <span className="inline-flex rounded-full border border-[#704FE6]/15 bg-[#704FE6]/8 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[#704FE6]">
+                      {blog.category}
+                    </span>
+                    <div className="flex items-center gap-2 rounded-full bg-[#F8FAFC] px-4 py-2 text-[#64748B]">
+                      <Calendar size={16} className="text-[#704FE6]" />
+                      <span className="font-poppins text-[12px] font-medium">
+                        {blog.date}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 rounded-full bg-[#F8FAFC] px-4 py-2 text-[#64748B]">
+                      <User size={16} className="text-[#704FE6]" />
+                      <span className="font-poppins text-[12px] font-medium">
+                        {blog.author}
+                      </span>
+                    </div>
+                  </div>
 
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8 leading-tight">
-            {blog.title}
-          </h1>
+                  <h1 className="mb-6 text-3xl font-semibold leading-tight text-[#163541] md:text-5xl">
+                    {blog.title}
+                  </h1>
 
-          <div className="prose max-w-none text-gray-700 leading-relaxed text-[16px]">
-            <div dangerouslySetInnerHTML={{ __html: blog.content }} />
-          </div>
+                  <div className="mb-8 overflow-hidden rounded-[28px] border border-[#E7ECF3] bg-[#F8FAFC]">
+                    <img
+                      src={blog.image}
+                      alt={blog.title}
+                      className="h-80 w-full object-cover md:h-105"
+                    />
+                  </div>
 
-
-          <CommentList
-            comments={comments}
-            onReply={(commentId) => setReplyToCommentId(commentId)}
-            onBanUser={handleBanUser}
-            currentUserId={currentUserId}
-            canModerate={canModerate}
-          />
-
-          {/* Comment */}
-          <div className="pt-8 border-t border-gray-100">
-            <h3 className="text-xl font-bold mb-4 text-black">
-              Leave A Comment
-            </h3>
-
-            <p className="text-[#555555] mb-6 text-sm">
-              {currentUserId
-                ? "Share your thoughts with other learners and lecturers."
-                : "You need to login to leave a comment."}
-            </p>
-
-            <div className="space-y-5">
-              {replyToCommentId ? (
-                <div className="rounded-lg bg-orange-50 px-3 py-2 text-sm text-orange-700">
-                  Replying to comment #{replyToCommentId}
-                  <button
-                    type="button"
-                    onClick={() => setReplyToCommentId(null)}
-                    className="ml-3 font-semibold underline"
-                  >
-                    Cancel
-                  </button>
+                  <div className="prose prose-slate max-w-none text-[16px] leading-8 text-[#475569] prose-headings:text-[#163541] prose-strong:text-[#163541] prose-a:text-[#19566A]">
+                    <div dangerouslySetInnerHTML={{ __html: blog.content }} />
+                  </div>
                 </div>
-              ) : null}
-              <textarea
-                placeholder="Comment"
-                rows={5}
-                value={commentContent}
-                onChange={(e) => setCommentContent(e.target.value)}
-                disabled={!currentUserId || commentSubmitting}
-                className="border border-[#9D9D9D] p-3 rounded-md w-full focus:outline-none focus:border-[#FF782D] placeholder-[#9D9D9D] text-[#555555]"
-              />
 
-              <button
-                type="button"
-                onClick={handleCommentSubmit}
-                disabled={commentSubmitting}
-                className="bg-[#FF782D] text-white px-8 py-3 rounded-full font-bold hover:opacity-90 transition-opacity shadow-sm disabled:opacity-60"
-              >
-                {currentUserId
-                  ? commentSubmitting
-                    ? "Submitting..."
-                    : replyToCommentId
-                      ? "Reply"
-                      : "Post Comment"
-                  : "Login To Comment"}
-              </button>
+                <div className="mt-8">
+                  <CommentList
+                    comments={comments}
+                    onReply={(commentId) => setReplyToCommentId(commentId)}
+                    onBanUser={handleBanUser}
+                    currentUserId={currentUserId}
+                    canModerate={canModerate}
+                  />
+                </div>
+
+                <div className="rounded-[30px] border border-white/80 bg-white/92 p-6 shadow-[0_18px_55px_rgba(34,40,84,0.08)] md:p-8">
+                  <span className="inline-flex rounded-full border border-[#704FE6]/15 bg-[#704FE6]/8 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[#704FE6]">
+                    Join the discussion
+                  </span>
+                  <h3 className="mb-3 mt-5 text-2xl font-semibold text-[#163541]">
+                    Leave A Comment
+                  </h3>
+
+                  <p className="mb-6 text-sm leading-7 text-[#64748B]">
+                    {currentUserId
+                      ? "Share your thoughts with other learners and lecturers."
+                      : "You need to login to leave a comment."}
+                  </p>
+
+                  <div className="space-y-5">
+                    {replyToCommentId ? (
+                      <div className="rounded-2xl bg-[#FFF7ED] px-4 py-3 text-sm text-[#C2410C]">
+                        Replying to comment #{replyToCommentId}
+                        <button
+                          type="button"
+                          onClick={() => setReplyToCommentId(null)}
+                          className="ml-3 font-semibold underline"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : null}
+                    <textarea
+                      placeholder="Comment"
+                      rows={5}
+                      value={commentContent}
+                      onChange={(e) => setCommentContent(e.target.value)}
+                      disabled={!currentUserId || commentSubmitting}
+                      className="w-full rounded-3xl border border-[#D8E1EA] bg-[#FBFCFE] p-4 text-[#475569] outline-none transition focus:border-[#704FE6]/25 focus:ring-4 focus:ring-[#704FE6]/8 placeholder:text-[#94A3B8]"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={handleCommentSubmit}
+                      disabled={commentSubmitting}
+                      className="rounded-full bg-[linear-gradient(135deg,#704FE6_0%,#5B3FD2_100%)] px-8 py-3 text-white shadow-[0_16px_32px_rgba(112,79,230,0.22)] transition-opacity hover:opacity-90 disabled:opacity-60 font-bold"
+                    >
+                      {currentUserId
+                        ? commentSubmitting
+                          ? "Submitting..."
+                          : replyToCommentId
+                            ? "Reply"
+                            : "Post Comment"
+                        : "Login To Comment"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <Sidebar recentPosts={relatedBlogs} />
             </div>
           </div>
         </div>
-
-        <Sidebar recentPosts={relatedBlogs} />
       </div>
     </div>
   );

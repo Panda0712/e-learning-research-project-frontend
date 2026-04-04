@@ -4,7 +4,6 @@ import { toast } from "react-toastify";
 import { courseService } from "../../apis/course";
 import { lecturerLessonService } from "../../apis/lecturer/lesson";
 import { lecturerModuleService } from "../../apis/lecturer/module";
-import CommentForm from "../../components/comment/CommentForm";
 import CourseDetailHeader from "../../components/course/details/CourseDetailHeader";
 import CourseSidebar from "../../components/course/details/CourseSideBar";
 import Curriculum from "../../components/course/details/Curriculum";
@@ -13,6 +12,8 @@ import Instructor from "../../components/course/details/Instructor";
 import Overview from "../../components/course/details/Overview";
 import Reviews from "../../components/course/details/Reviews";
 import Button from "../../components/ui/Button";
+import { selectCurrentUser } from "../../redux/activeUser/activeUserSlice";
+import { useAppSelector } from "../../redux/hooks";
 import type {
   Course,
   CourseAPIData,
@@ -26,17 +27,9 @@ import type {
   Section,
 } from "../../types/course.type";
 import { MOCK_COURSES } from "../../utils/mockData";
-import { useAppSelector } from "../../redux/hooks";
-import { selectCurrentUser } from "../../redux/activeUser/activeUserSlice";
 
-type TabType = "Overview" | "Curriculum" | "Instructor" | "FAQs" | "Reviews";
-const TABS: TabType[] = [
-  "Overview",
-  "Curriculum",
-  "Instructor",
-  "FAQs",
-  "Reviews",
-];
+type TabType = "Overview" | "Module" | "Instructor" | "FAQs" | "Reviews";
+const TABS: TabType[] = ["Overview", "Module", "Instructor", "FAQs", "Reviews"];
 
 const mapFaqs = (faqs: CourseFaqAPIData[]) =>
   faqs.map((f) => ({ q: f.question, a: f.answer || "" }));
@@ -208,28 +201,32 @@ const CourseDetail = () => {
   if (!displayCourse) return <div>Course not found</div>;
 
   return (
-    <div className="min-h-screen bg-white pb-20">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#f7f9fc_0%,#ffffff_24%,#f7f4ff_100%)] pb-20">
       <CourseDetailHeader course={displayCourse} />
 
-      <div className="max-w-7xl mx-auto px-4 -mt-16 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="relative z-10 mx-auto -mt-18 max-w-7xl px-4">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-100 flex mb-8 overflow-hidden">
+            <div className="mb-8 flex flex-wrap gap-2 rounded-[28px] border border-white/80 bg-white/90 p-2 shadow-[0_18px_55px_rgba(34,40,84,0.08)] backdrop-blur-sm">
               {TABS.map((tab) => (
                 <Button
                   key={tab}
                   content={tab}
                   onClick={() => setActiveTab(tab)}
                   additionalClass={`
-        !flex-1 !w-full !rounded-none !text-sm !font-bold !px-6 !py-4
-        !border-r !border-gray-100 last:!border-r-0 !transition-all
-        ${activeTab === tab ? "!bg-orange-50 !text-orange-500" : ""}
+        !h-auto !min-w-[120px] !flex-1 !rounded-[20px] !px-5 !py-3.5
+        !border-0 !text-sm !font-bold !shadow-none !transition-all
+        ${
+          activeTab === tab
+            ? "!bg-[linear-gradient(135deg,#704FE6_0%,#5B3FD2_100%)] !text-white shadow-[0_14px_30px_rgba(112,79,230,0.22)]"
+            : "!bg-transparent !text-[#64748B] hover:!bg-[#F8FAFC] hover:!text-[#163541]"
+        }
       `}
                 />
               ))}
             </div>
 
-            <div className="min-h-75 mb-10">
+            <div className="mb-10 min-h-80">
               {activeTab === "Overview" && (
                 <Overview
                   description={displayCourse.description}
@@ -237,7 +234,7 @@ const CourseDetail = () => {
                 />
               )}
 
-              {activeTab === "Curriculum" && (
+              {activeTab === "Module" && (
                 <Curriculum sections={displayCourse.curriculum} />
               )}
 
@@ -255,8 +252,6 @@ const CourseDetail = () => {
                 />
               )}
             </div>
-
-            <CommentForm />
           </div>
 
           <div className="lg:col-span-1">

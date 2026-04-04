@@ -177,200 +177,303 @@ const Cart = () => {
   };
 
   return (
-    <div className="w-full min-h-screen bg-slate-50 py-10 px-4 md:px-8 lg:px-16 font-sans">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8 font-[Inter]">
-          Shopping Cart
-        </h1>
+    <div className="min-h-screen w-full bg-[linear-gradient(180deg,#f7f9fc_0%,#ffffff_22%,#f7f4ff_100%)] px-4 py-10 font-sans md:px-8 lg:px-16">
+      <div className="mx-auto max-w-7xl">
+        <div className="relative overflow-hidden rounded-[34px] border border-white/70 bg-white/86 p-6 shadow-[0_26px_80px_rgba(34,40,84,0.08)] backdrop-blur-sm sm:p-8 lg:p-10">
+          <div className="absolute inset-x-0 top-0 h-36 bg-[radial-gradient(circle_at_top_left,rgba(112,79,230,0.14),transparent_34%),radial-gradient(circle_at_top_right,rgba(255,217,0,0.12),transparent_30%)]" />
+          <div className="relative">
+            <div className="flex flex-col gap-8">
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                <div className="max-w-2xl">
+                  <span className="inline-flex rounded-full border border-[#704FE6]/15 bg-[#704FE6]/8 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-[#704FE6]">
+                    Your basket
+                  </span>
+                  <h1 className="mt-2 text-3xl font-semibold text-[#163541] md:text-[42px]">
+                    Shopping Cart
+                  </h1>
+                  <p className="mt-3 max-w-xl text-[15px] leading-7 text-[#64748B]">
+                    Review your selected courses, apply promotions, and continue
+                    to checkout when you&apos;re ready.
+                  </p>
+                </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          <div className="lg:w-2/3 flex flex-col gap-4">
-            <h2 className="text-lg font-semibold text-gray-700 mb-2">
-              {cartItems.length} Course{cartItems.length !== 1 && "s"} in Cart
-            </h2>
-
-            {isLoading ? (
-              <div
-                className="bg-white rounded-xl shadow-sm border border-gray-100 
-              p-12 flex flex-col items-center justify-center"
-              >
-                <Loader2
-                  className="animate-spin text-blue-500 mb-2"
-                  size={32}
-                />
-                <p className="text-gray-500">Loading cart...</p>
+                <div className="grid gap-4 sm:grid-cols-3 lg:min-w-105">
+                  <div className="rounded-3xl border border-[#E7ECF3] bg-[linear-gradient(145deg,#ffffff_0%,#f8fbff_100%)] px-5 py-4 shadow-[0_14px_34px_rgba(34,40,84,0.05)]">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#704FE6]">
+                      Courses
+                    </p>
+                    <p className="mt-2 text-2xl font-semibold text-[#163541]">
+                      {cartItems.length}
+                    </p>
+                  </div>
+                  <div className="rounded-3xl border border-[#E7ECF3] bg-[linear-gradient(145deg,#ffffff_0%,#f8fbff_100%)] px-5 py-4 shadow-[0_14px_34px_rgba(34,40,84,0.05)]">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#704FE6]">
+                      Savings
+                    </p>
+                    <p className="mt-2 text-2xl font-semibold text-[#16A34A]">
+                      $
+                      {(
+                        totalOriginalPrice -
+                        subtotal +
+                        appliedDiscount
+                      ).toFixed(0)}
+                    </p>
+                  </div>
+                  <div className="rounded-3xl border border-[#E7ECF3] bg-[linear-gradient(145deg,#ffffff_0%,#f8fbff_100%)] px-5 py-4 shadow-[0_14px_34px_rgba(34,40,84,0.05)]">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#704FE6]">
+                      Ready to pay
+                    </p>
+                    <p className="mt-2 text-2xl font-semibold text-[#163541]">
+                      ${Math.max(0, total).toFixed(0)}
+                    </p>
+                  </div>
+                </div>
               </div>
-            ) : cartItems.length > 0 ? (
-              <div className="flex flex-col gap-4">
-                {cartItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex flex-col sm:flex-row items-start sm:items-center bg-white 
-                    rounded-xl shadow-sm border border-gray-100 p-4 gap-4 transition hover:shadow-md"
-                  >
-                    <div className="w-full sm:w-32 h-24 shrink-0 rounded-lg overflow-hidden bg-gray-200">
-                      <img
-                        src={item.thumbnail}
-                        alt={item.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
 
-                    <div className="flex-1">
-                      <h3 className="text-base md:text-lg font-bold text-gray-900 line-clamp-2 leading-tight">
-                        {item.title}
-                      </h3>
-                      <p className="text-sm text-gray-500 mt-1">
-                        By {item.lecturer}
-                      </p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <span className="text-sm font-bold text-yellow-600">
-                          {item.rating}
-                        </span>
-                        <span className="text-xs text-gray-400">
-                          ({item.reviews.toLocaleString()} ratings)
-                        </span>
+              <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+                <div className="flex flex-col gap-5">
+                  <div className="flex items-center justify-between rounded-3xl border border-[#E7ECF3] bg-[linear-gradient(145deg,#ffffff_0%,#fbfcff_100%)] px-5 py-4 shadow-[0_12px_30px_rgba(34,40,84,0.04)]">
+                    <h2 className="text-lg font-semibold text-[#163541]">
+                      {cartItems.length} Course{cartItems.length !== 1 && "s"}{" "}
+                      in Cart
+                    </h2>
+                    <span className="rounded-full bg-[#EEF4FF] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#19566A]">
+                      Updated live
+                    </span>
+                  </div>
+
+                  {isLoading ? (
+                    <div className="flex flex-col items-center justify-center rounded-[28px] border border-[#E7ECF3] bg-white p-14 text-center shadow-[0_16px_40px_rgba(34,40,84,0.05)]">
+                      <div className="mb-4 flex h-18 w-18 items-center justify-center rounded-full bg-[#EEF4FF]">
+                        <Loader2
+                          className="animate-spin text-[#19566A]"
+                          size={32}
+                        />
                       </div>
+                      <p className="text-lg font-semibold text-[#163541]">
+                        Loading your cart...
+                      </p>
+                      <p className="mt-2 text-sm text-[#64748B]">
+                        Preparing your selected courses.
+                      </p>
+                    </div>
+                  ) : cartItems.length > 0 ? (
+                    <div className="flex flex-col gap-4">
+                      {cartItems.map((item) => (
+                        <div
+                          key={item.id}
+                          className="group flex flex-col gap-4 rounded-[28px] border border-[#E7ECF3] bg-[linear-gradient(145deg,#ffffff_0%,#fbfcff_100%)] p-4 shadow-[0_16px_42px_rgba(34,40,84,0.05)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_22px_50px_rgba(34,40,84,0.08)] sm:flex-row sm:items-center sm:p-5"
+                        >
+                          <div className="h-28 w-full shrink-0 overflow-hidden rounded-[22px] bg-[#E8EEF5] sm:w-40">
+                            <img
+                              src={item.thumbnail}
+                              alt={item.title}
+                              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
+                          </div>
+
+                          <div className="flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="rounded-full bg-[#EEF4FF] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#19566A]">
+                                In cart
+                              </span>
+                              <span className="rounded-full bg-[#FFF8D6] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#A16207]">
+                                Bestseller
+                              </span>
+                            </div>
+
+                            <h3 className="mt-3 line-clamp-2 text-[20px] font-bold leading-tight text-[#163541]">
+                              {item.title}
+                            </h3>
+                            <p className="mt-2 text-sm text-[#64748B]">
+                              By{" "}
+                              <span className="font-semibold text-[#19566A]">
+                                {item.lecturer}
+                              </span>
+                            </p>
+                            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+                              <span className="text-sm font-bold text-[#D97706]">
+                                {item.rating}
+                              </span>
+                              <span className="text-xs text-[#94A3B8]">
+                                ({item.reviews.toLocaleString()} ratings)
+                              </span>
+                              <span className="text-xs text-[#94A3B8]">
+                                Instant access after payment
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex w-full flex-row items-center justify-between border-t border-[#EDF2F7] pt-4 sm:mt-0 sm:w-auto sm:flex-col sm:items-end sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">
+                            <div className="text-left sm:text-right">
+                              <div className="text-[26px] font-bold text-[#163541]">
+                                ${item.price}
+                              </div>
+                              <div className="text-sm text-[#A0AEC0] line-through">
+                                ${item.originalPrice}
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={() => handleRemoveItem(item.id)}
+                              className="mt-0 flex items-center gap-1.5 rounded-full bg-[#FFF1F2] px-3 py-2 text-sm font-medium text-[#E11D48] transition-colors hover:bg-[#FFE4E6] sm:mt-4"
+                            >
+                              <Trash2 size={16} />
+                              <span className="sm:hidden">Remove</span>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center rounded-[30px] border border-[#E7ECF3] bg-[linear-gradient(145deg,#ffffff_0%,#fbfcff_100%)] p-14 text-center shadow-[0_18px_46px_rgba(34,40,84,0.05)]">
+                      <div className="mb-5 flex h-28 w-28 items-center justify-center rounded-full bg-[#F8FAFC] shadow-[inset_0_0_0_10px_rgba(238,244,255,0.9)]">
+                        <ShoppingCart size={42} className="text-[#A0AEC0]" />
+                      </div>
+                      <h3 className="mb-2 text-2xl font-bold text-[#163541]">
+                        Your cart is empty.
+                      </h3>
+                      <p className="mb-7 max-w-md text-[15px] leading-7 text-[#64748B]">
+                        Keep shopping to find a course! We have thousands of
+                        courses to help you learn new skills.
+                      </p>
+                      <Link
+                        to="/courses"
+                        className="flex items-center gap-2 rounded-full px-7 py-3.5 font-bold text-black shadow-[0_16px_32px_rgba(255,217,0,0.24)] transition hover:opacity-90"
+                        style={{ backgroundColor: COLORS.yellowBtn }}
+                      >
+                        Keep Shopping
+                        <ArrowRight size={18} />
+                      </Link>
+                    </div>
+                  )}
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="rounded-[26px] border border-[#E7ECF3] bg-[linear-gradient(145deg,#ffffff_0%,#f8fbff_100%)] p-5 shadow-[0_12px_30px_rgba(34,40,84,0.04)]">
+                      <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-[#704FE6]">
+                        Why buy now
+                      </p>
+                      <h3 className="mt-3 text-lg font-semibold text-[#163541]">
+                        Learning starts the moment you check out
+                      </h3>
+                      <p className="mt-2 text-sm leading-7 text-[#64748B]">
+                        Instant access, flexible study time, and courses picked
+                        to help you move forward faster.
+                      </p>
                     </div>
 
-                    <div
-                      className="flex flex-row sm:flex-col items-center sm:items-end justify-between 
-                    w-full sm:w-auto mt-4 sm:mt-0 pl-0 sm:pl-4 border-t sm:border-t-0 sm:border-l border-gray-100 pt-4 sm:pt-0"
-                    >
-                      <div className="text-left sm:text-right">
-                        <div className="text-xl font-bold text-black">
-                          ${item.price}
+                    <div className="rounded-[26px] border border-[#E7ECF3] bg-[linear-gradient(145deg,#ffffff_0%,#f8fbff_100%)] p-5 shadow-[0_12px_30px_rgba(34,40,84,0.04)]">
+                      <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-[#704FE6]">
+                        Purchase note
+                      </p>
+                      <h3 className="mt-3 text-lg font-semibold text-[#163541]">
+                        Secure checkout and 30-day confidence
+                      </h3>
+                      <p className="mt-2 text-sm leading-7 text-[#64748B]">
+                        Your order summary updates automatically, and every
+                        purchase is protected with our money-back guarantee.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="lg:w-full">
+                  <div className="sticky top-24 overflow-hidden rounded-[30px] border border-[#E7ECF3] bg-[linear-gradient(180deg,#ffffff_0%,#fbfcff_100%)] p-6 shadow-[0_20px_60px_rgba(34,40,84,0.08)]">
+                    <div className="absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top,rgba(255,217,0,0.18),transparent_55%)]" />
+                    <div className="relative">
+                      <h2 className="border-b border-[#EDF2F7] pb-4 text-xl font-bold text-[#163541]">
+                        Order Summary
+                      </h2>
+
+                      <div className="mb-6 mt-6 space-y-3 text-[#64748B]">
+                        <div className="flex justify-between">
+                          <span>Original Price:</span>
+                          <span className="font-medium text-[#163541]">
+                            ${totalOriginalPrice.toFixed(2)}
+                          </span>
                         </div>
-                        <div className="text-sm text-gray-400 line-through">
-                          ${item.originalPrice}
+                        <div className="flex justify-between text-[#16A34A]">
+                          <span>Course Discounts:</span>
+                          <span className="font-medium">
+                            -${(totalOriginalPrice - subtotal).toFixed(2)}
+                          </span>
+                        </div>
+
+                        {appliedDiscount > 0 && (
+                          <div className="flex justify-between font-medium text-[#E11D48]">
+                            <span>Promo Code:</span>
+                            <span>-${appliedDiscount.toFixed(2)}</span>
+                          </div>
+                        )}
+
+                        <div className="flex justify-between border-t border-dashed border-[#D7E0EA] pt-4 text-[28px] font-bold text-[#163541]">
+                          <span>Total:</span>
+                          <span>${Math.max(0, total).toFixed(2)}</span>
+                        </div>
+                      </div>
+
+                      <div className="mb-6 rounded-3xl border border-[#E7ECF3] bg-[#F8FAFC] p-4">
+                        <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-[#163541]">
+                          <Tag size={16} className="text-[#704FE6]" />{" "}
+                          Promotions
+                        </div>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={promoCode}
+                            onChange={(e) => {
+                              setPromoCode(e.target.value);
+                              setAppliedCouponCode(null);
+                              setAppliedDiscount(0);
+                            }}
+                            placeholder="Enter Coupon"
+                            className="flex-1 rounded-xl border border-[#D8E1EA] bg-white px-4 py-3 text-sm uppercase outline-none transition focus:border-[#FFD900] focus:ring-2 focus:ring-[#FFD900]/20"
+                          />
+                          <button
+                            onClick={handleApplyPromo}
+                            disabled={
+                              !promoCode.trim() ||
+                              cartItems.length === 0 ||
+                              isApplyingPromo
+                            }
+                            className="rounded-xl bg-[#163541] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#102B35] disabled:opacity-50"
+                          >
+                            {isApplyingPromo ? "Applying..." : "Apply"}
+                          </button>
                         </div>
                       </div>
 
                       <button
-                        onClick={() => handleRemoveItem(item.id)}
-                        className="mt-0 sm:mt-4 text-gray-400 hover:text-red-500 flex 
-                        items-center gap-1 text-sm font-medium transition-colors"
+                        disabled={cartItems.length === 0 || isCheckingOut}
+                        onClick={handleCheckout}
+                        className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-bold text-black shadow-[0_18px_36px_rgba(255,217,0,0.24)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                        style={{ backgroundColor: COLORS.yellowBtn }}
                       >
-                        <Trash2 size={16} />
-                        <span className="sm:hidden">Remove</span>
+                        {isCheckingOut ? (
+                          <>
+                            <Loader2 className="animate-spin" size={18} />
+                            Redirecting...
+                          </>
+                        ) : (
+                          <>
+                            Checkout <ArrowRight size={18} />
+                          </>
+                        )}
                       </button>
+
+                      <div className="mt-5 rounded-[20px] border border-[#E7ECF3] bg-white px-4 py-4 text-center">
+                        <p className="text-sm font-semibold text-[#163541]">
+                          30-Day Money-Back Guarantee
+                        </p>
+                        <p className="mt-1 text-xs leading-6 text-[#94A3B8]">
+                          Secure payment and a smoother learning journey from
+                          day one.
+                        </p>
+                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div
-                className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 
-              flex flex-col items-center justify-center text-center"
-              >
-                <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                  <ShoppingCart size={40} className="text-gray-300" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">
-                  Your cart is empty.
-                </h3>
-                <p className="text-gray-500 mb-6 max-w-md">
-                  Keep shopping to find a course! We have thousands of courses
-                  to help you learn new skills.
-                </p>
-                <Link
-                  to="/courses"
-                  className="px-6 py-3 rounded-lg font-bold text-black shadow-sm 
-                  hover:opacity-90 transition flex items-center gap-2"
-                  style={{ backgroundColor: COLORS.yellowBtn }}
-                >
-                  Keep Shopping
-                </Link>
-              </div>
-            )}
-          </div>
-
-          <div className="lg:w-1/3">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sticky top-24">
-              <h2 className="text-lg font-bold text-gray-900 mb-4 border-b border-gray-100 pb-4">
-                Order Summary
-              </h2>
-
-              <div className="space-y-3 text-gray-600 mb-6">
-                <div className="flex justify-between">
-                  <span>Original Price:</span>
-                  <span>${totalOriginalPrice.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-green-600">
-                  <span>Course Discounts:</span>
-                  <span>-${(totalOriginalPrice - subtotal).toFixed(2)}</span>
-                </div>
-
-                {appliedDiscount > 0 && (
-                  <div className="flex justify-between text-red-500 font-medium">
-                    <span>Promo Code:</span>
-                    <span>-${appliedDiscount.toFixed(2)}</span>
-                  </div>
-                )}
-
-                <div
-                  className="flex justify-between pt-4 border-t border-dashed 
-                border-gray-200 text-2xl font-bold text-black"
-                >
-                  <span>Total:</span>
-                  <span>${Math.max(0, total).toFixed(2)}</span>
                 </div>
               </div>
-
-              <div className="mb-6">
-                <div className="flex items-center gap-2 mb-2 text-sm font-medium text-gray-700">
-                  <Tag size={16} /> Promotions
-                </div>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={promoCode}
-                    onChange={(e) => {
-                      setPromoCode(e.target.value);
-                      setAppliedCouponCode(null);
-                      setAppliedDiscount(0);
-                    }}
-                    placeholder="Enter Coupon"
-                    className="flex-1 px-4 py-2 border border-gray-200 rounded-lg outline-none 
-                    focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 transition text-sm uppercase"
-                  />
-                  <button
-                    onClick={handleApplyPromo}
-                    disabled={
-                      !promoCode.trim() ||
-                      cartItems.length === 0 ||
-                      isApplyingPromo
-                    }
-                    className="px-4 py-2 bg-gray-900 text-white font-medium rounded-lg 
-                    text-sm hover:bg-gray-800 transition disabled:opacity-50"
-                  >
-                    {isApplyingPromo ? "Applying..." : "Apply"}
-                  </button>
-                </div>
-              </div>
-
-              <button
-                disabled={cartItems.length === 0 || isCheckingOut}
-                onClick={handleCheckout}
-                className="w-full py-3.5 rounded-lg font-bold text-black shadow-sm hover:opacity-90 
-                transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: COLORS.yellowBtn }}
-              >
-                {isCheckingOut ? (
-                  <>
-                    <Loader2 className="animate-spin" size={18} />
-                    Redirecting...
-                  </>
-                ) : (
-                  <>
-                    Checkout <ArrowRight size={18} />
-                  </>
-                )}
-              </button>
-
-              <p className="text-xs text-center text-gray-400 mt-4">
-                30-Day Money-Back Guarantee
-              </p>
             </div>
           </div>
         </div>
