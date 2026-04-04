@@ -25,62 +25,68 @@ const Sidebar = ({
   const handleApply = () => onApply?.(filters);
 
   return (
-    <aside className="w-full bg-white p-6 rounded-[25px] border border-gray-100 shadow-[0_0_20px_rgba(0,0,0,0.05)]">
-      <div className="mb-8">
-        <h3 className="font-bold text-lg mb-4 text-[#07152F] font-poppins">
+    <aside className="sticky top-[136px] w-full bg-transparent p-0">
+      <div className="mb-7 border-b border-[#E7ECF3] pb-7">
+        <h3 className="mb-4 text-[12px] font-semibold uppercase tracking-[0.24em] text-[#704FE6] font-poppins">
           Course Category
         </h3>
-        {categories.map((cat) => (
-          <FilterItem
-            key={cat.id}
-            label={cat.name}
-            checked={filters.categoryId === cat.id}
-            onChange={(checked) =>
-              setFilters((prev) => ({
-                ...prev,
-                categoryId: checked ? cat.id : undefined,
-              }))
-            }
-          />
-        ))}
+        <div className="[&>div>span:last-child]:hidden [&_input]:border-[#CBD5E1] [&_input]:text-[#704FE6] [&_input]:focus:ring-2 [&_input]:focus:ring-[#704FE6]/20">
+          {categories.map((cat) => (
+            <FilterItem
+              key={cat.id}
+              label={cat.name}
+              checked={filters.categoryId === cat.id}
+              onChange={(checked) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  categoryId: checked ? cat.id : undefined,
+                }))
+              }
+            />
+          ))}
+        </div>
       </div>
 
-      <div className="mb-8">
-        <h3 className="font-bold text-lg mb-4 text-[#07152F] font-poppins">
+      <div className="mb-7 border-b border-[#E7ECF3] pb-7">
+        <h3 className="mb-4 text-[12px] font-semibold uppercase tracking-[0.24em] text-[#704FE6] font-poppins">
           Level
         </h3>
-        {LEVELS.map((level) => (
-          <FilterItem
-            key={level}
-            label={level}
-            checked={filters.level === level}
-            onChange={(checked) =>
-              setFilters((prev) => ({
-                ...prev,
-                level: checked ? level : undefined,
-              }))
-            }
-          />
-        ))}
+        <div className="[&>div>span:last-child]:hidden [&_input]:border-[#CBD5E1] [&_input]:text-[#704FE6] [&_input]:focus:ring-2 [&_input]:focus:ring-[#704FE6]/20">
+          {LEVELS.map((level) => (
+            <FilterItem
+              key={level}
+              label={level}
+              checked={filters.level === level}
+              onChange={(checked) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  level: checked ? level : undefined,
+                }))
+              }
+            />
+          ))}
+        </div>
       </div>
 
-      <div className="mb-8">
-        <h3 className="font-bold text-lg mb-4 text-[#07152F] font-poppins">
+      <div className="mb-7 border-b border-[#E7ECF3] pb-7">
+        <h3 className="mb-4 text-[12px] font-semibold uppercase tracking-[0.24em] text-[#704FE6] font-poppins">
           Price
         </h3>
-        {(["all", "free", "paid"] as const).map((price) => (
-          <FilterItem
-            key={price}
-            label={price}
-            checked={filters.price === price}
-            onChange={(checked) =>
-              setFilters((prev) => ({
-                ...prev,
-                price: checked ? price : prev.price,
-              }))
-            }
-          />
-        ))}
+        <div className="[&>div>span:last-child]:hidden [&_input]:border-[#CBD5E1] [&_input]:text-[#704FE6] [&_input]:focus:ring-2 [&_input]:focus:ring-[#704FE6]/20">
+          {(["all", "free", "paid"] as const).map((price) => (
+            <FilterItem
+              key={price}
+              label={price}
+              checked={filters.price === price}
+              onChange={(checked) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  price: checked ? price : prev.price,
+                }))
+              }
+            />
+          ))}
+        </div>
       </div>
 
       {/* <CategoryFilter />
@@ -89,19 +95,19 @@ const Sidebar = ({
       <ReviewFilter />
       <LevelFilter /> */}
 
-      <div className="flex gap-3 mt-6">
+      <div className="mt-6 flex gap-3">
         <Button
           content="Uncheck"
           type="secondary"
           onClick={handleReset}
-          additionalClass="!w-full !h-[40px] !text-[14px] !rounded-full !bg-white !border-gray-300 !text-gray-600 hover:!bg-gray-50"
+          additionalClass="!h-[42px] !w-full !rounded-full !border-[#D7E0EA] !bg-white !text-[14px] !text-[#64748B] shadow-[0_10px_25px_rgba(34,40,84,0.06)] hover:!bg-[#F8FAFC]"
         />
 
         <Button
           content="Apply"
           type="primary"
           onClick={handleApply}
-          additionalClass="!w-full !h-[40px] !text-[14px] !rounded-full text-[#190d30]"
+          additionalClass="!h-[42px] !w-full !rounded-full !bg-[linear-gradient(135deg,#704FE6_0%,#5B3FD2_100%)] !text-[14px] !text-white shadow-[0_14px_28px_rgba(112,79,230,0.22)]"
         />
       </div>
     </aside>

@@ -80,7 +80,7 @@ const Popular = ({
         additionalClass="mt-2 max-w-[50%] mx-auto"
       />
 
-      <div className="flex flex-wrap mt-16 justify-center gap-8">
+      <div className="grid grid-cols-4 mt-16 px-8 justify-center gap-8">
         {list.map((course, index) => (
           <CourseCard
             key={course.id}

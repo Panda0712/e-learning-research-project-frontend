@@ -2,8 +2,8 @@ import {
   Bell,
   CheckCheck,
   ChevronDown,
-  ShoppingCart,
   Heart,
+  ShoppingCart,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -435,16 +435,33 @@ const Navbar = () => {
                     className="absolute right-0 top-full z-50 mt-3 min-w-50 overflow-hidden 
                   rounded-2xl border border-slate-100 bg-white p-1.5 shadow-xl"
                   >
-                    <button
-                      onClick={() => {
-                        setIsUserDropdownOpen(false);
-                        navigate(getProfileTargetPath());
-                      }}
-                      className="block w-full rounded-xl px-4 py-2.5 text-left text-[15px] 
+                    {currentUser?.role !== ACCOUNT_ROLES.STUDENT ? (
+                      <button
+                        onClick={() => {
+                          setIsUserDropdownOpen(false);
+                          navigate(
+                            currentUser?.role === ACCOUNT_ROLES.ADMIN
+                              ? "/dashboard/admin"
+                              : "/dashboard/lecturer",
+                          );
+                        }}
+                        className="block w-full rounded-xl px-4 py-2.5 text-left text-[15px] 
                       font-medium text-gray-700 transition-colors hover:bg-[#EDF7FA] hover:text-[#19566A]"
-                    >
-                      Profile
-                    </button>
+                      >
+                        Dashboard
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setIsUserDropdownOpen(false);
+                          navigate(getProfileTargetPath());
+                        }}
+                        className="block w-full rounded-xl px-4 py-2.5 text-left text-[15px] 
+                      font-medium text-gray-700 transition-colors hover:bg-[#EDF7FA] hover:text-[#19566A]"
+                      >
+                        Profile
+                      </button>
+                    )}
                     <button
                       onClick={async () => {
                         setIsUserDropdownOpen(false);

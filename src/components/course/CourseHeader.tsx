@@ -9,17 +9,24 @@ type Props = {
 
 const CourseHeader = ({ value, onChange, onSubmit }: Props) => {
   return (
-    <div className="bg-white/50 backdrop-blur-sm sticky top-0 z-20 border-b border-gray-100">
-      <header className="max-w-7xl mx-auto px-4 py-6">
-        <div className="text-sm text-[#9D9D9D] mb-2 font-poppins">
+    <div className="sticky top-0 z-20 border-b border-white/70 bg-white/72 backdrop-blur-xl">
+      <header className="mx-auto max-w-7xl px-4 py-6">
+        <div className="mb-3 text-sm font-medium text-[#94A3B8] font-poppins">
           Home &gt; Course
         </div>
-        <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
-          <h1 className="text-3xl md:text-4xl font-extrabold text-[#07152F] font-poppins">
-            All Courses
-          </h1>
+
+        <div className="flex flex-col gap-5 rounded-[28px] border border-white/70 bg-[linear-gradient(145deg,#ffffff_0%,#f8fbff_100%)] px-5 py-5 shadow-[0_16px_45px_rgba(34,40,84,0.06)] md:flex-row md:items-end md:justify-between md:px-7">
+          <div>
+            <h1 className="text-3xl font-semibold text-[#163541] font-poppins md:text-[40px]">
+              All Courses
+            </h1>
+            <p className="mt-2 text-[15px] leading-7 text-[#64748B]">
+              Explore thoughtfully designed courses for every skill level.
+            </p>
+          </div>
+
           <form
-            className="w-full md:w-80"
+            className="w-full md:w-90"
             onSubmit={(e) => {
               e.preventDefault();
               onSubmit?.();
@@ -27,10 +34,10 @@ const CourseHeader = ({ value, onChange, onSubmit }: Props) => {
           >
             <Input
               placeholder="Search"
-              variant="underline"
-              rightIcon={<Search size={20} />}
-              containerClass="group"
-              className="group-hover:border-black transition-colors"
+              variant="outline"
+              rightIcon={<Search size={20} className="mr-3" />}
+              containerClass="group rounded-full border border-[#E7ECF3] bg-white px-4 shadow-[0_10px_30px_rgba(34,40,84,0.06)] transition-all duration-300 hover:border-[#704FE6]/20 focus-within:border-[#704FE6]/25 focus-within:shadow-[0_16px_34px_rgba(112,79,230,0.10)]"
+              className="border-none! bg-transparent! px-0! py-3! text-[15px] text-[#163541] placeholder:text-[#94A3B8]"
               value={value}
               onChange={(e) => onChange(e.target.value)}
             />
