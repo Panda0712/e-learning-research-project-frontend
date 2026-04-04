@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import { profileService } from "../../apis/profile";
 import { selectCurrentUser } from "../../redux/activeUser/activeUserSlice";
 import {
+  clearConversationUnreadLocally,
   createConversationAPI,
   fetchConversationsAPI,
   fetchMessagesAPI,
@@ -55,6 +56,13 @@ const StudentChatPage = () => {
     () => conversations.find((item) => item.id === activeConversationId),
     [conversations, activeConversationId],
   );
+
+  const activeLecturer = useMemo(() => {
+    if (!activeConversation) return null;
+    return (activeConversation.participants ?? []).find(
+      (p) => p.role === "lecturer",
+    );
+  }, [activeConversation]);
 
   const currentMessages = activeConversationId
     ? (messagesByConversation[activeConversationId]?.items ?? [])
@@ -167,17 +175,41 @@ const StudentChatPage = () => {
       .includes(search.toLowerCase()),
   );
 
+  const getConversationUnread = (conversationId?: number) => {
+    if (!conversationId) return 0;
+    const conversation = conversations.find((c) => c.id === conversationId);
+    if (!conversation) return 0;
+    const uid = String(currentUser?.id ?? "");
+    return conversation.unreadCounts?.[uid] ?? conversation.myUnreadCount ?? 0;
+  };
+
   const selectLecturer = async (lecturerId: number) => {
     const existed = conversations.find(
       (item) => item.lecturerId === lecturerId,
     );
+    const currentUserId = Number(currentUser?.id);
+
     if (existed) {
       dispatch(setActiveConversation(existed.id));
+
+      if (currentUserId > 0) {
+        dispatch(
+          clearConversationUnreadLocally({
+            conversationId: existed.id,
+            userId: currentUserId,
+          }),
+        );
+      }
+
+      dispatch(markAsSeenAPI(existed.id));
       return;
     }
     const action = await dispatch(createConversationAPI(lecturerId));
     const created = action?.payload?.conversation;
-    if (created?.id) dispatch(setActiveConversation(created.id));
+    if (created?.id) {
+      dispatch(setActiveConversation(created.id));
+      dispatch(markAsSeenAPI(created.id));
+    }
   };
 
   const onSend = async () => {
@@ -221,10 +253,10 @@ const StudentChatPage = () => {
   };
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-6 py-4">
-      <div className="grid h-[calc(100dvh-170px)] min-h-155 grid-cols-12 gap-5">
+    <div className="mx-auto w-full max-w-7xl px-6 py-4 overflow-hidden">
+      <div className="grid h-[calc(100dvh-170px)] min-h-155 grid-cols-12 gap-5 overflow-hidden">
         <div
-          className="col-span-4 flex flex-col overflow-hidden rounded-xl border 
+          className="col-span-4 min-h-0 flex flex-col overflow-hidden rounded-xl border 
         border-gray-200 bg-white"
         >
           <div className="border-b border-gray-200 p-4">
@@ -241,7 +273,7 @@ const StudentChatPage = () => {
               />
             </div>
           </div>
-          <div className={`flex-1 ${CHAT_SCROLLBAR_CLASS}`}>
+          <div className={`min-h-0 flex-1 ${CHAT_SCROLLBAR_CLASS}`}>
             {filteredLecturers.map((lecturer: any) => {
               const convo = conversations.find(
                 (item) => item.lecturerId === lecturer.id,
@@ -252,13 +284,23 @@ const StudentChatPage = () => {
                   type="button"
                   key={lecturer.id}
                   onClick={() => selectLecturer(lecturer.id)}
-                  className={`flex w-full items-center gap-3 border-b border-gray-100 p-4 text-left ${isActive ? "bg-blue-50" : "hover:bg-gray-50"}`}
+                  className={`relative flex w-full items-center gap-3 border-b border-gray-100 p-4 text-left ${isActive ? "bg-blue-50" : "hover:bg-gray-50"}`}
                 >
-                  <img
-                    src={lecturer?.avatar?.fileUrl || "/avatar1.png"}
-                    alt="lecturer-img"
-                    className="h-11 w-11 rounded-full object-cover"
-                  />
+                  <div className="relative">
+                    <img
+                      src={lecturer?.avatar?.fileUrl || "/avatar1.png"}
+                      alt="lecturer-img"
+                      className="h-11 w-11 rounded-full object-cover"
+                    />
+                    {(() => {
+                      const unreadCount = getConversationUnread(convo?.id);
+                      return unreadCount > 0 ? (
+                        <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#3b82f6] px-1 text-xs text-white">
+                          {unreadCount > 99 ? "99+" : unreadCount}
+                        </span>
+                      ) : null;
+                    })()}
+                  </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-gray-900">
                       {`${lecturer.firstName ?? ""} ${lecturer.lastName ?? ""}`}
@@ -273,16 +315,33 @@ const StudentChatPage = () => {
           </div>
         </div>
 
-        <div className="col-span-8 flex flex-col rounded-xl overflow-hidden border border-gray-200 bg-white">
-          <div className="border-b border-gray-200 p-4 text-sm font-semibold">
-            {activeConversation ? "Conversation" : "Select a lecturer"}
+        <div className="col-span-8 min-h-0 flex flex-col rounded-xl overflow-hidden border border-gray-200 bg-white">
+          <div className="border-b border-gray-200 p-4">
+            {activeLecturer ? (
+              <div className="flex items-center gap-3">
+                <img
+                  src={activeLecturer.avatarUrl || "/avatar1.png"}
+                  alt={`${activeLecturer.firstName ?? ""} ${activeLecturer.lastName ?? ""}`.trim()}
+                  className="h-10 w-10 rounded-full object-cover"
+                />
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {`${activeLecturer.firstName ?? ""} ${activeLecturer.lastName ?? ""}`.trim() ||
+                      "Lecturer"}
+                  </p>
+                  <p className="text-xs text-gray-500">Lecturer</p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm font-semibold">Select a lecturer</p>
+            )}
           </div>
 
           <div
             id="student-chat-scroll"
             ref={chatScrollRef}
             onScroll={handleChatScroll}
-            className={`flex-1 p-4 ${CHAT_SCROLLBAR_CLASS}`}
+            className={`min-h-0 flex-1 p-4 ${CHAT_SCROLLBAR_CLASS}`}
           >
             <InfiniteScroll
               dataLength={currentMessages.length}
