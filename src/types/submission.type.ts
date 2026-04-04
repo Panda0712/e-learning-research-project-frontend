@@ -1,8 +1,10 @@
 export interface NewSubmission {
-  assessmentId: number;
+  assessmentId?: number;
   quizId: number;
   studentId: number;
   submittedAt?: string;
+  score?: number;
+  feedback?: string;
   status?: "submitted" | "in-progress";
 }
 

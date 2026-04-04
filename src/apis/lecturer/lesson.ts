@@ -61,6 +61,24 @@ const createLessonAPI = async (payload: {
   return res.data;
 };
 
+const updateLessonAPI = async (
+  id: number,
+  payload: {
+    title?: string;
+    description?: string;
+    note?: string;
+    duration?: string;
+    video?: UploadedResource;
+    resource?: UploadedResource;
+  },
+) => {
+  const res = await authorizedAxiosInstance.patch(
+    `${API_ROOT}/v1/lessons/${id}`,
+    payload,
+  );
+  return res.data;
+};
+
 const getPublicLessonsByModuleIdAPI = async (moduleId: number) => {
   const res = await authorizedAxiosInstance.get(
     `${API_ROOT}/v1/lessons/get-by-module-id/${moduleId}`,
@@ -79,6 +97,7 @@ export const lecturerLessonService = {
   uploadLessonVideoAPI,
   uploadLessonFileAPI,
   createLessonAPI,
+  updateLessonAPI,
   getPublicLessonsByModuleIdAPI,
   getLearningLessonsByModuleIdAPI,
 };

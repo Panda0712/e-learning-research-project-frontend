@@ -22,15 +22,6 @@ export const columns = (actions: {
   onDetail: (id: number) => void;
 }): ColumnDef<MyCourseRow>[] => [
   {
-    id: "select",
-    header: () => <span></span>,
-    cell: () => (
-      <div className="flex items-center justify-center">
-        <input type="checkbox" />
-      </div>
-    ),
-  },
-  {
     accessorKey: "title",
     header: () => (
       <span className="font-poppins font-medium text-[15px]">Course Title</span>

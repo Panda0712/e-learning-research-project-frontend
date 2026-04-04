@@ -11,6 +11,10 @@ const ImageUploader = ({ imgUrl, onUpload }: ImgProps) => {
   const [preview, setPreview] = useState<string | null>(imgUrl ?? null);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    setPreview(imgUrl ?? null);
+  }, [imgUrl]);
+
   const handleImgFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -44,7 +48,7 @@ const ImageUploader = ({ imgUrl, onUpload }: ImgProps) => {
 
   useEffect(() => {
     return () => {
-      if (preview) URL.revokeObjectURL(preview);
+      if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
     };
   }, [preview]);
 

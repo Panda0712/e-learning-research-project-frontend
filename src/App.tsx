@@ -14,7 +14,6 @@ import RbacRoute from "./components/core/RbacRoute";
 import CourseDetailChapter from "./components/dashboard/admin/courses/course-detail-chapter/CourseDetailChapter";
 import AdminCourseDetail from "./components/dashboard/admin/courses/course-detail/AdminCourseDetail";
 import DashboardCreateEditCurriculum from "./components/dashboard/lecturer/create-course/curriculum/DashboardCreateEditCurriculum";
-import Success from "./components/payment/Success";
 import Footer from "./components/ui/Footer";
 import Loading from "./components/ui/Loading";
 import Navbar from "./components/ui/Navbar";
@@ -58,6 +57,7 @@ import Registration from "./pages/Lecturer/Registration";
 import NotFoundPage from "./pages/NotFound/NotFound";
 import Payment from "./pages/Payment/Payment";
 import PaymentCancel from "./pages/Payment/PaymentCancel";
+import PaymentSuccess from "./pages/Payment/PaymentSuccess";
 import Profile from "./pages/Profile/Profile";
 import StudentChatPage from "./pages/Student/StudentChatPage";
 import {
@@ -86,6 +86,24 @@ const ProtectedRoutes = ({
 
   const role = normalizeRole(user.role);
   if (role !== ACCOUNT_ROLES.STUDENT) {
+    return <Navigate to="/access-denied" replace={true} />;
+  }
+
+  return <Outlet />;
+};
+
+const StudentOrLecturerRoutes = ({
+  user,
+  authResolved,
+}: {
+  user: UserProfile | null;
+  authResolved: boolean;
+}) => {
+  if (!authResolved) return <AuthBootstrap />;
+  if (!user) return <Navigate to="/auth/login" replace={true} />;
+
+  const role = normalizeRole(user.role);
+  if (role !== ACCOUNT_ROLES.STUDENT && role !== ACCOUNT_ROLES.LECTURER) {
     return <Navigate to="/access-denied" replace={true} />;
   }
 
@@ -401,15 +419,6 @@ const App = () => {
               <Route path="/chat/student" element={<StudentChatPage />} />
             </Route>
 
-            {/* Course */}
-            <Route
-              element={
-                <RbacRoute requiredPermission={permissions.VIEW_COURSE} />
-              }
-            >
-              <Route path="/learning/:id" element={<CourseLearning />} />
-            </Route>
-
             {/* Cart */}
             <Route
               element={<RbacRoute requiredPermission={permissions.VIEW_CART} />}
@@ -451,8 +460,25 @@ const App = () => {
               }
             >
               <Route path="/payment/:id" element={<Payment />} />
-              <Route path="/payment/success" element={<Success />} />
+              <Route path="/payment/success" element={<PaymentSuccess />} />
               <Route path="/payment/cancel" element={<PaymentCancel />} />
+            </Route>
+          </Route>
+
+          <Route
+            element={
+              <StudentOrLecturerRoutes
+                user={currentUser}
+                authResolved={authResolved}
+              />
+            }
+          >
+            <Route
+              element={
+                <RbacRoute requiredPermission={permissions.VIEW_COURSE} />
+              }
+            >
+              <Route path="/learning/:id" element={<CourseLearning />} />
             </Route>
           </Route>
         </Route>

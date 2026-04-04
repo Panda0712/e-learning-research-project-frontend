@@ -41,6 +41,21 @@ const DashboardCreateCourse = () => {
   const isReviews = location.pathname.startsWith(
     "/dashboard/lecturer/my-courses/create-course/reviews",
   );
+  const mode = searchParams.get("mode") || "create";
+  const isViewMode = mode === "view";
+  const isCreateMode = mode === "create";
+  const persistentQuery = useMemo(() => {
+    const params = new URLSearchParams();
+    const courseId = searchParams.get("courseId");
+    const courseTitleParam = searchParams.get("courseTitle");
+
+    if (courseId) params.set("courseId", courseId);
+    if (courseTitleParam) params.set("courseTitle", courseTitleParam);
+    if (mode) params.set("mode", mode);
+
+    const str = params.toString();
+    return str ? `?${str}` : "";
+  }, [searchParams, mode]);
 
   const courseTitle = useMemo<string | null>(() => {
     const titleFromUrl = searchParams.get("courseTitle");
@@ -57,6 +72,28 @@ const DashboardCreateCourse = () => {
     if (!courseTitle) navigate("/dashboard/lecturer");
   }, [courseTitle, navigate]);
 
+  const displayedMenus = useMemo(() => {
+    if (isCreateMode) {
+      const byLabel = Object.fromEntries(
+        createCourseMenu.map((menu) => [menu.label, menu]),
+      ) as Record<string, (typeof createCourseMenu)[number]>;
+
+      return [byLabel.Detail, byLabel.Curriculum, byLabel.Promotion].filter(
+        Boolean,
+      );
+    }
+
+    if (isViewMode) {
+      const byLabel = Object.fromEntries(
+        createCourseMenu.map((menu) => [menu.label, menu]),
+      ) as Record<string, (typeof createCourseMenu)[number]>;
+
+      return [byLabel.Detail, byLabel.Curriculum].filter(Boolean);
+    }
+
+    return createCourseMenu;
+  }, [isCreateMode, isViewMode]);
+
   return (
     <div className="px-2 py-4 bg-[#f5f6fa]">
       <div className="flex items-center justify-between gap-5">
@@ -67,9 +104,9 @@ const DashboardCreateCourse = () => {
       </div>
 
       <div className="mt-5 flex items-center gap-3 border-b border-[#E2E8F0]">
-        {createCourseMenu.map((menu) => (
+        {displayedMenus.map((menu) => (
           <div
-            onClick={() => navigate(menu.path)}
+            onClick={() => navigate(`${menu.path}${persistentQuery}`)}
             key={menu.label}
             className={`group transition cursor-pointer py-4 px-2.5 hover:text-[#3B82F6] 
               border-b-[3.5px] hover:border-[#3B82F6] ${
@@ -80,26 +117,26 @@ const DashboardCreateCourse = () => {
           >
             <span
               className={`transition font-poppins group-hover:text-[#3B82F6] 
-                font-medium text-[16px] ${
-                  location.pathname.startsWith(menu.path)
-                    ? "text-[#3B82F6]"
-                    : "text-[#475569]"
-                }`}
+    font-medium text-[16px] ${
+      location.pathname.startsWith(menu.path)
+        ? "text-[#3B82F6]"
+        : "text-[#475569]"
+    }`}
             >
-              {menu.label}
+              {menu.label === "Curriculum" ? "Module" : menu.label}
             </span>
           </div>
         ))}
       </div>
 
       <div className="relative">
-        {isCommission && <DashboardCommission />}
+        {!isViewMode && isCommission && <DashboardCommission />}
         {isCurriculum && <DashboardCurriculum />}
-        {isCustomer && <DashboardCustomer />}
+        {!isViewMode && isCustomer && <DashboardCustomer />}
         {isDetail && <DashboardDetail />}
-        {isPromotion && <DashboardPromotion />}
-        {isPromotionEditCreate && <DashboardCreateEditCoupon />}
-        {isReviews && <DashboardReviews />}
+        {!isViewMode && isPromotion && <DashboardPromotion />}
+        {!isViewMode && isPromotionEditCreate && <DashboardCreateEditCoupon />}
+        {!isViewMode && isReviews && <DashboardReviews />}
       </div>
     </div>
   );

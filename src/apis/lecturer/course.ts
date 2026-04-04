@@ -29,6 +29,12 @@ export type LecturerCoursePayload = {
   status: "draft" | "pending" | "published" | "rejected";
 };
 
+export type CreateCourseWithAssetsInput = {
+  introImage: File;
+  introVideo?: File;
+  payload: Omit<LecturerCoursePayload, "thumbnail" | "introVideo">;
+};
+
 const mapCloudinaryResource = (
   data: CloudinaryUploadResponse,
 ): UploadedResource => ({
@@ -69,6 +75,21 @@ const createCourseAPI = async (payload: LecturerCoursePayload) => {
   return res.data;
 };
 
+const createCourseWithAssetsAPI = async (
+  input: CreateCourseWithAssetsInput,
+) => {
+  const thumbnail = await uploadCourseThumbnailAPI(input.introImage);
+  const introVideo = input.introVideo
+    ? await uploadCourseIntroVideoAPI(input.introVideo)
+    : undefined;
+
+  return createCourseAPI({
+    ...input.payload,
+    thumbnail,
+    introVideo,
+  });
+};
+
 const updateCourseAPI = async (
   id: number,
   payload: Partial<LecturerCoursePayload>,
@@ -88,6 +109,13 @@ const createCourseFaqAPI = async (payload: {
   const res = await authorizedAxiosInstance.post(
     `${API_ROOT}/v1/courses/faq`,
     payload,
+  );
+  return res.data;
+};
+
+const getCourseFaqByCourseIdAPI = async (courseId: number) => {
+  const res = await authorizedAxiosInstance.get(
+    `${API_ROOT}/v1/courses/faq/get-by-course-id/${courseId}`,
   );
   return res.data;
 };
@@ -120,13 +148,23 @@ const getMyCoursesAPI = async (params: {
   return res.data;
 };
 
+const getCourseByIdForLecturerAPI = async (id: number) => {
+  const res = await authorizedAxiosInstance.get(
+    `${API_ROOT}/v1/courses/lecturer/course/${id}`,
+  );
+  return res.data;
+};
+
 export const lecturerCourseService = {
   uploadCourseThumbnailAPI,
   uploadCourseIntroVideoAPI,
   createCourseAPI,
+  createCourseWithAssetsAPI,
   updateCourseAPI,
   createCourseFaqAPI,
+  getCourseFaqByCourseIdAPI,
   getCourseCategoriesAPI,
   getCoursesByLecturerIdAPI,
   getMyCoursesAPI,
+  getCourseByIdForLecturerAPI,
 };

@@ -28,6 +28,7 @@ export const rolePermissions = {
   ],
   [ACCOUNT_ROLES.LECTURER]: [
     permissions.VIEW_DASHBOARD_LECTURER,
+    permissions.VIEW_COURSE,
     permissions.VIEW_LECTURER,
     permissions.VIEW_LECTURER_REGISTRATION,
     permissions.VIEW_CART,

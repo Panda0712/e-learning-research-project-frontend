@@ -31,13 +31,25 @@ const PaymentSuccess = () => {
         }
 
         setOrderId(parsedOrderId);
-        const response =
-          await payosService.checkPaymentStatusAPI(parsedOrderId);
-        const paymentStatus = String(
-          response?.data?.paymentStatus || "",
-        ).toLowerCase();
+        const maxAttempts = 6;
+        for (let i = 0; i < maxAttempts; i += 1) {
+          const response =
+            await payosService.checkPaymentStatusAPI(parsedOrderId);
+          const paymentStatus = String(
+            response?.data?.paymentStatus || "",
+          ).toLowerCase();
 
-        setIsPaid(paymentStatus === "paid");
+          if (paymentStatus === "paid") {
+            setIsPaid(true);
+            return;
+          }
+
+          if (i < maxAttempts - 1) {
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+          }
+        }
+
+        setIsPaid(false);
       } catch (error) {
         if (error instanceof AxiosError) {
           toast.error(

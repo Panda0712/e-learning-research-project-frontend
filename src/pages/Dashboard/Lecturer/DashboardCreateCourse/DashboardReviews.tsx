@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { lecturerCourseInsightsService } from "../../../../apis/lecturer/courseInsights";
 import DashboardReviewsSection from "../../../../components/dashboard/lecturer/create-course/reviews/DashboardReviewsSection";
 import DashboardStatisticThumb from "../../../../components/dashboard/lecturer/create-course/reviews/DashboardStatisticThumb";
@@ -59,6 +60,15 @@ const DashboardReviews = () => {
         })) as RatingData[];
 
         setRows(mapped);
+      })
+      .catch((error: any) => {
+        setStats(emptyStats);
+        setRows([]);
+        toast.error(
+          error?.message ||
+            error?.response?.data?.message ||
+            "Missing course context. Open course detail and save first.",
+        );
       });
   }, []);
 

@@ -6,10 +6,6 @@ export const curriculumSchema = z.object({
     .string()
     .min(3, "Title must be at least 3 characters")
     .max(100, "Title is too long"),
-  subtitle: z
-    .string()
-    .min(3, "Subtitle must be at least 3 characters")
-    .max(150, "Title is too long"),
   description: z.string().min(20, "Description must be at least 20 characters"),
 
   lessons: z

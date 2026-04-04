@@ -4,10 +4,40 @@ import { API_ROOT } from "../../utils/constants";
 
 export type CouponStatus = "active" | "expired" | "scheduled";
 
-const getCourseContext = () => {
-  const raw = localStorage.getItem("lecturerCreateCourseContext");
-  const parsed = raw ? (JSON.parse(raw) as { courseId?: number }) : {};
-  return { courseId: Number(parsed.courseId || 0) };
+const toPositiveInt = (value: unknown): number | null => {
+  const parsed = Number(value);
+  if (Number.isInteger(parsed) && parsed > 0) return parsed;
+  return null;
+};
+
+const resolveCourseId = (): number | null => {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const courseIdFromQuery = toPositiveInt(params.get("courseId"));
+    if (courseIdFromQuery) return courseIdFromQuery;
+
+    const raw = localStorage.getItem("lecturerCreateCourseContext");
+    const parsed = raw ? (JSON.parse(raw) as { courseId?: number }) : {};
+    const courseIdFromContext = toPositiveInt(parsed.courseId);
+    if (courseIdFromContext) return courseIdFromContext;
+
+    const courseIdFromStorage = toPositiveInt(
+      localStorage.getItem("lecturerCreatedCourseId"),
+    );
+    if (courseIdFromStorage) return courseIdFromStorage;
+  } catch {
+    return null;
+  }
+
+  return null;
+};
+
+const requireCourseId = (): number => {
+  const courseId = resolveCourseId();
+  if (!courseId) {
+    throw new Error("Missing courseId. Please save course details first.");
+  }
+  return courseId;
 };
 
 const getCouponsByCourseAPI = async (params?: {
@@ -15,7 +45,7 @@ const getCouponsByCourseAPI = async (params?: {
   limit?: number;
   status?: CouponStatus | "all";
 }) => {
-  const { courseId } = getCourseContext();
+  const courseId = requireCourseId();
   const res = await authorizedAxiosInstance.get(`${API_ROOT}/v1/coupons`, {
     params: { ...params, courseId },
   });
@@ -41,7 +71,7 @@ const createCouponByCourseAPI = async (payload: {
   endingTime?: string;
   isUnlimited?: boolean;
 }) => {
-  const { courseId } = getCourseContext();
+  const courseId = requireCourseId();
   const res = await authorizedAxiosInstance.post(`${API_ROOT}/v1/coupons`, {
     ...payload,
     courseId,
@@ -62,7 +92,7 @@ const getReviewsByCourseAPI = async (params?: {
   limit?: number;
   rating?: number;
 }) => {
-  const { courseId } = getCourseContext();
+  const courseId = requireCourseId();
   const res = await authorizedAxiosInstance.get(
     `${API_ROOT}/v1/course-reviews/course/${courseId}`,
     { params },
@@ -78,7 +108,7 @@ const getCustomersByCourseForLecturerAPI = async (
     q?: string;
   },
 ) => {
-  const { courseId } = getCourseContext();
+  const courseId = requireCourseId();
   const res = await authorizedAxiosInstance.get(
     `${API_ROOT}/v1/enrollments/lecturer/${lecturerId}/course/${courseId}/students`,
     { params },
@@ -95,7 +125,7 @@ const getCommissionsByCourseForLecturerAPI = async (
     period?: string;
   },
 ) => {
-  const { courseId } = getCourseContext();
+  const courseId = requireCourseId();
   const res = await authorizedAxiosInstance.get(
     `${API_ROOT}/v1/order-items/lecturer/${lecturerId}/course/${courseId}/commissions`,
     { params },

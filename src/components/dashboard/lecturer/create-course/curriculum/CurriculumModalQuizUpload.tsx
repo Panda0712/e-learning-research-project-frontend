@@ -1,31 +1,39 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash2, X } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useFieldArray, useForm, useFormContext } from "react-hook-form";
-import Input from "../../../../ui/Input";
+import { toast } from "react-toastify";
 import type { CurriculumFormValues } from "../../../../../schemas/curriculum.schema";
 import {
   quizSchema,
   type QuizFormValues,
 } from "../../../../../schemas/quiz.schema";
+import Input from "../../../../ui/Input";
 
 type QuizModalProps = {
-  lessonIndex: number;
   onClose: () => void;
+  quizIndex?: number | null;
 };
 
-type QuestionType = "single" | "multiple";
-
 const CurriculumModalQuizUpload = ({
-  lessonIndex,
   onClose,
+  quizIndex = null,
 }: QuizModalProps) => {
   const [step, setStep] = useState<1 | 2>(1);
   const { setValue, getValues } = useFormContext<CurriculumFormValues>();
+  const existingQuiz = useMemo(() => {
+    if (typeof quizIndex === "number" && quizIndex >= 0) {
+      return getValues(`lessons.0.quizzes.${quizIndex}`) as
+        | QuizFormValues
+        | undefined;
+    }
+
+    return undefined;
+  }, [getValues, quizIndex]);
 
   const methods = useForm<QuizFormValues>({
     resolver: zodResolver(quizSchema),
-    defaultValues: {
+    defaultValues: existingQuiz || {
       title: "",
       description: "",
       timeLimit: 15,
@@ -60,21 +68,18 @@ const CurriculumModalQuizUpload = ({
     name: "questions",
   });
 
-  const handleNext = (e: React.MouseEvent) => {
+  const handleNext = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const quizData = getValues();
-    const errors = methods.formState.errors;
-
-    // Validate step 1 fields
-    if (
-      !quizData ||
-      errors.title ||
-      errors.description ||
-      errors.timeLimit ||
-      errors.passingScore
-    ) {
+    const valid = await methods.trigger([
+      "title",
+      "description",
+      "timeLimit",
+      "passingScore",
+    ]);
+    if (!valid) {
+      toast.error("Please complete quiz info before continuing.");
       return;
     }
 
@@ -86,32 +91,27 @@ const CurriculumModalQuizUpload = ({
   };
 
   const onSubmit = (data: QuizFormValues) => {
-    const currentLessonQuizzes =
-      getValues(`lessons.${lessonIndex}.quizzes`) || [];
-    setValue(`lessons.${lessonIndex}.quizzes`, [...currentLessonQuizzes, data]);
-    onClose();
-  };
+    const normalizedQuiz = {
+      ...data,
+      questions: data.questions.map((q) => ({
+        ...q,
+        type: "multiple" as const,
+        correctAnswer: Array.isArray(q.correctAnswer)
+          ? q.correctAnswer
+          : [String(q.correctAnswer || "")].filter(Boolean),
+      })),
+    };
 
-  const handleQuestionTypeChange = (index: number, newType: QuestionType) => {
-    const currentQuestion = watch(`questions.${index}`);
-
-    if (newType === "single") {
-      setQuizValue(`questions.${index}`, {
-        type: "single",
-        question: currentQuestion.question,
-        options: currentQuestion.options,
-        correctAnswer: "",
-        points: currentQuestion.points,
-      });
+    const currentQuizzes = getValues("lessons.0.quizzes") || [];
+    if (typeof quizIndex === "number" && quizIndex >= 0) {
+      const next = [...currentQuizzes];
+      next[quizIndex] = normalizedQuiz;
+      setValue("lessons.0.quizzes", next);
     } else {
-      setQuizValue(`questions.${index}`, {
-        type: "multiple",
-        question: currentQuestion.question,
-        options: currentQuestion.options,
-        correctAnswer: [],
-        points: currentQuestion.points,
-      });
+      setValue("lessons.0.quizzes", [...currentQuizzes, normalizedQuiz]);
     }
+
+    onClose();
   };
 
   const addOption = (questionIndex: number) => {
@@ -132,21 +132,19 @@ const CurriculumModalQuizUpload = ({
   const toggleCorrectAnswer = (questionIndex: number, option: string) => {
     const question = watch(`questions.${questionIndex}`);
 
-    if (question.type === "multiple") {
-      const currentAnswers = question.correctAnswer as string[];
-      const isSelected = currentAnswers.includes(option);
+    const currentAnswers = question.correctAnswer as string[];
+    const isSelected = currentAnswers.includes(option);
 
-      if (isSelected) {
-        setQuizValue(
-          `questions.${questionIndex}.correctAnswer`,
-          currentAnswers.filter((ans) => ans !== option),
-        );
-      } else {
-        setQuizValue(`questions.${questionIndex}.correctAnswer`, [
-          ...currentAnswers,
-          option,
-        ]);
-      }
+    if (isSelected) {
+      setQuizValue(
+        `questions.${questionIndex}.correctAnswer`,
+        currentAnswers.filter((ans) => ans !== option),
+      );
+    } else {
+      setQuizValue(`questions.${questionIndex}.correctAnswer`, [
+        ...currentAnswers,
+        option,
+      ]);
     }
   };
 
@@ -167,7 +165,7 @@ const CurriculumModalQuizUpload = ({
         >
           <div>
             <h3 className="text-[22px] font-semibold font-poppins text-[#1D2026]">
-              Create New Quiz
+              {typeof quizIndex === "number" ? "Edit Quiz" : "Create New Quiz"}
             </h3>
             <p className="text-[14px] text-[#8C94A3] mt-1">
               Add questions, set answers and configure quiz settings
@@ -182,7 +180,7 @@ const CurriculumModalQuizUpload = ({
         </div>
 
         {/* Content */}
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6">
+        <div className="p-6">
           {step === 1 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Quiz Details */}
@@ -361,7 +359,6 @@ const CurriculumModalQuizUpload = ({
               <div className="space-y-5 max-h-125 overflow-y-auto pr-2">
                 {questionFields.map((field, qIndex) => {
                   const question = watch(`questions.${qIndex}`);
-                  const questionType = question.type;
 
                   return (
                     <div
@@ -387,19 +384,6 @@ const CurriculumModalQuizUpload = ({
                               className="w-20 h-9 text-center"
                             />
                           </div>
-                          <select
-                            value={questionType}
-                            onChange={(e) =>
-                              handleQuestionTypeChange(
-                                qIndex,
-                                e.target.value as QuestionType,
-                              )
-                            }
-                            className="h-9 px-3 border border-[#E9EAF0] rounded-md text-[14px] bg-white"
-                          >
-                            <option value="multiple">Multiple Choice</option>
-                            <option value="single">Short Answer</option>
-                          </select>
                           {questionFields.length > 1 && (
                             <button
                               type="button"
@@ -432,74 +416,54 @@ const CurriculumModalQuizUpload = ({
                         )}
                       </div>
 
-                      {/* Answer Section */}
-                      {questionType === "multiple" ? (
-                        <div>
-                          <label className="text-[14px] font-medium text-[#1D2026] mb-2 block">
-                            Answer Options
-                          </label>
-                          <div className="space-y-2">
-                            {question.options.map((option, oIndex) => (
-                              <div
-                                key={oIndex}
-                                className="flex items-center gap-2"
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={(
-                                    question.correctAnswer as string[]
-                                  ).includes(option)}
-                                  onChange={() =>
-                                    toggleCorrectAnswer(qIndex, option)
-                                  }
-                                  className="w-5 h-5 rounded border-[#E9EAF0] text-[#564FFD] focus:ring-[#564FFD]"
-                                />
-                                <Input
-                                  variant="outline"
-                                  {...register(
-                                    `questions.${qIndex}.options.${oIndex}`,
-                                  )}
-                                  placeholder={`Option ${oIndex + 1}`}
-                                  className="flex-1 h-11"
-                                />
-                                {question.options.length > 2 && (
-                                  <button
-                                    type="button"
-                                    onClick={() => removeOption(qIndex, oIndex)}
-                                    className="text-red-500 hover:text-red-700 transition p-2"
-                                  >
-                                    <Trash2 size={16} />
-                                  </button>
+                      <div>
+                        <label className="text-[14px] font-medium text-[#1D2026] mb-2 block">
+                          Answer Options
+                        </label>
+                        <div className="space-y-2">
+                          {question.options.map((option, oIndex) => (
+                            <div
+                              key={oIndex}
+                              className="flex items-center gap-2"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={(
+                                  question.correctAnswer as string[]
+                                ).includes(option)}
+                                onChange={() =>
+                                  toggleCorrectAnswer(qIndex, option)
+                                }
+                                className="w-5 h-5 rounded border-[#E9EAF0] text-[#564FFD] focus:ring-[#564FFD]"
+                              />
+                              <Input
+                                variant="outline"
+                                {...register(
+                                  `questions.${qIndex}.options.${oIndex}`,
                                 )}
-                              </div>
-                            ))}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => addOption(qIndex)}
-                            className="mt-3 text-[14px] text-[#564FFD] font-medium hover:underline"
-                          >
-                            + Add Option
-                          </button>
+                                placeholder={`Option ${oIndex + 1}`}
+                                className="flex-1 h-11"
+                              />
+                              {question.options.length > 2 && (
+                                <button
+                                  type="button"
+                                  onClick={() => removeOption(qIndex, oIndex)}
+                                  className="text-red-500 hover:text-red-700 transition p-2"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              )}
+                            </div>
+                          ))}
                         </div>
-                      ) : (
-                        <div>
-                          <label className="text-[14px] font-medium text-[#1D2026] mb-2 block">
-                            Answer
-                          </label>
-                          <Input
-                            inputType="textarea"
-                            rows={3}
-                            variant="outline"
-                            {...register(
-                              `questions.${qIndex}.correctAnswer` as const,
-                            )}
-                            placeholder="Test your knowledge about environmental science basics, including 
-                            renewable energy, ecosystems, and sustainability."
-                            className="resize-none"
-                          />
-                        </div>
-                      )}
+                        <button
+                          type="button"
+                          onClick={() => addOption(qIndex)}
+                          className="mt-3 text-[14px] text-[#564FFD] font-medium hover:underline"
+                        >
+                          + Add Option
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
@@ -555,8 +519,14 @@ const CurriculumModalQuizUpload = ({
               </button>
             ) : (
               <button
-                type="submit"
-                onClick={(e) => e.stopPropagation()}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSubmit(onSubmit, () =>
+                    toast.error("Please complete quiz questions correctly."),
+                  )();
+                }}
                 className="h-12 px-6 bg-[#564FFD] text-white rounded-md
                 text-[16px] font-semibold hover:bg-[#4840CC] transition"
               >
@@ -564,7 +534,7 @@ const CurriculumModalQuizUpload = ({
               </button>
             )}
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

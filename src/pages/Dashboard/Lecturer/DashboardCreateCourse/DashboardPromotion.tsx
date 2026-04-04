@@ -3,6 +3,7 @@ import { Check, Plus, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { HiBars3BottomRight } from "react-icons/hi2";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { lecturerCourseInsightsService } from "../../../../apis/lecturer/courseInsights";
 import DashboardCouponChart from "../../../../components/dashboard/lecturer/create-course/promotion/DashboardCouponChart";
 import DashboardCouponTable from "../../../../components/dashboard/lecturer/create-course/promotion/DashboardCouponTable";
@@ -100,6 +101,15 @@ const DashboardPromotion = () => {
           totalCouponsRate: 0,
           redeemedAmountRate: 0,
         });
+      })
+      .catch((error: any) => {
+        setTableData([]);
+        setStats(emptyStats);
+        toast.error(
+          error?.message ||
+            error?.response?.data?.message ||
+            "Missing course context. Open course detail and save first.",
+        );
       });
   }, [hideFilter, dateFilter]);
 

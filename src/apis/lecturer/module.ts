@@ -17,10 +17,26 @@ const createModuleAPI = async (payload: CreateModulePayload) => {
   return res.data;
 };
 
+const updateModuleAPI = async (
+  id: number,
+  payload: Partial<Omit<CreateModulePayload, "courseId">>,
+) => {
+  const res = await authorizedAxiosInstance.patch(
+    `${API_ROOT}/v1/modules/${id}`,
+    payload,
+  );
+  return res.data;
+};
+
 const getPublicModulesByCourseIdAPI = async (courseId: number) => {
   const res = await authorizedAxiosInstance.get(
     `${API_ROOT}/v1/modules/get-by-course-id/${courseId}`,
   );
+  return res.data;
+};
+
+const getModuleByIdAPI = async (id: number) => {
+  const res = await authorizedAxiosInstance.get(`${API_ROOT}/v1/modules/${id}`);
   return res.data;
 };
 
@@ -33,6 +49,8 @@ const getLearningModulesByCourseIdAPI = async (courseId: number) => {
 
 export const lecturerModuleService = {
   createModuleAPI,
+  updateModuleAPI,
+  getModuleByIdAPI,
   getPublicModulesByCourseIdAPI,
   getLearningModulesByCourseIdAPI,
 };

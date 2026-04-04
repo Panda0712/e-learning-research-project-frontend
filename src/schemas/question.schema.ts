@@ -12,12 +12,14 @@ const baseQuestionSchema = {
 };
 
 const singleChoiceQuestionSchema = z.object({
+  id: z.number().positive().optional(),
   ...baseQuestionSchema,
   type: z.literal("single"),
   correctAnswer: z.string(),
 });
 
 const multipleChoiceQuestionSchema = z.object({
+  id: z.number().positive().optional(),
   ...baseQuestionSchema,
   type: z.literal("multiple"),
   correctAnswer: z

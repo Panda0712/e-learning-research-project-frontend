@@ -9,9 +9,17 @@ import CurriculumModalFileUpload from "./CurriculumModalFileUpload";
 
 type FileUploaderProps = {
   field: ControllerRenderProps<any, any>;
+  existingFileUrl?: string;
+  existingFileType?: string;
+  onRemoveExisting?: () => void;
 };
 
-const CurriculumFileUploader = ({ field }: FileUploaderProps) => {
+const CurriculumFileUploader = ({
+  field,
+  existingFileUrl,
+  existingFileType,
+  onRemoveExisting,
+}: FileUploaderProps) => {
   const [openModal, setOpenModal] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -41,6 +49,22 @@ const CurriculumFileUploader = ({ field }: FileUploaderProps) => {
   };
 
   useEffect(() => {
+    if (field.value instanceof File && field.value.size > 0) {
+      setFile(field.value);
+
+      if (field.value.type === "application/pdf") {
+        const nextPreview = URL.createObjectURL(field.value);
+        setPreviewUrl((prev) => {
+          if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+          return nextPreview;
+        });
+      } else {
+        setPreviewUrl(null);
+      }
+    }
+  }, [field.value]);
+
+  useEffect(() => {
     return () => {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
@@ -68,7 +92,44 @@ const CurriculumFileUploader = ({ field }: FileUploaderProps) => {
               size={24}
               className="absolute right-5 top-5 cursor-pointer 
               transition duration-300 hover:opacity-70"
-              onClick={() => setPreviewUrl(null)}
+              onClick={() => {
+                setPreviewUrl(null);
+                setFile(null);
+                field.onChange(new File([], ""));
+              }}
+            />
+          </>
+        ) : existingFileUrl ? (
+          <>
+            {(existingFileType || "").toLowerCase().includes("pdf") ||
+            existingFileUrl.toLowerCase().includes(".pdf") ? (
+              <iframe
+                src={existingFileUrl}
+                className="w-full h-full object-cover cursor-pointer"
+                title="Existing PDF Preview"
+              />
+            ) : (
+              <div className="flex items-center gap-3 w-full h-full">
+                <FileText />
+                <a
+                  href={existingFileUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm text-[#3B82F6] underline break-all"
+                >
+                  Open uploaded file
+                </a>
+              </div>
+            )}
+
+            <X
+              size={24}
+              className="absolute right-5 top-5 cursor-pointer 
+              transition duration-300 hover:opacity-70"
+              onClick={() => {
+                onRemoveExisting?.();
+                field.onChange(new File([], ""));
+              }}
             />
           </>
         ) : file ? (
@@ -79,7 +140,10 @@ const CurriculumFileUploader = ({ field }: FileUploaderProps) => {
               size={24}
               className="absolute right-5 top-5 cursor-pointer 
               transition duration-300 hover:opacity-70"
-              onClick={() => setFile(null)}
+              onClick={() => {
+                setFile(null);
+                field.onChange(new File([], ""));
+              }}
             />
           </div>
         ) : (

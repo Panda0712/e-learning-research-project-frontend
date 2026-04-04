@@ -2,6 +2,8 @@ import z from "zod";
 import { questionSchema } from "./question.schema";
 
 export const quizSchema = z.object({
+  id: z.number().positive().optional(),
+
   title: z.string().min(3, "Quiz title must be at least 3 characters").max(100),
 
   description: z.string().min(20, "Description must be at least 20 characters"),
