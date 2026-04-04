@@ -94,8 +94,18 @@ const Wishlist = () => {
       });
       toast.success("Added course to cart!", { theme: "colored" });
     } catch (error: any) {
-      const msg = error?.message || "Error when adding item to cart";
-      toast.error(msg);
+      const msg = String(error?.message || "");
+      if (/already purchased/i.test(msg)) {
+        toast.info("You already purchased this course.");
+        return;
+      }
+
+      if (/already in cart/i.test(msg)) {
+        toast.info("Course already in cart.");
+        return;
+      }
+
+      toast.error(msg || "Error when adding item to cart");
     }
   };
 

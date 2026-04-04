@@ -2,10 +2,12 @@
 import { Check, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { HiBars3BottomRight } from "react-icons/hi2";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { lecturerCourseInsightsService } from "../../../../apis/lecturer/courseInsights";
 import GraphIcon from "../../../../assets/graph.svg?react";
 import DashboardCommissionTable from "../../../../components/dashboard/lecturer/create-course/commission/DashboardCommissionTable";
 import TableSkeleton from "../../../../components/skeleton/TableSkeleton";
+import Button from "../../../../components/ui/Button";
 import Input from "../../../../components/ui/Input";
 
 type DateFilter = "all" | "last-month" | "this-month" | "this-year" | "custom";
@@ -33,6 +35,8 @@ const emptySummary: CommissionSummary = {
 };
 
 const DashboardCommission = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
   const [openFilter, setOpenFilter] = useState(false);
   const [dateFilter, setDateFilter] = useState<DateFilter>("this-year");
@@ -89,6 +93,20 @@ const DashboardCommission = () => {
 
   const tableRows = useMemo(() => rows, [rows]);
 
+  const persistentQuery = useMemo(() => {
+    const params = new URLSearchParams();
+    const courseId = searchParams.get("courseId");
+    const courseTitle = searchParams.get("courseTitle");
+    const mode = searchParams.get("mode") || "create";
+
+    if (courseId) params.set("courseId", courseId);
+    if (courseTitle) params.set("courseTitle", courseTitle);
+    if (mode) params.set("mode", mode);
+
+    const str = params.toString();
+    return str ? `?${str}` : "";
+  }, [searchParams]);
+
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -128,6 +146,17 @@ const DashboardCommission = () => {
       </div>
 
       <div className="flex items-center justify-between gap-5 my-4">
+        <Button
+          type="publish"
+          content="Create New Coupon"
+          onClick={() =>
+            navigate(
+              `/dashboard/lecturer/my-courses/create-course/commission/create-coupon${persistentQuery}`,
+            )
+          }
+          additionalClass="!h-10 !text-[14px] !px-4"
+        />
+
         <Input
           className="text-[14px] text-[#9D9D9D] border border-[#E2E8F0] bg-white"
           variant="outline"

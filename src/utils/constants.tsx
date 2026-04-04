@@ -178,10 +178,6 @@ export const createCourseMenu = [
     path: "/dashboard/lecturer/my-courses/create-course/curriculum",
   },
   {
-    label: "Promotion",
-    path: "/dashboard/lecturer/my-courses/create-course/promotion",
-  },
-  {
     label: "Detail",
     path: "/dashboard/lecturer/my-courses/create-course/detail",
   },

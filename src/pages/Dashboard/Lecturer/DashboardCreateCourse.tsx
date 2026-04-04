@@ -7,7 +7,6 @@ import DashboardCommission from "./DashboardCreateCourse/DashboardCommission";
 import DashboardCurriculum from "./DashboardCreateCourse/DashboardCurriculum";
 import DashboardCustomer from "./DashboardCreateCourse/DashboardCustomer";
 import DashboardDetail from "./DashboardCreateCourse/DashboardDetail";
-import DashboardPromotion from "./DashboardCreateCourse/DashboardPromotion";
 import DashboardReviews from "./DashboardCreateCourse/DashboardReviews";
 
 const DashboardCreateCourse = () => {
@@ -28,15 +27,12 @@ const DashboardCreateCourse = () => {
   const isDetail = location.pathname.startsWith(
     "/dashboard/lecturer/my-courses/create-course/detail",
   );
-  const isPromotion =
-    location.pathname ===
-    "/dashboard/lecturer/my-courses/create-course/promotion";
-  const isPromotionEditCreate =
+  const isCommissionCouponEditCreate =
     location.pathname.startsWith(
-      "/dashboard/lecturer/my-courses/create-course/promotion/edit-coupon",
+      "/dashboard/lecturer/my-courses/create-course/commission/edit-coupon",
     ) ||
     location.pathname.startsWith(
-      "/dashboard/lecturer/my-courses/create-course/promotion/create-coupon",
+      "/dashboard/lecturer/my-courses/create-course/commission/create-coupon",
     );
   const isReviews = location.pathname.startsWith(
     "/dashboard/lecturer/my-courses/create-course/reviews",
@@ -73,25 +69,24 @@ const DashboardCreateCourse = () => {
   }, [courseTitle, navigate]);
 
   const displayedMenus = useMemo(() => {
+    const byLabel = Object.fromEntries(
+      createCourseMenu.map((menu) => [menu.label, menu]),
+    ) as Record<string, (typeof createCourseMenu)[number]>;
+
     if (isCreateMode) {
-      const byLabel = Object.fromEntries(
-        createCourseMenu.map((menu) => [menu.label, menu]),
-      ) as Record<string, (typeof createCourseMenu)[number]>;
-
-      return [byLabel.Detail, byLabel.Curriculum, byLabel.Promotion].filter(
-        Boolean,
-      );
-    }
-
-    if (isViewMode) {
-      const byLabel = Object.fromEntries(
-        createCourseMenu.map((menu) => [menu.label, menu]),
-      ) as Record<string, (typeof createCourseMenu)[number]>;
-
       return [byLabel.Detail, byLabel.Curriculum].filter(Boolean);
     }
 
-    return createCourseMenu;
+    if (isViewMode) {
+      return [
+        byLabel.Detail,
+        byLabel.Curriculum,
+        byLabel.Commission,
+        byLabel.Reviews,
+      ].filter(Boolean);
+    }
+
+    return [byLabel.Detail, byLabel.Curriculum].filter(Boolean);
   }, [isCreateMode, isViewMode]);
 
   return (
@@ -130,13 +125,12 @@ const DashboardCreateCourse = () => {
       </div>
 
       <div className="relative">
-        {!isViewMode && isCommission && <DashboardCommission />}
+        {isCommission && <DashboardCommission />}
         {isCurriculum && <DashboardCurriculum />}
         {!isViewMode && isCustomer && <DashboardCustomer />}
         {isDetail && <DashboardDetail />}
-        {!isViewMode && isPromotion && <DashboardPromotion />}
-        {!isViewMode && isPromotionEditCreate && <DashboardCreateEditCoupon />}
-        {!isViewMode && isReviews && <DashboardReviews />}
+        {isCommissionCouponEditCreate && <DashboardCreateEditCoupon />}
+        {isReviews && <DashboardReviews />}
       </div>
     </div>
   );

@@ -282,15 +282,11 @@ const App = () => {
                   element={<DashboardCreateCourse />}
                 />
                 <Route
-                  path="lecturer/my-courses/create-course/promotion"
+                  path="lecturer/my-courses/create-course/commission/edit-coupon/:id"
                   element={<DashboardCreateCourse />}
                 />
                 <Route
-                  path="lecturer/my-courses/create-course/promotion/edit-coupon/:id"
-                  element={<DashboardCreateCourse />}
-                />
-                <Route
-                  path="lecturer/my-courses/create-course/promotion/create-coupon"
+                  path="lecturer/my-courses/create-course/commission/create-coupon"
                   element={<DashboardCreateCourse />}
                 />
                 <Route

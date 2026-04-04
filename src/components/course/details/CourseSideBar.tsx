@@ -3,11 +3,11 @@ import { Heart, PlayCircle, ShoppingCart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { cartService } from "../../../apis/cart";
+import { wishlistService } from "../../../apis/wishlist";
 import Button from "../../../components/ui/Button";
 import { selectCurrentUser } from "../../../redux/activeUser/activeUserSlice";
 import { useAppSelector } from "../../../redux/hooks";
 import type { Course, CourseStudentState } from "../../../types/course.type";
-import { wishlistService } from "../../../apis/wishlist";
 
 const CourseSidebar = ({
   course,
@@ -58,7 +58,18 @@ const CourseSidebar = ({
       toast.success("Added to cart successfully!");
       onAddedToCart?.();
     } catch (error: any) {
-      toast.error(error?.message || "Failed to add course to cart");
+      const msg = String(error?.message || "");
+      if (/already purchased/i.test(msg)) {
+        toast.info("You already purchased this course.");
+        return;
+      }
+
+      if (/already in cart/i.test(msg)) {
+        toast.info("Course already in cart.");
+        return;
+      }
+
+      toast.error(msg || "Failed to add course to cart");
     }
   };
 

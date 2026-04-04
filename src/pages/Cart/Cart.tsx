@@ -1,9 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ArrowRight, Loader2, ShoppingCart, Tag, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { cartService } from "../../apis/cart";
+import { couponService } from "../../apis/coupon";
+import { orderService } from "../../apis/order";
+import { payosService } from "../../apis/payos";
 import { selectCurrentUser } from "../../redux/activeUser/activeUserSlice";
 import { useAppSelector } from "../../redux/hooks";
 
@@ -24,12 +27,18 @@ interface CartItemType {
 }
 
 const Cart = () => {
+  const navigate = useNavigate();
   const currentUser = useAppSelector(selectCurrentUser);
 
   const [cartItems, setCartItems] = useState<CartItemType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [promoCode, setPromoCode] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState(0);
+  const [appliedCouponCode, setAppliedCouponCode] = useState<string | null>(
+    null,
+  );
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   useEffect(() => {
     const fetchCart = async () => {
@@ -85,13 +94,85 @@ const Cart = () => {
     }
   };
 
-  const handleApplyPromo = () => {
-    if (promoCode.trim().toUpperCase() === "LEARN2026") {
-      setAppliedDiscount(5.0);
-      toast.success("Applied coupon successfully!");
-    } else {
-      toast.error("Coupon code is not valid!");
+  const handleApplyPromo = async () => {
+    const normalizedCode = promoCode.trim().toUpperCase();
+    if (!normalizedCode) {
+      toast.error("Please enter coupon code.");
+      return;
+    }
+
+    if (cartItems.length === 0) {
+      toast.error("Your cart is empty.");
+      return;
+    }
+
+    try {
+      setIsApplyingPromo(true);
+      const preview = await couponService.previewCouponAPI({
+        code: normalizedCode,
+        courseIds: cartItems.map((item) => Number(item.courseId)),
+      });
+
+      const discountAmount = Number(preview?.discountAmount || 0);
+      setAppliedCouponCode(normalizedCode);
+      setAppliedDiscount(discountAmount);
+      setPromoCode(normalizedCode);
+      toast.success("Coupon applied successfully!");
+    } catch (error: any) {
+      setAppliedCouponCode(null);
       setAppliedDiscount(0);
+      toast.error(
+        error?.response?.data?.message || "Coupon code is not valid!",
+      );
+    } finally {
+      setIsApplyingPromo(false);
+    }
+  };
+
+  const handleCheckout = async () => {
+    if (!currentUser?.id) {
+      toast.error("Please login to checkout.");
+      navigate("/login");
+      return;
+    }
+
+    if (cartItems.length === 0) {
+      toast.error("Your cart is empty.");
+      return;
+    }
+
+    try {
+      setIsCheckingOut(true);
+
+      const order = await orderService.createOrderAPI({
+        studentId: Number(currentUser.id),
+        paymentMethod: "PAYOS",
+        couponCode: appliedCouponCode || undefined,
+      });
+
+      const orderId = Number(order?.id);
+      if (!orderId) {
+        throw new Error("Failed to create order");
+      }
+
+      localStorage.setItem("latestPaymentOrderId", String(orderId));
+
+      const payment = await payosService.createPaymentLinkAPI(orderId);
+      const checkoutUrl = payment?.data?.checkoutUrl;
+
+      if (!checkoutUrl) {
+        throw new Error("No checkout URL returned from PayOS");
+      }
+
+      window.location.href = checkoutUrl;
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Cannot checkout right now.",
+      );
+    } finally {
+      setIsCheckingOut(false);
     }
   };
 
@@ -244,29 +325,47 @@ const Cart = () => {
                   <input
                     type="text"
                     value={promoCode}
-                    onChange={(e) => setPromoCode(e.target.value)}
+                    onChange={(e) => {
+                      setPromoCode(e.target.value);
+                      setAppliedCouponCode(null);
+                      setAppliedDiscount(0);
+                    }}
                     placeholder="Enter Coupon"
                     className="flex-1 px-4 py-2 border border-gray-200 rounded-lg outline-none 
                     focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 transition text-sm uppercase"
                   />
                   <button
                     onClick={handleApplyPromo}
-                    disabled={!promoCode.trim() || cartItems.length === 0}
+                    disabled={
+                      !promoCode.trim() ||
+                      cartItems.length === 0 ||
+                      isApplyingPromo
+                    }
                     className="px-4 py-2 bg-gray-900 text-white font-medium rounded-lg 
                     text-sm hover:bg-gray-800 transition disabled:opacity-50"
                   >
-                    Apply
+                    {isApplyingPromo ? "Applying..." : "Apply"}
                   </button>
                 </div>
               </div>
 
               <button
-                disabled={cartItems.length === 0}
+                disabled={cartItems.length === 0 || isCheckingOut}
+                onClick={handleCheckout}
                 className="w-full py-3.5 rounded-lg font-bold text-black shadow-sm hover:opacity-90 
                 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: COLORS.yellowBtn }}
               >
-                Checkout <ArrowRight size={18} />
+                {isCheckingOut ? (
+                  <>
+                    <Loader2 className="animate-spin" size={18} />
+                    Redirecting...
+                  </>
+                ) : (
+                  <>
+                    Checkout <ArrowRight size={18} />
+                  </>
+                )}
               </button>
 
               <p className="text-xs text-center text-gray-400 mt-4">
