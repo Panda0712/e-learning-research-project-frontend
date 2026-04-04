@@ -220,7 +220,7 @@ export const PASSWORD_RULE_MESSAGE =
   "Password has to be at least 1 character, 1 number and 8 characters min.";
 export const PASSWORD_CONFIRMATION_MESSAGE = "Confirm password not match!";
 
-const PROD_API_ROOT = "https://meo-station-backend.onrender.com";
+const PROD_API_ROOT = "http://localhost:8017";
 const DEV_API_ROOT = "http://localhost:8017";
 
 export const API_ROOT =
