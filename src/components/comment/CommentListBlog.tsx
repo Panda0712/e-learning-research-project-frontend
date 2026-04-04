@@ -1,96 +1,156 @@
 import { Reply } from "lucide-react";
+import { useState } from "react";
+import type { BlogCommentItem } from "../../types/adminBlog.type";
 
-const commentsData = [
-  {
-    id: 1,
-    name: "Ngu Tuan",
-    date: "October 30, 2025",
-    content:
-      "This was exactly what I was looking for! I had zero coding knowledge before this. Tuan Andy explains everything with extreme clarity.",
-    avatar: "/public/ImgBlog/avartar_4.jpg",
-  },
-  {
-    id: 2,
-    name: "Khai",
-    date: "October 30, 2025",
-    content:
-      "Starting from the absolute basics. His 'learning by doing' approach helped me code along and build my first website. Highly recommended!",
-    avatar: "/public/avatar3.png",
-  },
-];
+interface CommentListProps {
+  comments: BlogCommentItem[];
+  onReply: (commentId: number) => void;
+  onBanUser?: (userId: number, isBanned: boolean) => void;
+  currentUserId?: number;
+  canModerate?: boolean;
+}
 
-const CommentList = () => {
+const formatDate = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString();
+};
+
+const getDisplayName = (comment: BlogCommentItem) => {
+  const firstName = comment.user?.firstName || "";
+  const lastName = comment.user?.lastName || "";
+  const fullName = `${firstName} ${lastName}`.trim();
+  return fullName || comment.user?.email || `User #${comment.userId}`;
+};
+
+const COMMENT_PREVIEW_LIMIT = 220;
+
+const CommentNode = ({
+  comment,
+  replies,
+  onReply,
+  onBanUser,
+  currentUserId,
+  canModerate,
+  level = 0,
+}: {
+  comment: BlogCommentItem;
+  replies: BlogCommentItem[];
+  onReply: (commentId: number) => void;
+  onBanUser?: (userId: number, isBanned: boolean) => void;
+  currentUserId?: number;
+  canModerate?: boolean;
+  level?: number;
+}) => {
+  const [expanded, setExpanded] = useState(false);
+  const childComments = replies.filter((item) => item.parentId === comment.id);
+  const content = String(comment.content || "").trim();
+  const isLongContent = content.length > COMMENT_PREVIEW_LIMIT;
+  const visibleContent =
+    expanded || !isLongContent
+      ? content
+      : `${content.slice(0, COMMENT_PREVIEW_LIMIT).trimEnd()}...`;
+
   return (
-    <div className="bg-[#F5F5F5] p-8 rounded-xl mb-12">
-      <h3 className="text-xl font-bold mb-8">Comments</h3>
-
-      <div className="flex flex-col gap-8">
-        {commentsData.map((comment, index) => (
-          <div
-            key={comment.id}
-            className={`flex gap-4 md:gap-6 ${
-              index !== 0 ? "border-t border-gray-200 pt-8" : ""
-            }`}
-          >
-            <div className="shrink-0">
-              <img
-                src={comment.avatar}
-                alt={comment.name}
-                className="w-12 h-12 md:w-16 md:h-16 rounded-full object-cover border-2 border-white shadow-sm"
-              />
-            </div>
-
-            <div className="flex-1">
-              <div className="flex justify-between items-center mb-2">
-                <h4 className="font-bold text-gray-900 text-lg">
-                  {comment.name}
-                </h4>
-                <span className="text-gray-500 text-sm">{comment.date}</span>
-              </div>
-
-              <p className="text-gray-600 leading-relaxed mb-3 text-sm md:text-base">
-                {comment.content}
-              </p>
-
-              <button className="flex items-center gap-1 text-[#FF6B6B] font-bold text-sm hover:underline">
-                <Reply size={16} /> Reply
-              </button>
-            </div>
-          </div>
-        ))}
+    <div className={`rounded-xl bg-white p-3 ${level > 0 ? "ml-4 mt-2" : ""}`}>
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <h4 className="text-base font-bold text-gray-900">{getDisplayName(comment)}</h4>
+        <span className="text-xs text-gray-500">{formatDate(comment.createdAt)}</span>
       </div>
 
-      <div className="flex justify-center gap-2 mt-10">
+      <p className="mb-2 text-sm leading-relaxed text-gray-600 whitespace-pre-wrap wrap-break-word">
+        {visibleContent || "(No content)"}
+      </p>
+
+      {isLongContent ? (
         <button
-          className="w-10 h-10 rounded-full bg-white border border-gray-200 
-        hover:bg-gray-100 flex items-center justify-center text-gray-500"
+          type="button"
+          onClick={() => setExpanded((prev) => !prev)}
+          className="mb-3 text-xs font-semibold text-[#2563EB] hover:underline"
         >
-          {"<"}
+          {expanded ? "Show less" : "Show more"}
         </button>
+      ) : null}
+
+      <div className="flex items-center gap-4">
         <button
-          className="w-10 h-10 rounded-full bg-black text-white 
-        flex items-center justify-center font-bold"
+          type="button"
+          onClick={() => onReply(comment.id)}
+          className="flex items-center gap-1 text-xs font-bold text-[#FF6B6B] hover:underline"
         >
-          1
+          <Reply size={16} /> Reply
         </button>
-        <button
-          className="w-10 h-10 rounded-full bg-white border border-gray-200 
-        hover:bg-gray-100 flex items-center justify-center text-gray-500"
-        >
-          2
-        </button>
-        <button
-          className="w-10 h-10 rounded-full bg-white border border-gray-200 
-        hover:bg-gray-100 flex items-center justify-center text-gray-500"
-        >
-          3
-        </button>
-        <button
-          className="w-10 h-10 rounded-full bg-white border border-gray-200 
-        hover:bg-gray-100 flex items-center justify-center text-gray-500"
-        >
-          {">"}
-        </button>
+
+        {canModerate && currentUserId !== comment.userId && onBanUser ? (
+          <button
+            type="button"
+            onClick={() => onBanUser(comment.userId, Boolean(comment.isBannedUser))}
+            className="text-xs font-semibold text-red-600 hover:underline"
+          >
+            {comment.isBannedUser ? "Unban" : "Ban user"}
+          </button>
+        ) : null}
+
+        {comment.isBannedUser ? (
+          <span className="rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-700">
+            Banned from commenting
+          </span>
+        ) : null}
+      </div>
+
+      {childComments.length > 0 ? (
+        <div className="mt-2 space-y-2 border-l border-gray-200 pl-3">
+          {childComments.map((reply) => (
+            <CommentNode
+              key={reply.id}
+              comment={reply}
+              replies={replies}
+              onReply={onReply}
+              onBanUser={onBanUser}
+              currentUserId={currentUserId}
+              canModerate={canModerate}
+              level={level + 1}
+            />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+const CommentList = ({
+  comments,
+  onReply,
+  onBanUser,
+  currentUserId,
+  canModerate,
+}: CommentListProps) => {
+  const rootComments = comments.filter((comment) => !comment.parentId);
+
+  return (
+    <div className="mb-12 rounded-xl bg-[#F5F5F5] p-5">
+      <h3 className="mb-4 text-xl font-bold">Comments</h3>
+
+      <div className="max-h-96 overflow-y-auto no-scrollbar pr-1">
+        <div className="flex flex-col gap-3">
+        {rootComments.length ? (
+          rootComments.map((comment) => (
+            <CommentNode
+              key={comment.id}
+              comment={comment}
+              replies={comments}
+              onReply={onReply}
+              onBanUser={onBanUser}
+              currentUserId={currentUserId}
+              canModerate={canModerate}
+            />
+          ))
+        ) : (
+          <div className="rounded-lg bg-white p-4 text-sm text-gray-600">
+            No comments yet. Be the first to comment.
+          </div>
+        )}
+        </div>
       </div>
     </div>
   );

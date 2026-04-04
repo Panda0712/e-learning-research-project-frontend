@@ -3,6 +3,7 @@ import {
   MdAttachMoney,
   MdChat,
   MdDashboard,
+  MdDescription,
   MdLibraryBooks,
   MdPerson,
   MdSettings,
@@ -50,6 +51,11 @@ export const menuDashboard = [
     label: "Communication",
     path: "/dashboard/lecturer/communication",
     icon: <MdChat size={22} />,
+  },
+  {
+    label: "Blog",
+    path: "/dashboard/lecturer/blog",
+    icon: <MdDescription size={22} />,
   },
   {
     label: "Setting",

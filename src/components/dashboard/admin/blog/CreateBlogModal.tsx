@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
+import { Editor } from "@tinymce/tinymce-react";
 import type {
   BlogCategoryItem,
+  BlogPostStatus,
   BlogPostItem,
   BlogThumbnailPayload,
 } from "../../../../types/adminBlog.type";
@@ -15,12 +17,15 @@ interface CreateBlogModalProps {
     slug: string;
     content: string;
     categoryId: number;
+    status?: BlogPostStatus;
     thumbnail?: BlogThumbnailPayload;
   }) => Promise<void>;
   categories: BlogCategoryItem[];
   mode: "create" | "edit";
   initialData?: BlogPostItem | null;
   submitting?: boolean;
+  allowStatusControl?: boolean;
+  readOnly?: boolean;
 }
 
 const slugify = (value: string) =>
@@ -39,6 +44,8 @@ const CreateBlogModal = ({
   mode,
   initialData,
   submitting,
+  allowStatusControl = false,
+  readOnly = false,
 }: CreateBlogModalProps) => {
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
@@ -47,6 +54,7 @@ const CreateBlogModal = ({
   const [thumbnail, setThumbnail] = useState<BlogThumbnailPayload | undefined>(
     undefined,
   );
+  const [status, setStatus] = useState<BlogPostStatus>("draft");
   const [thumbnailPreview, setThumbnailPreview] = useState("");
   const [hasNewThumbnail, setHasNewThumbnail] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -67,6 +75,7 @@ const CreateBlogModal = ({
       setContent(initialData.content || "");
       setCategoryId(initialData.categoryId || categories[0]?.id || "");
       setThumbnail(initialData.thumbnail || undefined);
+      setStatus((initialData.status as BlogPostStatus) || "draft");
       setThumbnailPreview(initialData.image || "");
       setHasNewThumbnail(false);
       return;
@@ -77,9 +86,10 @@ const CreateBlogModal = ({
     setContent("");
     setCategoryId(categories[0]?.id || "");
     setThumbnail(undefined);
+    setStatus(allowStatusControl ? "published" : "draft");
     setThumbnailPreview("");
     setHasNewThumbnail(false);
-  }, [isOpen, mode, initialData, categories]);
+  }, [isOpen, mode, initialData, categories, allowStatusControl]);
 
   const handleUploadThumbnail = async (file?: File) => {
     if (!file) return;
@@ -103,6 +113,18 @@ const CreateBlogModal = ({
     } finally {
       setUploadingImage(false);
     }
+  };
+
+  const uploadImageForEditor = async (file: File) => {
+    const formData = new FormData();
+    formData.append("images", file);
+    const uploaded = await blogApi.uploadBlogThumbnailAPI(formData);
+
+    if (!uploaded?.fileUrl) {
+      throw new Error("Upload image failed.");
+    }
+
+    return uploaded.fileUrl;
   };
 
   const handleSubmit = async () => {
@@ -131,6 +153,7 @@ const CreateBlogModal = ({
       slug: string;
       content: string;
       categoryId: number;
+      status?: BlogPostStatus;
       thumbnail?: BlogThumbnailPayload;
     } = {
       title: title.trim(),
@@ -138,6 +161,10 @@ const CreateBlogModal = ({
       content: content.trim(),
       categoryId: selectedCategoryId,
     };
+
+    if (allowStatusControl) {
+      submitPayload.status = status;
+    }
 
     if (mode === "create" && thumbnail) {
       submitPayload.thumbnail = thumbnail;
@@ -158,39 +185,24 @@ const CreateBlogModal = ({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-4xl rounded-2xl bg-[#F5F7FA] p-8 shadow-xl"
+        className="flex w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-[#F5F7FA] shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-6 flex items-start justify-between">
-          <div>
-            <h2 className="font-inter text-2xl font-bold text-black">
-              {mode === "create" ? "Create Blog" : "Edit Blog"}
-            </h2>
-            <p className="font-poppins text-sm text-gray-600">
-              {mode === "create"
-                ? "Create a new blog post"
+        <div className="border-b border-slate-200 bg-white px-6 py-4">
+          <h2 className="font-inter text-2xl font-bold text-black">
+            {mode === "create" ? "Create Blog" : readOnly ? "Blog Detail" : "Edit Blog"}
+          </h2>
+          <p className="font-poppins text-sm text-gray-600">
+            {mode === "create"
+              ? "Create a new blog post"
+              : readOnly
+                ? "Admin review mode: view only"
                 : "Update selected blog post"}
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onClose}
-              disabled={Boolean(submitting) || uploadingImage}
-              className="rounded-lg border border-gray-300 bg-white px-5 py-2 font-poppins text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={Boolean(submitting) || uploadingImage}
-              className="rounded-lg bg-[#3B82F6] px-5 py-2 font-poppins text-sm font-medium text-white hover:bg-blue-600"
-            >
-              {submitting ? "Saving..." : mode === "create" ? "Create" : "Update"}
-            </button>
-          </div>
+          </p>
         </div>
 
-        <div className="space-y-4">
+        <div className="p-6">
+          <div className="space-y-4">
           <div className="rounded-xl border border-gray-200 bg-white px-4 py-3">
             <label className="mb-1 block font-poppins text-xs text-gray-400">Title</label>
             <input
@@ -202,6 +214,7 @@ const CreateBlogModal = ({
                   setSlug(slugify(e.target.value));
                 }
               }}
+              disabled={readOnly}
               placeholder="Top 10 IT skills in 2026"
               className="w-full bg-transparent font-poppins text-sm text-black focus:outline-none"
             />
@@ -213,6 +226,7 @@ const CreateBlogModal = ({
               type="text"
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
+              disabled={readOnly}
               placeholder="top-10-it-skills-in-2026"
               className="w-full bg-transparent font-poppins text-sm text-black focus:outline-none"
             />
@@ -223,6 +237,7 @@ const CreateBlogModal = ({
             <select
               value={selectedCategoryId || ""}
               onChange={(e) => setCategoryId(Number(e.target.value))}
+              disabled={readOnly}
               className="w-full bg-transparent font-poppins text-sm text-black focus:outline-none"
             >
               {categories.map((category) => (
@@ -233,30 +248,62 @@ const CreateBlogModal = ({
             </select>
           </div>
 
+          {allowStatusControl && !readOnly ? (
+            <div className="rounded-xl border border-gray-200 bg-white px-4 py-3">
+              <label className="mb-1 block font-poppins text-xs text-gray-400">Status</label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as BlogPostStatus)}
+                className="w-full bg-transparent font-poppins text-sm text-black focus:outline-none"
+              >
+                <option value="draft">Draft</option>
+                <option value="pending">Pending Review</option>
+                <option value="published">Published</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+          ) : null}
+
           <div className="rounded-xl border border-gray-200 bg-white px-4 py-3">
             <label className="mb-1 block font-poppins text-xs text-gray-400">Content</label>
-            <textarea
+            <Editor
+              apiKey="epokjqkl8j9pg7k1gjua77wucdxd43qdoo7bspaw9pmx0bmh"
               value={content}
-              onChange={(e) => setContent(e.target.value)}
-              rows={10}
-              placeholder="Write your blog content here..."
-              className="w-full resize-none bg-transparent font-poppins text-sm text-black focus:outline-none"
+              onEditorChange={(value) => setContent(value)}
+              init={{
+                height: 360,
+                menubar: false,
+                statusbar: false,
+                plugins: ["lists", "link", "image", "table", "code"],
+                toolbar:
+                  "undo redo | blocks fontsize | forecolor bold italic underline | alignleft aligncenter alignright | bullist numlist | image link table | code",
+                content_style:
+                  "body { font-family: Poppins, sans-serif; font-size: 14px; padding: 12px; }",
+                branding: false,
+                images_upload_handler: async (blobInfo) => {
+                  const file = blobInfo.blob();
+                  return await uploadImageForEditor(file);
+                },
+              }}
+              disabled={readOnly}
             />
           </div>
 
           <div className="rounded-xl border border-gray-200 bg-white px-4 py-3">
             <label className="mb-2 block font-poppins text-xs text-gray-400">Thumbnail</label>
             <div className="flex flex-wrap items-center gap-4">
-              <label className="cursor-pointer rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200">
-                {uploadingImage ? "Uploading..." : "Upload Image"}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  disabled={uploadingImage || Boolean(submitting)}
-                  onChange={(e) => handleUploadThumbnail(e.target.files?.[0])}
-                />
-              </label>
+              {!readOnly ? (
+                <label className="cursor-pointer rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200">
+                  {uploadingImage ? "Uploading..." : "Upload Image"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={uploadingImage || Boolean(submitting)}
+                    onChange={(e) => handleUploadThumbnail(e.target.files?.[0])}
+                  />
+                </label>
+              ) : null}
 
               {thumbnailPreview ? (
                 <img
@@ -269,6 +316,28 @@ const CreateBlogModal = ({
               )}
             </div>
           </div>
+        </div>
+
+        </div>
+
+        <div className="flex items-center justify-end gap-3 border-t border-slate-200 bg-white px-6 py-4">
+          <button
+            onClick={onClose}
+            disabled={Boolean(submitting) || uploadingImage}
+            className="rounded-lg border border-gray-300 bg-white px-5 py-2 font-poppins text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            {readOnly ? "Close" : "Cancel"}
+          </button>
+
+          {!readOnly ? (
+            <button
+              onClick={handleSubmit}
+              disabled={Boolean(submitting) || uploadingImage}
+              className="rounded-lg bg-[#3B82F6] px-5 py-2 font-poppins text-sm font-medium text-white hover:bg-blue-600"
+            >
+              {submitting ? "Saving..." : mode === "create" ? "Create" : "Update"}
+            </button>
+          ) : null}
         </div>
       </div>
     </div>
