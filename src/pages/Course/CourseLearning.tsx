@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { courseService } from "../../apis/course";
+import { enrollmentService } from "../../apis/enrollment";
 import { lecturerLessonService } from "../../apis/lecturer/lesson";
 import { lecturerModuleService } from "../../apis/lecturer/module";
 import { lecturerQuestionService } from "../../apis/lecturer/question";
@@ -138,6 +139,7 @@ const CourseLearning = () => {
   const [selectedAnswers, setSelectedAnswers] = useState<
     Record<number, string[]>
   >({});
+  const [passedQuizIds, setPassedQuizIds] = useState<number[]>([]);
   const [quizResult, setQuizResult] = useState<{
     score: number;
     maxScore: number;
@@ -145,6 +147,7 @@ const CourseLearning = () => {
     passed: boolean;
   } | null>(null);
   const [isSubmittingQuiz, setIsSubmittingQuiz] = useState(false);
+  const [serverProgress, setServerProgress] = useState<number>(0);
 
   const [reviews, setReviews] = useState<Review[]>([]);
   const [totalReviews, setTotalReviews] = useState(0);
@@ -158,6 +161,58 @@ const CourseLearning = () => {
     const userId = Number(currentUser?.id || 0);
     return `course-learning-progress-${id}-${userId > 0 ? userId : "guest"}`;
   }, [id, currentUser?.id]);
+
+  const trackedLessonIds = useMemo(
+    () =>
+      sections.flatMap((section) =>
+        section.items
+          .filter((item) => item.type !== "quiz")
+          .map((item) => item.id),
+      ),
+    [sections],
+  );
+
+  const trackedQuizIds = useMemo(
+    () =>
+      sections.flatMap((section) =>
+        section.items
+          .filter((item) => item.type === "quiz" && Number(item.quizId) > 0)
+          .map((item) => Number(item.quizId)),
+      ),
+    [sections],
+  );
+
+  const completedTrackedLessonCount = useMemo(() => {
+    if (trackedLessonIds.length === 0) return 0;
+
+    const trackedSet = new Set(trackedLessonIds);
+    return completedLessonIds.filter((lessonId) => trackedSet.has(lessonId))
+      .length;
+  }, [completedLessonIds, trackedLessonIds]);
+
+  const completedTrackedQuizCount = useMemo(() => {
+    if (trackedQuizIds.length === 0) return 0;
+
+    const trackedQuizSet = new Set(trackedQuizIds);
+    return passedQuizIds.filter((quizId) => trackedQuizSet.has(quizId)).length;
+  }, [passedQuizIds, trackedQuizIds]);
+
+  const totalTrackableItems = trackedLessonIds.length + trackedQuizIds.length;
+  const completedTrackableItems =
+    completedTrackedLessonCount + completedTrackedQuizCount;
+
+  const localProgressPercent = useMemo(() => {
+    if (totalTrackableItems === 0) return 0;
+
+    return Number(
+      ((completedTrackableItems / totalTrackableItems) * 100).toFixed(2),
+    );
+  }, [completedTrackableItems, totalTrackableItems]);
+
+  const displayProgressPercent = useMemo(
+    () => Math.max(serverProgress, localProgressPercent),
+    [localProgressPercent, serverProgress],
+  );
 
   const markLessonCompleted = (lessonId?: number) => {
     if (!lessonId) return;
@@ -189,8 +244,21 @@ const CourseLearning = () => {
       const parsed = raw ? (JSON.parse(raw) as number[]) : [];
       setCompletedLessonIds(Array.isArray(parsed) ? parsed : []);
     }
+    setPassedQuizIds([]);
 
     (async () => {
+      if (currentUser?.id) {
+        try {
+          const enrollment =
+            await enrollmentService.getMyProgressByCourseAPI(courseId);
+          setServerProgress(Number(enrollment?.progress || 0));
+        } catch {
+          setServerProgress(0);
+        }
+      } else {
+        setServerProgress(0);
+      }
+
       const [apiCourse, categories] = await Promise.all([
         courseService.getCourseByIdAPI(courseId),
         courseService.getCourseCategoriesAPI(),
@@ -289,6 +357,49 @@ const CourseLearning = () => {
       setSections(mappedSections);
       setCurrentLesson(mappedSections?.[0]?.items?.[0] || null);
 
+      if (currentUser?.id) {
+        const studentId = Number(currentUser.id);
+        const quizUnits = mappedSections.flatMap((section) =>
+          section.items
+            .filter((item) => item.type === "quiz" && Number(item.quizId) > 0)
+            .map((item) => ({
+              quizId: Number(item.quizId),
+              passingScore: Number(item.passingScore || 70),
+            })),
+        );
+
+        if (quizUnits.length > 0) {
+          const passedIds = await Promise.all(
+            quizUnits.map(async (unit) => {
+              try {
+                const response = await submissionService.getSubmissionsAPI({
+                  page: 1,
+                  limit: 1,
+                  studentId,
+                  quizId: unit.quizId,
+                });
+
+                const latest = Array.isArray(response?.data)
+                  ? response.data[0]
+                  : null;
+                const latestScore = Number(latest?.score ?? NaN);
+
+                return Number.isFinite(latestScore) &&
+                  latestScore >= unit.passingScore
+                  ? unit.quizId
+                  : null;
+              } catch {
+                return null;
+              }
+            }),
+          );
+
+          setPassedQuizIds(
+            passedIds.filter((id): id is number => Number(id) > 0),
+          );
+        }
+      }
+
       const fallback = MOCK_COURSES.find((c) => c.id === courseId);
       setCourse(
         mapLearningCourse(
@@ -303,7 +414,26 @@ const CourseLearning = () => {
       setSections([]);
       setCurrentLesson(null);
     });
-  }, [id, progressStorageKey]);
+  }, [id, progressStorageKey, currentUser?.id]);
+
+  useEffect(() => {
+    if (!id || !currentUser?.id) return;
+
+    const courseId = Number(id);
+    if (!Number.isInteger(courseId) || courseId <= 0) return;
+
+    enrollmentService
+      .updateMyProgressAPI({
+        courseId,
+        progress: localProgressPercent,
+      })
+      .then((res) => {
+        setServerProgress(Number(res?.progress || 0));
+      })
+      .catch(() => {
+        // Keep silent to avoid noisy toasts while watching lessons.
+      });
+  }, [id, currentUser?.id, localProgressPercent]);
 
   useEffect(() => {
     if (!id) return;
@@ -400,6 +530,13 @@ const CourseLearning = () => {
           percentage: Number(percentage.toFixed(2)),
           passed: percentage >= passingScore,
         });
+
+        if (percentage >= passingScore) {
+          setPassedQuizIds((prev) => {
+            const quizId = Number(currentLesson.quizId || 0);
+            return prev.includes(quizId) ? prev : [...prev, quizId];
+          });
+        }
       })
       .catch(() => {});
   }, [
@@ -444,7 +581,7 @@ const CourseLearning = () => {
 
   const isLessonCompleted = (lesson: LearningLesson) => {
     if (lesson.type === "quiz") {
-      return Boolean(quizResult && currentLesson?.quizId === lesson.quizId);
+      return passedQuizIds.includes(Number(lesson.quizId || 0));
     }
     return completedLessonIds.includes(lesson.id);
   };
@@ -527,6 +664,13 @@ const CourseLearning = () => {
         });
 
         if (passed) {
+          setPassedQuizIds((prev) => {
+            const quizId = Number(currentLesson.quizId || 0);
+            return prev.includes(quizId) ? prev : [...prev, quizId];
+          });
+        }
+
+        if (passed) {
           toast.success(toastBody, {
             autoClose: 2600,
             hideProgressBar: false,
@@ -560,6 +704,22 @@ const CourseLearning = () => {
       <div className="max-w-400 mx-auto px-4 lg:px-8 mt-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-8">
+            <div className="mb-4 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+              <div className="flex items-center justify-between text-[13px] text-[#475569]">
+                <span>Course Progress</span>
+                <span>
+                  {displayProgressPercent}% ({completedTrackableItems}/
+                  {totalTrackableItems || 0} items)
+                </span>
+              </div>
+              <div className="mt-2 h-2 w-full rounded-full bg-[#E2E8F0]">
+                <div
+                  className="h-2 rounded-full bg-[#2563EB] transition-all duration-300"
+                  style={{ width: `${displayProgressPercent}%` }}
+                />
+              </div>
+            </div>
+
             <VideoPlayer
               thumbnail={displayCourse.image}
               videoUrl={videoUrl}

@@ -132,7 +132,7 @@ const DashboardPromotion = () => {
           content="Create New Coupon"
           onClick={() =>
             navigate(
-              "/dashboard/lecturer/my-courses/create-course/promotion/create-coupon",
+              "/dashboard/lecturer/my-courses/create-course/commission/create-coupon",
             )
           }
           icon={<Plus size={20} className="font-bold" />}

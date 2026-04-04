@@ -10,12 +10,12 @@ import {
   updateUserAPI,
 } from "../../redux/activeUser/activeUserSlice";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { formatUpdatedAt } from "../../utils/helpers";
 import ProfileLecturers from "./ProfileLecturers";
 import ProfileMyCourses from "./ProfileMyCourses";
 import PersonalIcon from "/icons/avatar.png";
 import BookIcon from "/icons/book.png";
 import TeacherIcon from "/icons/teacher.png";
-import { formatUpdatedAt } from "../../utils/helpers";
 
 const Profile = () => {
   const currentUser = useAppSelector(selectCurrentUser);

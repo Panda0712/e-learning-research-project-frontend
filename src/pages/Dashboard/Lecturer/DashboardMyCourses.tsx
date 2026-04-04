@@ -18,6 +18,7 @@ type MyCoursesResponse = {
     name: string;
     status: string;
     totalStudents?: number;
+    completionRate?: number;
     updatedAt?: string;
     createdAt?: string;
   }>;
@@ -105,7 +106,7 @@ const DashboardMyCourses = () => {
           title: item.name,
           status: (item.status || "draft") as MyCourseRow["status"],
           enrollments: item.totalStudents || 0,
-          completionRate: 0,
+          completionRate: Number(item.completionRate || 0),
           lastUpdated: new Date(item.updatedAt || item.createdAt || Date.now()),
         }));
         setRows(mapped);

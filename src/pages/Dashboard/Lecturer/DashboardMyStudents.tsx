@@ -6,19 +6,19 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
+  Loader2,
   Mail,
   PlayCircle,
   Send,
   SquareArrowOutUpRight,
   Trash2,
-  Loader2,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useAppSelector } from "../../../redux/hooks";
+import { lecturerService } from "../../../apis/lecturer";
 import { selectCurrentUser } from "../../../redux/activeUser/activeUserSlice";
+import { useAppSelector } from "../../../redux/hooks";
 import type { DashboardStudent } from "../../../types/course.type";
 import { MOCK_COURSES } from "../../../utils/mockData";
-import { lecturerService } from "../../../apis/lecturer";
 
 const COLORS = {
   yellowBtn: "#FFD900",
@@ -48,7 +48,7 @@ const StatusBadge = ({ status }: { status: string }) => {
 const DashboardMyStudents = () => {
   const currentUser = useAppSelector(selectCurrentUser);
   const itemsPerPage = 8;
-  
+
   const [studentsList, setStudentsList] = useState<DashboardStudent[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -91,15 +91,20 @@ const DashboardMyStudents = () => {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         const rawData = await lecturerService.getMyStudentsAPI(currentUser?.id);
 
         const mappedData: DashboardStudent[] = rawData.map((item: any) => ({
           id: item.id,
-          name: item.student?.fullName || item.student?.name || "Student",
+          name:
+            `${item.student?.firstName || ""} ${item.student?.lastName || ""}`.trim() ||
+            item.student?.fullName ||
+            item.student?.name ||
+            "Student",
           email: item.student?.email || "No email found",
-          course: item.course?.title || "No course title found",
-          progress: item.progress || 0,
+          course:
+            item.course?.name || item.course?.title || "No course title found",
+          progress: Number(item.progress || 0),
           lastActivity: new Date(
             item.updatedAt || item.createdAt,
           ).toLocaleDateString("en-US", {
@@ -335,7 +340,7 @@ const DashboardMyStudents = () => {
             <p>Loading students data...</p>
           </div>
         ) : error ? (
-           <div className="flex flex-col items-center justify-center py-20 text-red-500">
+          <div className="flex flex-col items-center justify-center py-20 text-red-500">
             <p>Error: {error}</p>
           </div>
         ) : processedData.length > 0 ? (
