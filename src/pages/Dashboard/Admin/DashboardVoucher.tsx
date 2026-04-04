@@ -14,7 +14,10 @@ import {
   type VoucherCategoryItem,
   type VoucherDiscountUnit,
   type VoucherItem,
+  type VoucherScope,
 } from "../../../apis/adminVoucher";
+import { adminCourseService } from "../../../apis/adminCourse";
+import { courseService } from "../../../apis/course";
 import { DEFAULT_ITEMS_PER_PAGE } from "../../../utils/constants";
 import { toast } from "react-toastify";
 
@@ -25,11 +28,20 @@ const toDateInput = (value?: string | null) => {
   return d.toISOString().slice(0, 10);
 };
 
+interface CourseOption {
+  id: number;
+  name: string;
+}
+
 const DashboardVoucher = () => {
   const [vouchers, setVouchers] = useState<VoucherItem[]>([]);
   const [voucherCategories, setVoucherCategories] = useState<
     VoucherCategoryItem[]
   >([]);
+  const [courseCategories, setCourseCategories] = useState<VoucherCategoryItem[]>(
+    [],
+  );
+  const [courses, setCourses] = useState<CourseOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -54,10 +66,14 @@ const DashboardVoucher = () => {
     discount: "",
     discountUnit: "percent" as VoucherDiscountUnit,
     code: "",
+    scope: "ALL_COURSES" as VoucherScope,
+    scopeCategoryId: "",
+    courseId: "",
     usageLimit: "",
+    usagePerUser: "",
     minOrderValue: "",
     description: "",
-    status: "active" as "active" | "scheduled" | "expired",
+    status: "active" as "active" | "inactive" | "scheduled" | "expired",
     maxValue: "",
     categoryId: "",
     startingDate: "",
@@ -73,12 +89,53 @@ const DashboardVoucher = () => {
     return voucherCategories.find((c) => c.id === id)?.name || "";
   }, [formData.categoryId, voucherCategories]);
 
+  const selectedScopeCategoryLabel = useMemo(() => {
+    const id = Number(formData.scopeCategoryId);
+    if (!id) return "";
+    return courseCategories.find((c) => c.id === id)?.name || "";
+  }, [formData.scopeCategoryId, courseCategories]);
+
+  const selectedCourseLabel = useMemo(() => {
+    const id = Number(formData.courseId);
+    if (!id) return "";
+    return courses.find((c) => c.id === id)?.name || "";
+  }, [formData.courseId, courses]);
+
   const fetchVoucherCategories = async () => {
     try {
       const categories = await adminVoucherService.getVoucherCategoriesAPI();
       setVoucherCategories(categories);
     } catch (error: any) {
       toast.error(error?.message || "Failed to fetch voucher categories.");
+    }
+  };
+
+  const fetchCourseCategories = async () => {
+    try {
+      const categories = await courseService.getCourseCategoriesAPI();
+      const rows = Array.isArray(categories) ? categories : categories?.data;
+      setCourseCategories(Array.isArray(rows) ? rows : []);
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to fetch course categories.");
+    }
+  };
+
+  const fetchCourses = async () => {
+    try {
+      const response = await adminCourseService.getAdminCoursesAPI({
+        page: 1,
+        itemsPerPage: 200,
+        status: "all",
+      });
+      const rows = Array.isArray(response?.data) ? response.data : [];
+      setCourses(
+        rows.map((course: any) => ({
+          id: Number(course.id),
+          name: String(course.name || `Course #${course.id}`),
+        })),
+      );
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to fetch courses.");
     }
   };
 
@@ -101,6 +158,8 @@ const DashboardVoucher = () => {
 
   useEffect(() => {
     fetchVoucherCategories();
+    fetchCourseCategories();
+    fetchCourses();
   }, []);
 
   useEffect(() => {
@@ -124,6 +183,7 @@ const DashboardVoucher = () => {
     today.setHours(0, 0, 0, 0);
     const discount = Number(formData.discount);
     const usageLimit = Number(formData.usageLimit);
+    const usagePerUser = Number(formData.usagePerUser);
     const minOrderValue = Number(formData.minOrderValue);
     const maxValue = Number(formData.maxValue);
 
@@ -134,9 +194,18 @@ const DashboardVoucher = () => {
     if (!formData.code.trim()) newErrors.code = "Required";
     if (!formData.usageLimit || usageLimit <= 0)
       newErrors.usageLimit = "> 0";
+    if (formData.usagePerUser && usagePerUser <= 0)
+      newErrors.usagePerUser = "> 0";
     if (!formData.minOrderValue || minOrderValue < 0)
       newErrors.minOrderValue = ">= 0";
     if (!formData.maxValue || maxValue < 0) newErrors.maxValue = ">= 0";
+
+    if (formData.scope === "CATEGORY" && !formData.scopeCategoryId) {
+      newErrors.scopeCategoryId = "Required";
+    }
+    if (formData.scope === "SPECIFIC_COURSE" && !formData.courseId) {
+      newErrors.courseId = "Required";
+    }
 
     if (!formData.endingDate) {
       newErrors.endingDate = "Required";
@@ -163,7 +232,11 @@ const DashboardVoucher = () => {
       discount: "",
       discountUnit: "percent",
       code: "",
+      scope: "ALL_COURSES",
+      scopeCategoryId: "",
+      courseId: "",
       usageLimit: "",
+      usagePerUser: "",
       minOrderValue: "",
       description: "",
       status: "active",
@@ -186,10 +259,18 @@ const DashboardVoucher = () => {
       discount: String(item.discount ?? ""),
       discountUnit: (item.discountUnit || "percent") as VoucherDiscountUnit,
       code: item.code,
+      scope: (item.scope || "ALL_COURSES") as VoucherScope,
+      scopeCategoryId: String(item.scopeCategoryId || ""),
+      courseId: String(item.courseId || ""),
       usageLimit: String(item.usageLimit ?? ""),
+      usagePerUser: String(item.usagePerUser ?? ""),
       minOrderValue: String(item.minOrderValue ?? ""),
       description: item.description || "",
-      status: (item.status || "active") as "active" | "scheduled" | "expired",
+      status: (item.status || "active") as
+        | "active"
+        | "inactive"
+        | "scheduled"
+        | "expired",
       maxValue: String(item.maxValue ?? ""),
       categoryId: String(item.categoryId || ""),
       startingDate: toDateInput(item.startingDate),
@@ -213,12 +294,22 @@ const DashboardVoucher = () => {
         discount: Number(formData.discount),
         discountUnit: formData.discountUnit,
         code: formData.code.trim(),
+        scope: formData.scope,
         usageLimit: Number(formData.usageLimit),
+        ...(formData.usagePerUser
+          ? { usagePerUser: Number(formData.usagePerUser) }
+          : {}),
         minOrderValue: Number(formData.minOrderValue),
         description: formData.description.trim(),
         status: formData.status,
         maxValue: Number(formData.maxValue),
         ...(formData.categoryId ? { categoryId: Number(formData.categoryId) } : {}),
+        ...(formData.scope === "CATEGORY" && formData.scopeCategoryId
+          ? { scopeCategoryId: Number(formData.scopeCategoryId) }
+          : {}),
+        ...(formData.scope === "SPECIFIC_COURSE" && formData.courseId
+          ? { courseId: Number(formData.courseId) }
+          : {}),
         ...(formData.startingDate ? { startingDate: formData.startingDate } : {}),
         ...(formData.startingTime ? { startingTime: formData.startingTime } : {}),
         ...(formData.endingDate ? { endingDate: formData.endingDate } : {}),
@@ -301,6 +392,8 @@ const DashboardVoucher = () => {
                 Voucher Name
               </th>
               <th className="p-4 text-sm font-semibold text-gray-600">Discount</th>
+              <th className="p-4 text-sm font-semibold text-gray-600">Scope</th>
+              <th className="p-4 text-sm font-semibold text-gray-600">Target</th>
               <th className="p-4 text-sm font-semibold text-gray-600">Category</th>
               <th className="p-4 text-sm font-semibold text-gray-600">Code</th>
               <th className="p-4 text-sm font-semibold text-gray-600 text-center">
@@ -318,7 +411,7 @@ const DashboardVoucher = () => {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={10} className="p-8 text-center text-gray-500">
+                <td colSpan={12} className="p-8 text-center text-gray-500">
                   Loading vouchers...
                 </td>
               </tr>
@@ -334,6 +427,16 @@ const DashboardVoucher = () => {
                 <td className="p-4 text-sm text-gray-600">
                   {item.discount ?? 0}
                   {item.discountUnit === "percent" ? "%" : ""}
+                </td>
+                <td className="p-4 text-sm text-gray-700 font-medium">
+                  {item.scope || "ALL_COURSES"}
+                </td>
+                <td className="p-4 text-sm text-gray-600">
+                  {item.scope === "CATEGORY"
+                    ? item.scopeCategory?.name || "-"
+                    : item.scope === "SPECIFIC_COURSE"
+                      ? item.course?.name || "-"
+                      : "All courses"}
                 </td>
                 <td className="p-4 text-sm text-gray-600">
                   {item.category?.name || "-"}
@@ -401,7 +504,7 @@ const DashboardVoucher = () => {
             ))}
             {!loading && vouchers.length === 0 && (
               <tr>
-                <td colSpan={10} className="p-8 text-center text-gray-500">
+                <td colSpan={12} className="p-8 text-center text-gray-500">
                   No vouchers found.
                 </td>
               </tr>
@@ -561,6 +664,88 @@ const DashboardVoucher = () => {
               </div>
 
               <div className="space-y-1">
+                <label className="text-sm text-gray-500">Voucher Scope</label>
+                <select
+                  value={formData.scope}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      scope: e.target.value as VoucherScope,
+                      scopeCategoryId: "",
+                      courseId: "",
+                    })
+                  }
+                  className="w-full border rounded-lg p-3 text-sm border-gray-200"
+                >
+                  <option value="ALL_COURSES">ALL_COURSES</option>
+                  <option value="CATEGORY">CATEGORY</option>
+                  <option value="SPECIFIC_COURSE">SPECIFIC_COURSE</option>
+                </select>
+              </div>
+
+              {formData.scope === "CATEGORY" && (
+                <div className="space-y-1">
+                  <label className="text-sm text-gray-500">Target Category</label>
+                  <select
+                    value={formData.scopeCategoryId}
+                    onChange={(e) =>
+                      setFormData({ ...formData, scopeCategoryId: e.target.value })
+                    }
+                    className={`w-full border rounded-lg p-3 text-sm ${
+                      errors.scopeCategoryId ? "border-red-500" : "border-gray-200"
+                    }`}
+                  >
+                    <option value="">Select category</option>
+                    {courseCategories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.scopeCategoryId && (
+                    <p className="text-red-500 text-xs flex items-center gap-1">
+                      <AlertCircle size={12} /> {errors.scopeCategoryId}
+                    </p>
+                  )}
+                  {selectedScopeCategoryLabel ? (
+                    <p className="text-xs text-gray-500">
+                      Selected: {selectedScopeCategoryLabel}
+                    </p>
+                  ) : null}
+                </div>
+              )}
+
+              {formData.scope === "SPECIFIC_COURSE" && (
+                <div className="space-y-1">
+                  <label className="text-sm text-gray-500">Target Course</label>
+                  <select
+                    value={formData.courseId}
+                    onChange={(e) =>
+                      setFormData({ ...formData, courseId: e.target.value })
+                    }
+                    className={`w-full border rounded-lg p-3 text-sm ${
+                      errors.courseId ? "border-red-500" : "border-gray-200"
+                    }`}
+                  >
+                    <option value="">Select course</option>
+                    {courses.map((course) => (
+                      <option key={course.id} value={course.id}>
+                        {course.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.courseId && (
+                    <p className="text-red-500 text-xs flex items-center gap-1">
+                      <AlertCircle size={12} /> {errors.courseId}
+                    </p>
+                  )}
+                  {selectedCourseLabel ? (
+                    <p className="text-xs text-gray-500">Selected: {selectedCourseLabel}</p>
+                  ) : null}
+                </div>
+              )}
+
+              <div className="space-y-1">
                 <label className="text-sm text-gray-500">Usage Limit</label>
                 <input
                   type="number"
@@ -574,6 +759,23 @@ const DashboardVoucher = () => {
                 {errors.usageLimit && (
                   <p className="text-red-500 text-xs flex items-center gap-1">
                     <AlertCircle size={12} /> {errors.usageLimit}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm text-gray-500">Usage Per User (optional)</label>
+                <input
+                  type="number"
+                  name="usagePerUser"
+                  value={formData.usagePerUser}
+                  onChange={handleInputChange}
+                  className={`w-full border rounded-lg p-3 text-sm focus:outline-none 
+                    focus:border-blue-500 ${errors.usagePerUser ? "border-red-500" : "border-gray-200"}`}
+                  placeholder="No limit"
+                />
+                {errors.usagePerUser && (
+                  <p className="text-red-500 text-xs flex items-center gap-1">
+                    <AlertCircle size={12} /> {errors.usagePerUser}
                   </p>
                 )}
               </div>
@@ -634,12 +836,17 @@ const DashboardVoucher = () => {
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      status: e.target.value as "active" | "scheduled" | "expired",
+                      status: e.target.value as
+                        | "active"
+                        | "inactive"
+                        | "scheduled"
+                        | "expired",
                     })
                   }
                   className="w-full border rounded-lg p-3 text-sm border-gray-200"
                 >
                   <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
                   <option value="scheduled">Scheduled</option>
                   <option value="expired">Expired</option>
                 </select>

@@ -2,11 +2,18 @@ import authorizedAxiosInstance from "../utils/authorizedAxios";
 import { API_ROOT } from "../utils/constants";
 
 export type VoucherDiscountUnit = "amount" | "percent";
+export type VoucherScope = "ALL_COURSES" | "CATEGORY" | "SPECIFIC_COURSE";
 
 export interface VoucherItem {
   id: number;
   name: string;
   code: string;
+  scope?: VoucherScope;
+  courseId?: number | null;
+  scopeCategoryId?: number | null;
+  usagePerUser?: number | null;
+  course?: { id: number; name?: string | null } | null;
+  scopeCategory?: { id: number; name?: string | null } | null;
   description?: string | null;
   status?: string | null;
   categoryId?: number | null;
@@ -71,10 +78,14 @@ export const adminVoucherService = {
     discount: number;
     discountUnit: VoucherDiscountUnit;
     code: string;
+    scope?: VoucherScope;
+    courseId?: number;
+    scopeCategoryId?: number;
     usageLimit: number;
+    usagePerUser?: number;
     minOrderValue: number;
     description: string;
-    status: "active" | "scheduled" | "expired";
+    status: "active" | "inactive" | "scheduled" | "expired";
     maxValue: number;
     startingDate?: string;
     startingTime?: string;
@@ -93,10 +104,14 @@ export const adminVoucherService = {
       discount: number;
       discountUnit: VoucherDiscountUnit;
       code: string;
+      scope: VoucherScope;
+      courseId: number;
+      scopeCategoryId: number;
       usageLimit: number;
+      usagePerUser: number;
       minOrderValue: number;
       description: string;
-      status: "active" | "scheduled" | "expired";
+      status: "active" | "inactive" | "scheduled" | "expired";
       maxValue: number;
       startingDate?: string;
       startingTime?: string;
