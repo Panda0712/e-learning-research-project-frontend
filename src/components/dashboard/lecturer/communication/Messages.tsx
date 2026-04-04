@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { selectCurrentUser } from "../../../../redux/activeUser/activeUserSlice";
 import {
+  clearConversationUnreadLocally,
   fetchMessagesAPI,
   markAsSeenAPI,
   sendDirectMessageAPI,
@@ -213,7 +214,19 @@ const Messages = () => {
   ]);
 
   const handleSelectConversation = (conversationId: number) => {
+    const currentUserId = Number(currentUser?.id);
     dispatch(setActiveConversation(conversationId));
+
+    if (currentUserId > 0) {
+      dispatch(
+        clearConversationUnreadLocally({
+          conversationId,
+          userId: currentUserId,
+        }),
+      );
+    }
+
+    dispatch(markAsSeenAPI(conversationId));
   };
 
   const handleSendMessage = async () => {
