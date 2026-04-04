@@ -69,7 +69,8 @@ import { useAppDispatch, useAppSelector } from "./redux/hooks";
 import type { UserProfile } from "./types/user.type";
 import { ACCOUNT_ROLES, API_ROOT } from "./utils/constants";
 import { normalizeRole } from "./utils/helpers";
-import DashboardLecturerBlog from "./pages/Dashboard/Lecturer/DashboardBlog.tsx";
+import DashboardLecturerBlog from "./pages/Dashboard/Lecturer/DashboardBlog";
+import Wishlist from "./pages/Profile/Wishlist";
 
 const AuthBootstrap = () => <Loading caption="Checking your session..." />;
 
@@ -414,6 +415,15 @@ const App = () => {
               element={<RbacRoute requiredPermission={permissions.VIEW_CART} />}
             >
               <Route path="/cart" element={<Cart />} />
+            </Route>
+
+            {/* Wishlist */}
+            <Route
+              element={
+                <RbacRoute requiredPermission={permissions.VIEW_WISHLIST} />
+              }
+            >
+              <Route path="/wishlist" element={<Wishlist />} />
             </Route>
 
             {/* Lecturer */}

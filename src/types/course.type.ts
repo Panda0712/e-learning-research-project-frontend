@@ -75,6 +75,8 @@ export type CourseStudentState = {
   isPurchased: boolean;
   isInCart: boolean;
   canAddToCart: boolean;
+  isInWishlist: boolean;
+  canAddToWishlist: boolean;
 };
 
 export interface DashboardStudent {

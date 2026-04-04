@@ -270,6 +270,13 @@ const CourseDetail = () => {
                     : prev,
                 )
               }
+              onAddedToWishlist={() =>
+                setStudentState((prev) =>
+                  prev
+                    ? { ...prev, isInWishlist: true, canAddToWishlist: false }
+                    : prev,
+                )
+              }
             />
           </div>
         </div>

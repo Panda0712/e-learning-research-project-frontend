@@ -273,6 +273,28 @@ const chatSlice = createSlice({
       });
     },
 
+    clearConversationUnreadLocally: (
+      state,
+      action: PayloadAction<{ conversationId: number; userId: number }>,
+    ) => {
+      const { conversationId, userId } = action.payload;
+
+      state.conversations = state.conversations.map((c) => {
+        if (c.id !== conversationId) return c;
+
+        const nextUnreadCounts = {
+          ...(c.unreadCounts ?? {}),
+          [String(userId)]: 0,
+        };
+
+        return {
+          ...c,
+          unreadCounts: nextUnreadCounts,
+          myUnreadCount: 0,
+        };
+      });
+    },
+
     resetChatState: () => initialState,
   },
 
@@ -357,6 +379,7 @@ export const {
   receiveSocketMessage,
   receiveSocketConversation,
   receiveReadMessage,
+  clearConversationUnreadLocally,
   resetChatState,
 } = chatSlice.actions;
 

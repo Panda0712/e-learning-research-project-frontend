@@ -1,11 +1,12 @@
-import { Heart, ShoppingCart, Loader2, Star } from "lucide-react"; 
-import { useState, useEffect } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Heart, Loader2, ShoppingCart, Star } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useAppSelector } from "../../redux/hooks";
-import { selectCurrentUser } from "../../redux/activeUser/activeUserSlice";
+import { cartService } from "../../apis/cart";
 import { wishlistService } from "../../apis/wishlist";
-import { cartService } from "../../apis/cart"; 
+import { selectCurrentUser } from "../../redux/activeUser/activeUserSlice";
+import { useAppSelector } from "../../redux/hooks";
 
 const COLORS = {
   yellowBtn: "#FFD900",
@@ -34,24 +35,36 @@ const Wishlist = () => {
         setIsLoading(false);
         return;
       }
-      
+
       setIsLoading(true);
       try {
-        const response = await wishlistService.getWishlistsByUserIdAPI(currentUser.id);
-        
-        if (response && response.data) {
-          const mappedItems = response.data.map((item: any) => ({
+        const response = await wishlistService.getMyWishlistsAPI(1, 20);
+
+        const mappedItems = (response.data || []).map((item: any) => {
+          const ratings = item.course?.reviews || [];
+          const rating =
+            ratings.length > 0
+              ? ratings.reduce(
+                  (sum: number, r: any) => sum + (r.rating || 0),
+                  0,
+                ) / ratings.length
+              : 0;
+
+          return {
             id: item.id,
             courseId: item.courseId,
-            title: item.courseName || "Course",
-            lecturer: item.lecturer || "Lecturer",
-            thumbnail: item.courseThumbnail || "https://placehold.co/600x400/3b82f6/white?text=EduLearn",
-            price: 19.99, 
-            rating: 4.8,
-            reviews: 1250,
-          }));
-          setWishlistItems(mappedItems);
-        }
+            title: item.courseName || item.course?.name || "Course",
+            lecturer: item.lecturer || item.course?.lecturerName || "Lecturer",
+            thumbnail:
+              item.courseThumbnail ||
+              item.course?.thumbnail?.fileUrl ||
+              "https://placehold.co/600x400/3b82f6/white?text=EduLearn",
+            price: item.course?.price ?? 0,
+            rating: Number(rating.toFixed(1)),
+            reviews: ratings.length,
+          };
+        });
+        setWishlistItems(mappedItems);
       } catch (error: any) {
         toast.error(error?.message || "Failed to get wishlist data!");
       } finally {
@@ -67,20 +80,19 @@ const Wishlist = () => {
       setWishlistItems((prev) => prev.filter((item) => item.id !== id));
       await wishlistService.removeWishlistItemAPI(id);
       toast.success("Removed successfully from wishlist!");
-    } catch (error) {
-      toast.error("Remove item failed! Please try again later");
+    } catch (error: any) {
+      toast.error(
+        error?.message || "Remove item failed! Please try again later",
+      );
     }
   };
 
   const handleAddToCart = async (item: WishlistItemType) => {
     try {
       await cartService.addToCart({
-        userId: currentUser.id,
         courseId: item.courseId,
-        price: item.price,
       });
       toast.success("Added course to cart!", { theme: "colored" });
-      
     } catch (error: any) {
       const msg = error?.message || "Error when adding item to cart";
       toast.error(msg);
@@ -104,7 +116,9 @@ const Wishlist = () => {
         {isLoading ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-20 flex flex-col items-center justify-center min-h-[50vh]">
             <Loader2 className="animate-spin text-blue-500 mb-4" size={40} />
-            <p className="font-medium text-gray-500">Loading wishlist data...</p>
+            <p className="font-medium text-gray-500">
+              Loading wishlist data...
+            </p>
           </div>
         ) : wishlistItems.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -134,15 +148,16 @@ const Wishlist = () => {
                       {item.title}
                     </h3>
                   </Link>
-                  <p className="text-sm text-gray-500 mb-2">
-                    {item.lecturer}
-                  </p>
+                  <p className="text-sm text-gray-500 mb-2">{item.lecturer}</p>
 
                   <div className="flex items-center gap-1.5 mb-4">
                     <span className="text-sm font-bold text-yellow-600">
                       {item.rating}
                     </span>
-                    <Star size={14} className="fill-yellow-400 text-yellow-400" />
+                    <Star
+                      size={14}
+                      className="fill-yellow-400 text-yellow-400"
+                    />
                     <span className="text-xs text-gray-400 ml-1">
                       ({item.reviews.toLocaleString()})
                     </span>
@@ -152,7 +167,7 @@ const Wishlist = () => {
                     <div className="text-xl font-bold text-gray-900">
                       ${item.price}
                     </div>
-                    
+
                     <button
                       onClick={() => handleAddToCart(item)}
                       className="flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-black shadow-sm transition hover:opacity-90 text-sm"
@@ -174,7 +189,8 @@ const Wishlist = () => {
               Your wishlist is currently empty.
             </h3>
             <p className="text-gray-500 mb-8 max-w-md">
-              Found a course you like? Click the heart icon to save it for later.
+              Found a course you like? Click the heart icon to save it for
+              later.
             </p>
             <Link
               to="/courses"
