@@ -1,4 +1,4 @@
-import StarIcon from "../../../../assets/Star.svg?react";
+import StarIcon from "../../../../assets/star.svg?react";
 import ChatIcon from "../../../../assets/chat-circle.svg?react";
 import CardsIcon from "../../../../assets/cards.svg?react";
 import { formatDistanceToNow } from "date-fns";
